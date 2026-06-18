@@ -1,6 +1,0 @@
-http://localhost:8080 {
-	root * /app
-	encode gzip
-	php_fastcgi localhost:9000
-	file_server
-}
