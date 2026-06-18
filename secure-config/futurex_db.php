@@ -14,10 +14,10 @@ declare(strict_types=1);
  */
 
 return [
-    'DB_HOST' => 'sql301.infinityfree.com',
-    'DB_USER' => 'if0_39993218',
-    'DB_PASS' => 'IloveCoDInDg573',
-    'DB_NAME' => 'if0_39993218_FutureX',
-    'DB_PORT' => 3306,
+    'DB_HOST' => 'interchange.proxy.rlwy.net',
+    'DB_USER' => 'root',
+    'DB_PASS' => 'bGuEFpSXnxEDjpcmhmiwvVIlcvYxUahW',
+    'DB_NAME' => 'FutureX',
+    'DB_PORT' => 39772,
     'DB_CHARSET' => 'utf8mb4',
 ];
