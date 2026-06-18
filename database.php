@@ -10,8 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Find the secret config file (adjust if your path differs)
-$cfgPath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? __DIR__, '/').'/secure-config/futurex_db.php';
+$cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
 if (!file_exists($cfgPath)) {
     http_response_code(500);
