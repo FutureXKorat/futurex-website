@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20251125040713349",
+    "user_id": 2,
+    "username": "Dr.Khai",
+    "user_email": "",
+    "delivery": "pickup",
+    "address": "",
+    "items": [
+        {
+            "name": "CD12 Chef Dee Purple Sweet Potato",
+            "price": 570,
+            "qty": 1
+        }
+    ],
+    "amounts": {
+        "subtotal": 570,
+        "shipping": 0,
+        "total": 570
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20251125040713349_1764061639.PNG",
+    "created_at": "2025-11-25T04:07:19-05:00"
+}

@@ -1,0 +1,88 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Database connection file for Future X.
+ * Loads credentials from /htdocs/secure-config/futurex_db.php
+ */
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Find the secret config file (adjust if your path differs)
+$cfgPath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? __DIR__, '/').'/secure-config/futurex_db.php';
+
+if (!file_exists($cfgPath)) {
+    http_response_code(500);
+    die("Database config file not found.");
+}
+
+$config = require $cfgPath;
+
+// Create the MySQL connection
+$conn = @new mysqli(
+    $config['DB_HOST'],
+    $config['DB_USER'],
+    $config['DB_PASS'],
+    $config['DB_NAME'],
+    (int)$config['DB_PORT']
+);
+
+// --- Language persistence via cookie (EN/TH) ---
+$__allowedLangs = ['en', 'th'];
+
+if (isset($_GET['lang']) && in_array($_GET['lang'], $__allowedLangs, true)) {
+    $__chosen = $_GET['lang'];
+    $__oneYear = time() + 60 * 60 * 24 * 365;
+
+    setcookie('lang', $__chosen, [
+        'expires'  => $__oneYear,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => false,
+        'samesite' => 'Lax',
+    ]);
+
+    $lang = $__chosen; // use immediately
+} else {
+    $lang = (isset($_COOKIE['lang']) && in_array($_COOKIE['lang'], $__allowedLangs, true))
+        ? $_COOKIE['lang']
+        : 'en'; // default
+}
+
+if ($conn->connect_error) {
+    error_log('DB connection failed: ' . $conn->connect_error);
+    die("Database connection failed.");
+}
+
+// Ensure UTF-8/emoji works
+$charset = $config['DB_CHARSET'] ?? 'utf8mb4';
+if (! $conn->set_charset($charset)) {
+    // Fallback for hosts that ignore set_charset
+    $conn->query("SET NAMES utf8mb4");
+    $conn->query("SET CHARACTER SET utf8mb4");
+}
+
+// --- Admin setup (simple: by username exact match) ---
+$ADMIN_USERNAMES = ['Seven']; // <-- change this
+
+$currentUser = null;
+$isAdmin = false;
+
+if (!empty($_SESSION['user_id'])) {
+    $uid = (int)$_SESSION['user_id'];
+    if ($stmt = $conn->prepare("SELECT id, username, name, email FROM users WHERE id = ?")) {
+        $stmt->bind_param("i", $uid);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res && $row = $res->fetch_assoc()) {
+            $currentUser = $row;
+            $isAdmin = in_array($row['username'], $ADMIN_USERNAMES, true);
+        }
+        $stmt->close();
+    }
+    $_SESSION['is_admin'] = $isAdmin;
+}
+
+// (no closing PHP tag to avoid accidental output)

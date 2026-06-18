@@ -1,0 +1,767 @@
+<?php
+session_start();
+include 'database.php';
+
+$welcomeText = "Welcome to Future X";
+$profilePicture = "avatar.png"; // default fallback
+
+$texts = [
+    'en' => [
+    'title'          => 'Home - Future X',
+    'home'           => 'Home',
+    'cart'           => 'Shopping Cart',
+    'product'        => 'Products',
+    'btnproduct'     => 'View Products',
+    'about'          => 'About Us',
+    'Source'         => 'Sources',
+    'Welcome'        => 'Welcome to Future X, ',
+    'sponsor'        => 'Sponsor Bonus',
+    'dsponsor'       => 'Bonus from sponsors for 3 generations when your downline buys our product.',
+    'binary'         => 'Binary Bonus',
+    'dbinary'        => '30% of the points from the weak side. Please go to the official website for more details.',
+    'matching'       => 'Matching Bonus',
+    'dmatching'      => 'If your downline gets income from matching, you will also get it',
+    'uni'            => 'Uni-level bonus',
+    'duni'           => 'If your 20 level downline buys our products, you get 10% for each level.',
+    'page'           => 'This is the page for 7 warehouse (Nakhon Ratchasima)',
+    'login'          => 'Please log in to access your profile.',
+    'login2'         => 'Please log in to see our products.',
+    'profile'        => 'Edit Profile',
+    'out'            => 'Log Out',
+    'orders'         => 'Orders',
+    'lang'           => 'ภาษาไทย'
+    ],
+
+    'th' => [
+    'title'          => 'หน้าหลัก - Future X',
+    'home'           => 'หน้าหลัก',
+    'product'        => 'สินค้า',
+    'btnproduct'     => 'ดูสินค้า',
+    'cart'           => 'ตะกร้าสินค้า',
+    'about'          => 'เกี่ยวกับพวกเรา',
+    'Source'         => 'แหล่งที่มา',
+    'Welcome'        => 'ยินดีต้อนรับสู่ Future X, ',
+    'sponsor'        => 'โบนัสสปอนเซอร์',
+    'dsponsor'       => 'โบนัสจากผู้สนับสนุน 3 รุ่น เมื่อดาวน์ไลน์ของคุณซื้อผลิตภัณฑ์ของเรา',
+    'binary'         => 'โบนัสจับคู่จ่าย',
+    'dbinary'        => '30% ของคะแนนมาจากฝั่งอ่อน - มีรายละเอียดเพิ่มเติม กรุณาไปที่เว็บไซต์ทางการ',
+    'matching'       => 'โบนัสแมทชิ่ง',
+    'dmatching'      => 'ถ้าลูกเราจับคู่ เราก็ได้ด้วย',
+    'uni'            => 'โบนัสยูนิเลเวล',
+    'duni'           => 'หากดาวน์ไลน์ลึก 20 ชั้นของท่านมีการสั่งซื้อผลิตภัณฑ์ของเรา ท่านจะได้รับค่าตอบแทน 10% ในแต่ละชั้น',
+    'page'           => 'นี่คือหน้าเพจของคลัง 7 (นครราชสีมา)',
+    'login'          => 'กรุณาเข้าสู่ระบบเพื่อแก้ไขโปรไฟล์ของคุณ',
+    'login2'         => 'กรุณาเข้าสู่ระบบเพื่อดูสินค้าของเรา',
+    'profile'        => 'แก้ไขโปรไฟล์',
+    'out'            => 'ออกจากระบบ',
+    'orders'         => 'รายการที่สั่ง',
+    'lang'           => 'English'
+    ],
+];
+
+if (isset($_SESSION["user_id"])) {
+    $userId = (int)$_SESSION["user_id"];
+    $sql = "SELECT name, profile_picture FROM users WHERE id = $userId";
+    $result = $conn->query($sql);
+    if ($result && $row = $result->fetch_assoc()) {
+        $welcomeText =  $texts[$lang]['Welcome'] . htmlspecialchars($row["name"]);
+        if (!empty($row["profile_picture"])) {
+            $profilePicture = "uploads/profile_pics/" . htmlspecialchars($row["profile_picture"]);
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><?php echo ($texts[$lang]['title']) ?></title>
+    <link rel="icon" type="image/png" href="logo_transparent_onlyblack.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        :root {
+            --brand-color:#007BFF;
+            --brand-hover:#0056b3;
+            --gray-color: #ccc;
+            --ink: #111111;           /* darker text for white backgrounds */
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #FFFFFF;
+            color: var(--ink);
+        }
+
+        /* Navbar (kept structure, colors switched to red/white; stays opaque when scrolled) */
+        .top-banner {
+            background-color: var(--brand-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .top-banner.scrolled {
+            background-color: var(--brand-color); /* keep red when scrolled */
+            box-shadow: none;
+        }
+        .nav-links-container {
+            flex: 1;
+            overflow-x: auto;
+            position: relative;
+            padding: 12px 20px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            white-space: nowrap;
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
+        .nav-scroll-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: #fff; /* white line for contrast on red */
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.2s linear;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #fff;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            transition: background 0.3s, transform 0.15s ease, opacity 0.15s ease;
+        }
+        .top-banner.scrolled .nav-links a { color: #fff; }
+        .nav-links a:hover { background-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+		#profileIcon + .profile-dropdown-content {
+  	    	margin-top: 8px; /* or whatever gap you want */
+		}
+        .profile-dropdown {
+            transition: transform .15s ease;
+            will-change: transform;
+        }
+
+        .profile-dropdown:hover {
+            transform: translateY(-1px);
+        }
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 10px;
+            background-color: white;
+            min-width: 190px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 0;
+        }
+        .profile-dropdown-content a {
+            display: block;
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+        .profile-dropdown-content a:hover { background-color: #f2f2f2; color: #333;}
+        .profile-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            background-color: var(--gray-color);
+            border: none; /* no border */
+        }
+        /* Language dropdown container */
+        .lang-dropdown{
+                position: relative;
+                flex-shrink: 0;
+        }
+
+        /* Round icon button (glassy like your theme) */
+        .lang-btn-icon{
+                width: 42px;
+                height: 42px;
+                display: grid;
+                place-items: center;
+                border: 1px solid rgba(255,255,255,0.35);
+                background: rgba(255,255,255,0.18);
+                color: #fff;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: transform .15s ease, background .2s ease, opacity .15s ease;
+        }
+        .lang-btn-icon:hover{ 
+                background: rgba(255,255,255,0.28); 
+                transform: translateY(-1px); 
+        }
+        .lang-btn-icon:focus{ 
+                outline: 2px solid rgba(255,255,255,0.6); 
+                outline-offset: 2px; 
+        }
+
+        /* Dropdown panel (same look as profile) */
+        .lang-dropdown-content{
+                display: none;
+                position: absolute;
+                right: 0;
+                top: calc(100% + 8px);
+                background-color: #fff;
+                min-width: 190px;
+                box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+                border-radius: 8px;
+                overflow: hidden;
+                padding: 0;
+        }
+
+        .lang-dropdown-content a{
+                display:block;
+                color:#333;
+                padding:12px 16px;
+                text-decoration:none;
+                transition: background .2s ease;
+                white-space: nowrap;
+        }
+        .lang-dropdown-content a:hover{ 
+                background:#f2f2f2; 
+        }
+        .lang-dropdown-content a.active{
+                font-weight:700;
+                background:#f7f7f7;
+        }
+
+  
+        /* HERO — switched to red base with soft light overlays */
+        .logo-container {
+            position: relative;
+            background:
+                radial-gradient(1200px 600px at 20% 10%, rgba(255,255,255,0.18), transparent 60%),
+                radial-gradient(900px 500px at 80% 30%, rgba(255,255,255,0.12), transparent 60%),
+                var(--brand-color);
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* default: center on desktops */
+            overflow: hidden;
+            isolation: isolate;
+        }
+        .logo-container::before,
+        .logo-container::after {
+            content: "";
+            position: absolute;
+            width: 55vmax;
+            height: 55vmax;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.14;
+            animation: blobFloat 24s ease-in-out infinite;
+            pointer-events: none;
+            background: #FFD6D6; /* soft pinkish glow */
+        }
+        .logo-container::before { top: -20vmax; left: -10vmax; }
+        .logo-container::after  { bottom: -20vmax; right: -10vmax; animation-delay: 8s; }
+        @keyframes blobFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%     { transform: translate(2vmax, -3vmax) scale(1.05); }
+        }
+
+        .logo-box {
+            width: clamp(260px, 45vw, 680px); /* responsive size */
+            aspect-ratio: 19 / 6;
+            display: grid;
+            place-items: center;
+            transform: translateY(16px) scale(0.98);
+            opacity: 0;
+            transition: transform 800ms cubic-bezier(.2,.8,.2,1), opacity 800ms ease;
+            position: relative;
+            z-index: 1;           /* below arrow */
+            pointer-events: none; /* don't block arrow clicks */
+        }
+        .hero-loaded .logo-box { transform: none; opacity: 1; }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 4%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            animation: bounce 1.5s infinite;
+            z-index: 999;         /* ensure above logo */
+            pointer-events: auto;
+        }
+        .scroll-down svg { width: 100%; height: 100%; }
+        .scroll-down svg polyline { stroke: white; }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-12px); }
+            60% { transform: translateY(-6px); }
+        }
+
+        /* FEATURES SLIDER — red-tinted background */
+        .features-wrap { background: #ffffff; }
+        .features {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 36px 16px 8px;
+        }
+        .features .carousel-inner { height: 260px; }
+        .carousel .carousel-item { height: 100%; }
+
+        .slide-inner{
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 36px 16px;
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%);
+            border-radius: 20px;
+        }
+        .feature-title {
+            font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--brand-hover); /* darker red for titles */
+            margin-bottom: 8px;
+        }
+        .feature-sub {
+            font-size: clamp(0.95rem, 0.9rem + 0.4vw, 1.1rem);
+            color: #374151;
+            max-width: 780px;
+            margin: 0 auto;
+        }
+        .feature-icon { width: 44px; height: 44px; margin-bottom: 10px; }
+        .feature-icon path { stroke: #990000; } /* deep red strokes */
+
+        /* CONTENT */
+        .content-section {
+            text-align: center;
+            padding: 60px 20px 30px 20px;
+            margin-top: -20px;
+            color: var(--ink);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .content-section h1 {
+            font-size: clamp(2rem, 1.4rem + 2.2vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+            color: var(--brand-color);
+        }
+        .content-section p.lead {
+            font-size: clamp(1.05rem, 1rem + 0.5vw, 1.3rem);
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .export-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 30px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--brand-color);
+            text-transform: uppercase;
+        }
+        .export-image {
+            max-width: 280px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(204, 0, 0, 0.25);
+        }
+
+        /* Button (floats up on hover) — red gradient B */
+        .btn-gradient {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--brand-color), var(--brand-hover));
+            color: #fff !important;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 20px;
+            text-decoration: none;
+            box-shadow: 0 6px 16px rgba(0, 0, 204, 0.25);
+            transform: translateY(0);
+       			transition: transform 0.15s ease, 
+                box-shadow 0.2s ease, 
+                filter 0.2s ease, 
+                background 0.2s ease, 
+                opacity 0.15s ease;
+            will-change: transform;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(0, 0, 204, 0.35);
+            text-decoration: none;
+            filter: brightness(1.03);
+        }
+
+        /* Reveal on scroll */
+        .reveal { opacity: 0; transform: translateY(16px); transition: opacity 700ms ease, transform 700ms ease; }
+        .reveal.visible { opacity: 1; transform: none; }
+
+        /* Phones & tablets — logo at top with ~16px padding (kept) */
+        @media (max-width: 1280px) {
+            .logo-container {
+                justify-content: flex-start;
+                padding-top: 16px;
+            }
+        }
+
+	.right-actions{
+  	    display:flex;
+  	    align-items:center;
+  	    gap:10px;
+  	    margin-right:12px;
+	}
+
+	.lang-btn{
+  	    display:inline-block;
+  	    padding:8px 12px;
+  	    border-radius:10px;
+  	    font-weight:600;
+  	    text-decoration:none;
+  	    color:#fff;
+  	    background: rgba(255,255,255,0.18);
+  	    border:1px solid rgba(255,255,255,0.3);
+  	    backdrop-filter: blur(4px);
+  	    transition: transform .15s ease, background .2s ease, opacity .15s ease;s
+	}
+	.lang-btn:hover{
+  	    background: rgba(255,255,255,0.28);
+  	    transform: translateY(-1px);
+	}
+    .feature-diagram{
+  		 /* tweak as you like */
+  		height: auto;
+  		margin-bottom: 10px;
+	}
+    .carousel-control-prev-icon {
+        filter: invert(100%);
+    }
+	.carousel-control-next-icon {
+    	filter: invert(100%); /* turns white SVG to black */
+	}
+
+
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-box, .btn-gradient, .reveal { transition: none !important; }
+            .scroll-down { animation: none !important; }
+            .logo-container::before, .logo-container::after { animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+<!-- NAVBAR -->
+<div class="top-banner" id="topBanner">
+  <div class="nav-links-container" id="navLinksContainer">
+    <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
+    <div class="nav-links" id="navLinks">
+      <a href="home.php"><?php echo ($texts[$lang]['home']) ?></a>
+
+      <?php if (isset($_SESSION['user_id'])): ?>
+        <a href="products.php"><?php echo ($texts[$lang]['product']) ?></a>
+        <a href="cart.php"><?php echo ($texts[$lang]['cart']) ?></a>
+        <a href="orders.php"><?php echo ($texts[$lang]['orders']) ?></a>
+      <?php endif; ?>
+
+      <a href="about.php"><?php echo ($texts[$lang]['about']) ?></a>
+      <a href="source.php"><?php echo ($texts[$lang]['Source']) ?></a>
+    </div>
+  </div>
+
+  <div class="right-actions">
+  <div class="lang-dropdown">
+  <button class="lang-btn-icon" id="langIcon" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
+    <!-- Globe SVG -->
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M2 12h20M12 2c3 3 3 15 0 20M12 2c-3 3-3 15 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <div id="langMenu" class="lang-dropdown-content">
+    <a href="?lang=en" class="<?php echo ($lang==='en'?'active':''); ?>">English</a>
+    <a href="?lang=th" class="<?php echo ($lang==='th'?'active':''); ?>">ไทย</a>
+  </div>
+</div>
+  
+  <!-- Profile dropdown -->
+  <div class="profile-dropdown">
+    <img src="<?php echo file_exists($profilePicture) ? $profilePicture : 'avatar.png'; ?>" alt="Profile" class="profile-img" id="profileIcon">
+    <div id="dropdownMenu" class="profile-dropdown-content">
+      <?php if (isset($_SESSION["user_id"])): ?>
+        <a href="profile.php"><?php echo ($texts[$lang]['profile']) ?></a>
+        <a href="logout.php"><?php echo ($texts[$lang]['out']) ?></a>
+      <?php else: ?>
+        <a href="index.php"><?php echo ($texts[$lang]['login']) ?></a>
+      <?php endif; ?>
+    </div>
+  </div>
+  </div>
+  </div>
+
+<!-- HERO -->
+<div class="logo-container" id="hero">
+    <div class="logo-box">
+        <img src="logo_transparent.png" alt="Future X Logo">
+    </div>
+    <div class="scroll-down" id="scrollDown" aria-label="Scroll to features">
+        <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <circle cx="30" cy="30" r="28" stroke="white" stroke-width="4"/>
+            <polyline points="20,25 30,35 40,25" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+</div>
+
+<!-- FEATURES SLIDER -->
+<section class="features-wrap" id="features">
+    <div class="features container">
+        <div id="featuresCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="slide-inner">
+                        <div>
+                            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        						<!-- Top circle -->
+        						<circle cx="12" cy="6" r="3" style="stroke: var(--brand-color); fill: none;" stroke-width="2"/>
+        						<!-- Bottom left circle -->
+        						<circle cx="6" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="none"/>
+        						<!-- Bottom right circle -->
+        						<circle cx="18" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="none"/>
+        						<!-- Left diagonal line -->
+        						<line x1="11" y1="9" x2="7" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+        						<!-- Right diagonal line -->
+        						<line x1="13" y1="9" x2="17" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+      			    		</svg>
+                            <div class="feature-title"><?php echo ($texts[$lang]['sponsor']) ?></div>
+                            <div class="feature-sub"><?php echo ($texts[$lang]['dsponsor']) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="slide-inner">
+                        <div>
+                            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        						<!-- Top circle -->
+        						<circle cx="12" cy="6" r="3" style="stroke: var(--brand-color); fill: none;" stroke-width="2"/>
+        						<!-- Bottom left circle -->
+        						<circle cx="6" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="none"/>
+        						<!-- Bottom right circle -->
+        						<circle cx="18" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="none"/>
+        						<!-- Left diagonal line -->
+        						<line x1="11" y1="9" x2="7" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+        						<!-- Right diagonal line -->
+        						<line x1="13" y1="9" x2="17" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+      			    		</svg>
+
+                            <div class="feature-title"><?php echo ($texts[$lang]['binary']) ?></div>
+                            <div class="feature-sub"><?php echo ($texts[$lang]['dbinary']) ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-item">
+                    <div class="slide-inner">
+                        <div>
+                            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        						<!-- Top circle -->
+        						<circle cx="12" cy="6" r="3" style="stroke: var(--brand-color); fill: none;" stroke-width="2"/>
+        						<!-- Bottom left circle -->
+        						<circle cx="6" cy="18" r="3" stroke="var(--brand-color)" stroke-width="2" fill="var(--brand-color")/>
+        						<!-- Bottom right circle -->
+        						<circle cx="18" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="var(--brand-color")/>
+        						<!-- Left diagonal line -->
+        						<line x1="11" y1="9" x2="7" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+        						<!-- Right diagonal line -->
+        						<line x1="13" y1="9" x2="17" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
+      			    		</svg>
+                            <div class="feature-title"><?php echo ($texts[$lang]['matching']) ?></div>
+                            <div class="feature-sub"><?php echo ($texts[$lang]['dmatching']) ?></div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="carousel-item">
+                    <div class="slide-inner">
+                        <div>
+                            <svg viewBox="0 0 40 50" width="164" height="164" class="feature-icon" aria-hidden="true">
+    							<!-- Top circle -->
+  								<circle cx="20" cy="6" r="3" stroke="var(--brand-color)" stroke-width="2" fill="none"/>
+
+  								<!-- Vertical line -->
+  								<line x1="20" y1="9" x2="20" y2="21" stroke="var(--brand-color)" stroke-width="2"/>
+
+  <!-- Bottom circle -->
+  <circle cx="20" cy="24" r="3" stroke="var(--brand-color)" stroke-width="2" fill="none"/>
+
+  <!-- Left label -->
+  <text x="10" y="17" text-anchor="middle" font-size="6" fill="var(--brand-color)">20</text>
+</svg>
+
+
+                            <div class="feature-title"><?php echo ($texts[$lang]['uni']) ?></div>
+                            <div class="feature-sub"><?php echo ($texts[$lang]['duni']) ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#featuresCarousel" data-bs-slide="prev" aria-label="Previous slide">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#featuresCarousel" data-bs-slide="next" aria-label="Next slide">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+
+            <div class="carousel-indicators mt-3">
+                <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="0" class="active" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTENT -->
+<div class="content-section reveal" id="content">
+    <h1 class="reveal">👋 <?php echo $welcomeText; ?></h1>
+    <p class="lead reveal"><?php echo ($texts[$lang]['page']) ?></p>
+    <?php if (isset($_SESSION["user_id"])): ?>
+       <div class="reveal">
+    		<a href="products.php" class="btn-gradient mt-4">
+        	<?php echo ($texts[$lang]['btnproduct']); ?>
+    		</a>
+		</div>
+	<?php else: ?>
+    	<div class="reveal">
+            <a href="index.php" class="btn-gradient mt-4">
+                <?php echo ($texts[$lang]['login2']); ?>
+            </a>
+    <?php endif; ?>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Profile dropdown
+    const profileIcon = document.getElementById("profileIcon");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    if (profileIcon) {
+        profileIcon.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+        });
+        document.addEventListener("click", () => { dropdownMenu.style.display = "none"; });
+    }
+
+    // Navbar scroll state (kept, but background remains red)
+    const topBanner = document.getElementById("topBanner");
+    window.addEventListener("scroll", () => {
+        topBanner.classList.toggle("scrolled", window.scrollY > 10);
+    });
+
+    // Scroll down button
+    const scrollDown = document.getElementById("scrollDown");
+    if (scrollDown) {
+        scrollDown.addEventListener("click", () => {
+            const target = document.getElementById("features");
+            if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }
+
+    // Nav scroll indicator (defensive)
+    const navLinksContainer = document.getElementById("navLinksContainer");
+    const navScrollIndicator = document.getElementById("navScrollIndicator");
+    function updateScrollIndicator() {
+      if (!navLinksContainer || !navScrollIndicator) return;
+      const maxScroll = navLinksContainer.scrollWidth - navLinksContainer.clientWidth;
+      const currentScroll = navLinksContainer.scrollLeft;
+      const progress = maxScroll > 0 ? (currentScroll / maxScroll) * 100 : 0;
+      navScrollIndicator.style.width = progress + "%";
+    }
+    if (navLinksContainer) {
+      navLinksContainer.addEventListener("scroll", updateScrollIndicator);
+      window.addEventListener("resize", updateScrollIndicator);
+      updateScrollIndicator();
+    }
+
+    // Hero entrance
+    window.addEventListener('DOMContentLoaded', () => {
+        document.body.classList.add('hero-loaded');
+    });
+
+    // Reveal on scroll (current: one-time)
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+</script>
+<script>
+// Language dropdown
+const langIcon = document.getElementById("langIcon");
+const langMenu = document.getElementById("langMenu");
+const profileIconEl = document.getElementById("profileIcon");
+const profileMenuEl = document.getElementById("dropdownMenu");
+
+if (langIcon) {
+    langIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // close profile menu if open
+        if (profileMenuEl) 
+            profileMenuEl.style.display = "none";
+        // toggle language menu
+        const open = langMenu.style.display === "block";
+        langMenu.style.display = open ? "none" : "block";
+        langIcon.setAttribute("aria-expanded", open ? "false" : "true");
+    });
+}
+
+// Close both menus when clicking outside
+document.addEventListener("click", () => {
+    if (langMenu) 
+        langMenu.style.display = "none";
+    if (profileMenuEl) 
+        profileMenuEl.style.display = "none";
+});
+
+// Optional: close on Escape key
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        if (langMenu) 
+            langMenu.style.display = "none";
+        if (profileMenuEl) 
+            profileMenuEl.style.display = "none";
+        if (langIcon) 
+            langIcon.setAttribute("aria-expanded","false");
+    }
+});
+</script>
+</body>
+</html>

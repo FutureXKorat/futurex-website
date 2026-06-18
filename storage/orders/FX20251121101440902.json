@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20251121101440902",
+    "user_id": 6,
+    "user_name": "",
+    "user_email": "",
+    "delivery": "pickup",
+    "address": "",
+    "items": [
+        {
+            "name": "HM01 Happymeal",
+            "price": 1300,
+            "qty": 2
+        }
+    ],
+    "amounts": {
+        "subtotal": 2600,
+        "shipping": 0,
+        "total": 2600
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20251121101440902_1763738392.png",
+    "created_at": "2025-11-21T10:19:52-05:00"
+}

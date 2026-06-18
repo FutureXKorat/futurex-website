@@ -1,0 +1,460 @@
+<?php
+// file: promptpay.php
+declare(strict_types=1);
+ini_set('display_errors', '1'); error_reporting(E_ALL);
+session_start();
+include 'database.php'; // for $lang (optional)
+
+// must arrive from checkout
+if (empty($_SESSION['pending_checkout'])) {
+    header('Location: checkout.php'); exit;
+}
+
+$order = $_SESSION['pending_checkout'];
+$order_id   = $order['order_id'];
+$totalTHB   = (float)($order['amounts']['total'] ?? 0);
+$delivery   = $order['delivery'] ?? 'pickup';
+$address    = $order['address'] ?? '';
+$items      = $order['items'] ?? [];
+
+// storage (auto-create)
+$baseDir   = __DIR__ . '/storage';
+$ordersDir = $baseDir . '/orders';
+$slipsDir  = $baseDir . '/slips';
+if (!is_dir($ordersDir)) { @mkdir($ordersDir, 0755, true); }
+if (!is_dir($slipsDir))  { @mkdir($slipsDir, 0755, true); }
+
+// i18n (minimal)
+$texts = [
+  'en' => [
+    'title' => 'Pay via PromptPay',
+    'scan'  => 'Scan & Pay',
+    'ppid'  => 'PromptPay ID',
+    'amt'   => 'Amount',
+    'addr'  => 'Shipping address',
+    'upload'=> 'Upload payment slip',
+    'submit'=> 'I have paid',
+    'note'  => 'We will review your payment and confirm your order.',
+    'order' => 'Order',
+    'back'  => 'Back to Checkout',
+    'err_nofile' => 'Please upload your payment slip before confirming payment.',
+    'err_type'   => 'Unsupported file type. Please upload JPG, PNG, WEBP, GIF, HEIC, or HEIF.',
+    'err_size'   => 'File is too large. Max size is 5 MB.',
+    'err_move'   => 'Could not save the file. Please try again.',
+  ],
+  'th' => [
+    'title' => 'ชำระเงินด้วยพร้อมเพย์',
+    'scan'  => 'สแกนเพื่อชำระเงิน',
+    'ppid'  => 'พร้อมเพย์',
+    'amt'   => 'ยอดชำระ',
+    'addr'  => 'ที่อยู่จัดส่ง',
+    'upload'=> 'อัปโหลดสลิปโอนเงิน',
+    'submit'=> 'ชำระเงินแล้ว',
+    'note'  => 'เราจะตรวจสอบการชำระเงินและยืนยันคำสั่งซื้อ',
+    'order' => 'คำสั่งซื้อ',
+    'back'  => 'กลับไปหน้าชำระเงิน',
+    'err_nofile' => 'กรุณาอัปโหลดสลิปการโอนเงินก่อนยืนยันการชำระเงิน',
+    'err_type'   => 'ประเภทไฟล์ไม่รองรับ โปรดอัปโหลด JPG, PNG, WEBP, GIF, HEIC หรือ HEIF',
+    'err_size'   => 'ไฟล์มีขนาดใหญ่เกินไป ขนาดสูงสุด 5 MB',
+    'err_move'   => 'ไม่สามารถบันทึกไฟล์ได้ โปรดลองอีกครั้ง',
+  ],
+];
+$t = $texts[$lang] ?? $texts['en'];
+
+// TODO: put your PromptPay ID/number here (phone or e-Wallet ID)
+$PROMPTPAY_ID = '061-969-9249';
+
+$errors = [];           // <-- collect errors for display
+$slipPathWeb = '';      // relative path for viewing if saved
+
+// handle submit (save order JSON + slip)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Must have a file
+    if (empty($_FILES['slip']['name']) || !is_uploaded_file($_FILES['slip']['tmp_name'])) {
+        $errors[] = $t['err_nofile'];
+    } else {
+        $okType = ['image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'];
+        $size   = (int)$_FILES['slip']['size'];
+
+        // MIME sniff
+        $mime = '';
+        if (function_exists('finfo_open')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $buf  = @file_get_contents($_FILES['slip']['tmp_name']);
+                $mime = $buf !== false ? finfo_buffer($finfo, $buf) : '';
+                @finfo_close($finfo);
+            }
+        }
+        if (!$mime) {
+            $mime = $_FILES['slip']['type'] ?: 'application/octet-stream';
+        }
+
+        if (!in_array($mime, $okType, true)) {
+            $errors[] = $t['err_type'];
+        }
+        if ($size > 5*1024*1024) {
+            $errors[] = $t['err_size'];
+        }
+
+        // Move only when no validation errors
+        if (!$errors) {
+            $ext = pathinfo($_FILES['slip']['name'], PATHINFO_EXTENSION) ?: 'jpg';
+            $ext = preg_replace('/[^a-z0-9.]/i','', $ext);
+            $fname = $order_id . '_' . time() . '.' . $ext;
+            $dest  = $slipsDir . '/' . $fname;
+            if (move_uploaded_file($_FILES['slip']['tmp_name'], $dest)) {
+                $slipPathWeb = 'storage/slips/' . $fname;
+            } else {
+                $errors[] = $t['err_move'];
+            }
+        }
+    }
+
+    // If valid, persist and redirect; otherwise stay and show errors
+    if (!$errors) {
+        $record = [
+            'order_id'   => $order_id,
+            'user_id'    => (int)($_SESSION['user_id'] ?? 0),
+            'username'  => (string)($_SESSION['username']),
+            'user_email' => (string)($_SESSION['user_email'] ?? $_SESSION['email'] ?? ''),
+            'delivery'   => $delivery,
+            'address'    => $address,
+            'items'      => $items,
+            'amounts'    => $order['amounts'],
+            'status'     => 'awaiting_review', // admin will set to 'paid' or 'rejected'
+            'slip'       => $slipPathWeb,
+            'created_at' => date('c'),
+        ];
+        @file_put_contents($ordersDir . '/' . $order_id . '.json', json_encode($record, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+
+        // clear cart
+        $_SESSION['cart'] = [];
+        // keep minimal info for thank you
+        $_SESSION['last_submitted_order'] = $order_id;
+        unset($_SESSION['pending_checkout']);
+        
+        require_once __DIR__ . '/send_order.php';
+			try {
+    			send_order_mail($order_id); // ignore result; don't block user
+			} catch (\Throwable $e) {
+   				 // Optional: log it
+    			// error_log('send_order failed: '.$e->getMessage());
+			}
+
+        header('Location: pay_success.php');
+        exit;
+    }
+}
+?>
+<!doctype html>
+<html lang="<?php echo htmlspecialchars($lang); ?>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><?php echo htmlspecialchars($t['title']); ?></title>
+<link rel="icon" type="image/png" href="logo_transparent_onlyblack.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body{
+      margin:0;
+      font-family:Inter,sans-serif;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#E6F0FF,#CCE0FF,#FFFFFF);
+      padding:40px 20px
+    }
+  .cardx {
+      background:rgba(255,255,255,.25);
+      backdrop-filter:blur(12px);
+      border-radius:20px;
+      box-shadow:0 12px 32px rgba(0,0,0,.15);
+      padding:22px;max-width:940px;width:100%
+    }
+  .hdr {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px
+    }
+  .ttl {
+      font-size:1.3rem;
+      font-weight:700
+    }
+  .qr{
+      display:grid;
+      place-items:center;
+      background:#fff;
+      border-radius:16px;
+      padding:12px;
+      border:1px solid rgba(0,0,0,.06)
+    }
+    .qr img{
+        max-width:50%;
+        max-height:50%;
+    }
+  .muted{
+      color:#555
+    }
+  .ppid{
+      font-weight:700;
+      font-size:1.1rem
+    }
+  .btn-modern{
+    display:block;
+    width:100%;
+    margin-top:12px;
+    padding:14px;
+    font-size:1.1rem;
+    font-weight:600;
+    border-radius:14px;
+    transition:all .3s ease;
+    border:0;
+  }
+  .btn-modern.btn-primary{
+    background:linear-gradient(135deg,#007BFF,#0056b3);
+    color:#fff;
+  }
+  .btn-modern.btn-primary:hover{
+    background:linear-gradient(135deg,#0056b3,#003f7f);
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
+  .btn-modern:focus-visible{
+    outline:3px solid rgba(0,123,255,.5);
+    outline-offset:2px;
+  }
+  .btn-modern:disabled{
+    opacity:.65; cursor:not-allowed; transform:none; box-shadow:none;
+  }
+
+  /* Custom file UI */
+  .file-input-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .file-input-row .form-label {
+    display: inline-block;
+    margin-bottom: 0;
+  }
+  .choose-btn {
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    margin: 0;
+    vertical-align: middle;
+  }
+  .choose-btn:hover {
+    background: #f3f4f6;
+  }
+  .file-label {
+    display: inline-block;
+    color: #4b5563;
+    vertical-align: middle;
+    margin-left: 0;
+  }
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .inline-file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .inline-file-row .form-label {
+    display: inline-block;
+    margin: 0;
+    line-height: 1.25;
+  }
+  .inline-file-row .choose-btn { /* keep inline */
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    margin: 0;
+    vertical-align: middle;
+  }
+  .inline-file-row .choose-btn:hover { background: #f3f4f6; }
+  .inline-file-row .file-label {
+    display: inline-block;
+    color: #4b5563;
+    margin: 0;
+    vertical-align: middle;
+  }
+  .file-inline {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    white-space: nowrap !important;
+  }
+  .choose-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-top: 6px !important; /* fixed spacing */
+  }
+  .file-label {
+    display: inline-block !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+  }
+</style>
+</head>
+<body>
+<div class="cardx">
+  <div class="hdr">
+    <div class="ttl"><?php echo htmlspecialchars($t['title']); ?></div>
+    <div class="muted">#<?php echo htmlspecialchars($order_id); ?></div>
+  </div>
+
+  <?php if ($errors): ?>
+    <div class="alert alert-danger" role="alert">
+      <ul class="mb-0">
+        <?php foreach ($errors as $e): ?>
+          <li><?php echo htmlspecialchars($e); ?></li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+  <?php endif; ?>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <div class="qr">
+        <!-- Put a static PNG of your PromptPay QR here if you have one -->
+        <div class="text-center p-3">
+          <div class="ppid"><?php echo htmlspecialchars($t['ppid']); ?>: <?php echo htmlspecialchars($PROMPTPAY_ID); ?></div>
+          <div class="mt-2"><?php echo htmlspecialchars($t['amt']); ?>: <strong><?php echo number_format($totalTHB,2); ?> ฿</strong></div>
+          <div class="small mt-3 text-muted"><?php echo htmlspecialchars($t['scan']); ?></div>
+          <div class="mt-3">
+            <img src="code.jpg" alt="PromptPay QR">
+          </div>
+        </div>
+      </div>
+      <?php if ($delivery === 'ship' && $address): ?>
+      <div class="mt-3">
+        <div class="muted mb-1"><?php echo htmlspecialchars($t['addr']); ?></div>
+        <div class="border rounded p-2 bg-light"><?php echo nl2br(htmlspecialchars($address)); ?></div>
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        <div class="mb-3">
+          <!-- label sits on its own line -->
+          <label class="form-label d-block mb-1">
+            <?php echo htmlspecialchars($t['upload']); ?>
+          </label>
+
+          <!-- real file input -->
+          <input
+            type="file"
+            id="slip"
+            name="slip"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,image/*"
+            class="visually-hidden"
+            required
+          >
+
+          <!-- button + filename on the SAME line -->
+          <div class="file-inline">
+            <label for="slip" class="choose-btn mb-0">
+              <?php echo ($lang === 'en') ? 'Choose Slip' : 'เลือกสลิป'; ?>
+            </label>
+            <span id="fileLabel" class="file-label">
+              <?php echo ($lang === 'en') ? 'No file chosen' : 'ไม่มีไฟล์ที่ท่านได้เลือก'; ?>
+            </span>
+          </div>
+        </div>
+
+        <button id="submitBtn" type="submit" class="btn-modern btn-primary" disabled>
+          <?php echo htmlspecialchars($t['submit']); ?>
+        </button>
+
+        <div class="form-text mt-2"><?php echo htmlspecialchars($t['note']); ?></div>
+        <div class="mt-3"><a href="checkout.php">&larr; <?php echo htmlspecialchars($t['back']); ?></a></div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var input = document.getElementById('slip');
+    var label = document.getElementById('fileLabel');
+    var submitBtn = document.getElementById('submitBtn');
+
+    var allowed = [
+      'image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'
+    ];
+    var maxSize = 5 * 1024 * 1024;
+
+    function setDisabled(state) {
+      if (submitBtn) submitBtn.disabled = state;
+    }
+
+    // Start disabled until a valid file is chosen
+    setDisabled(true);
+
+    if (!input || !label) return;
+
+    input.addEventListener('change', function () {
+      if (!input.files || !input.files[0]) {
+        label.textContent = <?php echo json_encode(($lang === 'en') ? 'No file chosen' : 'ไม่มีไฟล์ที่ท่านได้เลือก'); ?>;
+        setDisabled(true);
+        return;
+      }
+
+      var f = input.files[0];
+      var kb = Math.round(f.size / 1024);
+
+      // Client-side checks (extra UX; server-side still authoritative)
+      if (f.size > maxSize) {
+        label.textContent = <?php echo json_encode($t['err_size']); ?> + ' (' + kb.toLocaleString() + ' KB)';
+        setDisabled(true);
+        return;
+      }
+      // Some browsers may not set type correctly; still try:
+      if (f.type && allowed.indexOf(f.type) === -1) {
+        label.textContent = <?php echo json_encode($t['err_type']); ?>;
+        setDisabled(true);
+        return;
+      }
+
+      label.textContent = f.name + ' (' + kb.toLocaleString() + ' KB)';
+      setDisabled(false);
+    });
+  })();
+</script>
+</body>
+</html>

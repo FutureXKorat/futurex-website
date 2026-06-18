@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20260206214333683",
+    "user_id": 1,
+    "username": "Seven",
+    "user_email": "",
+    "delivery": "ship",
+    "address": "Hdyealhsk he",
+    "items": [
+        {
+            "name": "CD11 Chef Dee Purple Sweet Potato",
+            "price": 1580,
+            "qty": 1
+        }
+    ],
+    "amounts": {
+        "subtotal": 1580,
+        "shipping": 50,
+        "total": 1630
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20260206214333683_1770432283.jpeg",
+    "created_at": "2026-02-06T21:44:43-05:00"
+}

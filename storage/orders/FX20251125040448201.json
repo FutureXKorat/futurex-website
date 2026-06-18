@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20251125040448201",
+    "user_id": 4,
+    "username": "New789",
+    "user_email": "",
+    "delivery": "pickup",
+    "address": "",
+    "items": [
+        {
+            "name": "CD01 Chef Dee Matcha",
+            "price": 1580,
+            "qty": 1
+        }
+    ],
+    "amounts": {
+        "subtotal": 1580,
+        "shipping": 0,
+        "total": 1580
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20251125040448201_1764061493.PNG",
+    "created_at": "2025-11-25T04:04:53-05:00"
+}

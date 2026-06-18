@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20251125034507401",
+    "user_id": 1,
+    "user_name": "",
+    "user_email": "",
+    "delivery": "pickup",
+    "address": "",
+    "items": [
+        {
+            "name": "PDS03 Oxylight Fiber",
+            "price": 490,
+            "qty": 1
+        }
+    ],
+    "amounts": {
+        "subtotal": 490,
+        "shipping": 0,
+        "total": 490
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20251125034507401_1764060313.PNG",
+    "created_at": "2025-11-25T03:45:13-05:00"
+}

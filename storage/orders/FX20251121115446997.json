@@ -1,0 +1,23 @@
+{
+    "order_id": "FX20251121115446997",
+    "user_id": 2,
+    "user_name": "",
+    "user_email": "",
+    "delivery": "pickup",
+    "address": "",
+    "items": [
+        {
+            "name": "PDS01 NAD PNN U",
+            "price": 980,
+            "qty": 1
+        }
+    ],
+    "amounts": {
+        "subtotal": 980,
+        "shipping": 0,
+        "total": 980
+    },
+    "status": "awaiting_review",
+    "slip": "storage\/slips\/FX20251121115446997_1763744110.jpeg",
+    "created_at": "2025-11-21T11:55:10-05:00"
+}
