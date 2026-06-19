@@ -6,4 +6,7 @@ RUN docker-php-ext-install mysqli
 # Copy application code into the web root
 COPY . /app
 
-EXPOSE 8080
+# FrankenPHP runs on port 80 by default
+EXPOSE 80
+
+ENV SERVER_NAME=":80"
