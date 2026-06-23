@@ -38,7 +38,7 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], $__allowedLangs, true)) {
     setcookie('lang', $__chosen, [
         'expires'  => $__oneYear,
         'path'     => '/',
-        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure'   => true,
         'httponly' => false,
         'samesite' => 'Lax',
     ]);
@@ -62,26 +62,3 @@ if (! $conn->set_charset($charset)) {
     $conn->query("SET NAMES utf8mb4");
     $conn->query("SET CHARACTER SET utf8mb4");
 }
-
-// --- Admin setup (simple: by username exact match) ---
-$ADMIN_USERNAMES = ['Seven']; // <-- change this
-
-$currentUser = null;
-$isAdmin = false;
-
-if (!empty($_SESSION['user_id'])) {
-    $uid = (int)$_SESSION['user_id'];
-    if ($stmt = $conn->prepare("SELECT id, username, name, email FROM users WHERE id = ?")) {
-        $stmt->bind_param("i", $uid);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($res && $row = $res->fetch_assoc()) {
-            $currentUser = $row;
-            $isAdmin = in_array($row['username'], $ADMIN_USERNAMES, true);
-        }
-        $stmt->close();
-    }
-    $_SESSION['is_admin'] = $isAdmin;
-}
-
-// (no closing PHP tag to avoid accidental output)
