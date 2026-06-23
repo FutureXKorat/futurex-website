@@ -1,62 +1,55 @@
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require 'PHPMailer/Exception.php';
-require 'PHPMailer/PHPMailer.php';
-require 'PHPMailer/SMTP.php';
-
 include 'database.php';
 
 function sendOTPEmail($recipientEmail, $otp) {
-    $mail = new PHPMailer(true);
     global $lang;
 
-    try {
-        // 1) Load secret config FIRST (outside web root)
-        $config = require __DIR__ . '/secure-config/futurex_mail.php';
+    // 1) Load config
+    $config = require __DIR__ . '/secure-config/futurex_mail.php';
 
-        // 2) SMTP configuration (from secret config)
-        $mail->isSMTP();
-        $mail->Host       = $config['SMTP_HOST'];
-        $mail->SMTPAuth   = (bool)$config['SMTP_AUTH'];
-        $mail->Username   = $config['SMTP_USER'];
-        $mail->Password   = $config['SMTP_PASS'];
-        $mail->SMTPSecure = $config['SMTP_SECURE']; // 'tls' or 'ssl'
-        $mail->Port       = (int)$config['SMTP_PORT'];
-        $mail->CharSet    = 'UTF-8';
-        // $mail->SMTPDebug = 0; // keep 0 in production
-
-        // 3) Headers & recipients
-        $mail->setFrom($config['FROM_EMAIL'], $config['FROM_NAME_OTP']);
-        $mail->addAddress($recipientEmail);
-
-        // 4) Content
-        $mail->isHTML(true);
-        $mail->Subject = ($lang === 'en') ? 'Your Future X OTP Code' : 'รหัส OTP Future X ของคุณ';
-        if ($lang === 'en') {
-        $mail->Body = "
-            Your OTP code is: <b>$otp</b><br><br>
-            Please do not reply. This is an auto-message.<br><br>
-	    	Your OTP code will expire in <b>5 mins</b>
-        ";
-        $mail->AltBody = "Your OTP code is: $otp";
-        }elseif ($lang === 'th') {
-            $mail->Body = "
+    // 2) Build email content
+    if ($lang === 'th') {
+        $subject = 'รหัส OTP Future X ของคุณ';
+        $html    = "
             รหัส OTP ของคุณคือ: <b>$otp</b><br><br>
             กรุณาอย่าตอบกลับ ข้อความนี้เป็นข้อความอัตโนมัติ<br><br>
-	        รหัส  OTP ของคุณจะหมดอายุภายใน <b>5 นาที</b>
+            รหัส OTP ของคุณจะหมดอายุภายใน <b>5 นาที</b>
         ";
-        $mail->AltBody = "รหัส OTP ของคุณคือ: $otp";
-        }
+    } else {
+        $subject = 'Your Future X OTP Code';
+        $html    = "
+            Your OTP code is: <b>$otp</b><br><br>
+            Please do not reply. This is an auto-message.<br><br>
+            Your OTP code will expire in <b>5 mins</b>
+        ";
+    }
 
-        // 5) Send
-        $mail->send();
+    // 3) Send via Resend API
+    $payload = json_encode([
+        'from'    => $config['FROM_NAME_OTP'] . ' <' . $config['FROM_EMAIL'] . '>',
+        'to'      => [$recipientEmail],
+        'subject' => $subject,
+        'html'    => $html,
+    ]);
+
+    $ch = curl_init('https://api.resend.com/emails');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $config['RESEND_API_KEY'],
+        'Content-Type: application/json',
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    // 4) Check result
+    if ($httpCode === 200 || $httpCode === 201) {
         return true;
-
-    } catch (Exception $e) {
-        // Log the detailed error; avoid exposing internals to users
-        error_log('Mailer Error (sendOTPEmail): ' . $mail->ErrorInfo);
+    } else {
+        error_log('Resend Error (sendOTPEmail): HTTP ' . $httpCode . ' — ' . $response);
         return false;
     }
 }
