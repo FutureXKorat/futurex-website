@@ -17,7 +17,7 @@ return [
     'DB_HOST' => 'interchange.proxy.rlwy.net',
     'DB_USER' => 'root',
     'DB_PASS' => 'bGuEFpSXnxEDjpcmhmiwvVIlcvYxUahW',
-    'DB_NAME' => 'FutureX',
+    'DB_NAME' => 'railway',
     'DB_PORT' => 39772,
     'DB_CHARSET' => 'utf8mb4',
 ];
