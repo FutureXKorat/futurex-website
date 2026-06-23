@@ -1,9 +1,9 @@
 {
-	auto_https off
 	frankenphp
+	auto_https off
 }
 
-http://localhost:80 {
+:80 {
 	root * /app
 	php_server
 }
