@@ -18,7 +18,7 @@ function sendResetEmail($email, $token) {
 
     try {
         // 1) Load secret config FIRST (outside web root)
-        $config = require '/home/vol13_6/infinityfree.com/if0_39993218/htdocs/secure-config/futurex_mail.php';
+        $config = require '/secure-config/futurex_mail.php';
         // For XAMPP (localhost) practice, use this instead:
         // $config = require 'C:/xampp/secure-config/canasia_mail.php';
 
