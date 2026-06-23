@@ -1,8 +1,9 @@
 {
 	auto_https off
+	admin off
 }
 
-http:// {
+http://:80 {
 	root * /app
 	php_server
 }
