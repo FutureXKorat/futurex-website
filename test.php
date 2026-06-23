@@ -1,2 +1,3 @@
 <?php
-echo "Railway is working!";
+echo "hello world";
+exit;
