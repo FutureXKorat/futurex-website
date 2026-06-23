@@ -10,5 +10,3 @@ COPY Caddyfile /etc/caddy/Caddyfile
 COPY . /app
 
 EXPOSE 80
-
-ENV SERVER_NAME=":80"
