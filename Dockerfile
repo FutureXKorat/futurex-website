@@ -4,7 +4,7 @@ FROM dunglas/frankenphp
 RUN docker-php-ext-install mysqli
 
 # Copy Caddyfile
-COPY Caddyfile /etc/caddy/Caddyfile
+COPY Caddyfile /app/Caddyfile
 
 # Copy application code into the web root
 COPY . /app
