@@ -14,9 +14,7 @@ function sendOTPEmail($recipientEmail, $otp) {
 
     try {
         // 1) Load secret config FIRST (outside web root)
-        $config = require '/secure-config/futurex_mail.php';
-        // For XAMPP (localhost) practice, use this instead:
-        // $config = require 'C:/xampp/secure-config/futurex_mail.php';
+        $config = require __DIR__ . '/secure-config/futurex_mail.php';
 
         // 2) SMTP configuration (from secret config)
         $mail->isSMTP();
