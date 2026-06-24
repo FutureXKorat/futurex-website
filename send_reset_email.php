@@ -30,7 +30,7 @@ function sendResetEmail($email, $token) {
 
     // 3) Send via Resend API
     $payload = json_encode([
-        'from'    => $config['FROM_NAME_RESET'] . ' <' . $config['FROM_EMAIL'] . '>',
+        'from'    => $config['FROM_NAME_RESET'] . ' <' . $config['FROM_EMAIL_RESET'] . '>',
         'to'      => [$email],
         'subject' => $subject,
         'html'    => $html,

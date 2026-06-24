@@ -11,7 +11,7 @@ $cfgPath = __DIR__ . '/secure-config/futurex_mail.php';
 $mailCfg = is_file($cfgPath) ? require $cfgPath : [];
 
 $ADMIN_EMAIL    = (string)($mailCfg['ADMIN_EMAIL']     ?? 'futurexkorat@gmail.com');
-$FROM_EMAIL     = (string)($mailCfg['FROM_EMAIL']      ?? 'onboarding@resend.dev');
+$FROM_EMAIL     = (string)($mailCfg['FROM_EMAIL_ORDER'] ?? 'order@futurexthailand.com');
 $FROM_NAME      = (string)($mailCfg['FROM_NAME_ORDER'] ?? 'Future X Order');
 $RESEND_API_KEY = (string)($mailCfg['RESEND_API_KEY']  ?? '');
 

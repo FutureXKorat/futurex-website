@@ -26,7 +26,7 @@ function sendOTPEmail($recipientEmail, $otp) {
 
     // 3) Send via Resend API
     $payload = json_encode([
-        'from'    => $config['FROM_NAME_OTP'] . ' <' . $config['FROM_EMAIL'] . '>',
+        'from'    => $config['FROM_NAME_OTP'] . ' <' . $config['FROM_EMAIL_OTP'] . '>',
         'to'      => [$recipientEmail],
         'subject' => $subject,
         'html'    => $html,
