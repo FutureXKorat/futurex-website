@@ -158,7 +158,6 @@ function send_order_mail(string $orderId): array {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
     if ($httpCode === 200 || $httpCode === 201) {
         return ['ok' => true];
