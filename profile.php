@@ -1,5 +1,4 @@
 <?php
-session_start();
 include 'database.php';
 
 $texts = [
@@ -35,7 +34,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$userId = $_SESSION['user_id'];
+$userId = (int)$_SESSION['user_id'];
 $success = "";
 $errors = [];
 
@@ -44,9 +43,11 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
 
-$sql = "SELECT * FROM users WHERE id = $userId";
-$result = $conn->query($sql);
-$user = $result->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
     $data = $_POST['cropped_image'];
