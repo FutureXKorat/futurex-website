@@ -147,9 +147,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 100;
             background: rgba(255, 255, 255, 0.7);
             border: none;
             padding: 6px 12px;

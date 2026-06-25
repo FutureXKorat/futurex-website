@@ -104,9 +104,10 @@ $texts = [
 
         /* Language switch button */
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 100;
             background: rgba(255, 255, 255, 0.7);
             border: none;
             padding: 6px 12px;
@@ -115,7 +116,7 @@ $texts = [
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-	    	color: blue;
+	    	color: var(--brand-color);
         }
         .lang-switch:hover {
             background: rgba(255, 255, 255, 0.9);

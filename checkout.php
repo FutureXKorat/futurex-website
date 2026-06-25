@@ -210,9 +210,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .summary-row.total { border-top:1px solid rgba(0,0,0,.1); margin-top:6px; padding-top:10px; font-weight:700; font-size:1.15rem; }
 
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 100;
             background: rgba(255, 255, 255, 0.7);
             border: none;
             padding: 6px 12px;
@@ -221,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-	    	color: blue;
+	    	color: var(--brand-color);
         }
         .lang-switch:hover {
             background: rgba(255, 255, 255, 0.9);

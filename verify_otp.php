@@ -184,9 +184,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn-modern.btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand-hover)); }
         .btn-modern.btn-primary:hover{ background:linear-gradient(135deg,var(--brand-hover),var(--brand-deep)); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,123,255,.35); }
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 100;
             background: rgba(255, 255, 255, 0.7);
             border: none;
             padding: 6px 12px;
@@ -195,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-	    	color: blue;
+	    	color: var(--brand-color);
         }
         .lang-switch:hover {
             background: rgba(255, 255, 255, 0.9);
