@@ -239,7 +239,7 @@ $texts = [
   	    background: rgba(255,255,255,0.18);
   	    border:1px solid rgba(255,255,255,0.3);
   	    backdrop-filter: blur(4px);
-  	    transition: transform .15s ease, background .2s ease, opacity .15s ease;s
+  	    transition: transform .15s ease, background .2s ease, opacity .15s ease;
 	}
 	.lang-btn:hover{
   	    background: rgba(255,255,255,0.28);

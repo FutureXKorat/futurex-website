@@ -293,7 +293,7 @@ $texts = [
             margin: 0 auto;
         }
         .feature-icon { width: 44px; height: 44px; margin-bottom: 10px; }
-        .feature-icon path { stroke: #990000; } /* deep red strokes */
+        .feature-icon path { stroke: var(--brand-color); }
 
         /* CONTENT */
         .content-section {
@@ -392,7 +392,7 @@ $texts = [
   	    background: rgba(255,255,255,0.18);
   	    border:1px solid rgba(255,255,255,0.3);
   	    backdrop-filter: blur(4px);
-  	    transition: transform .15s ease, background .2s ease, opacity .15s ease;s
+  	    transition: transform .15s ease, background .2s ease, opacity .15s ease;
 	}
 	.lang-btn:hover{
   	    background: rgba(255,255,255,0.28);
@@ -490,9 +490,9 @@ $texts = [
         						<!-- Top circle -->
         						<circle cx="12" cy="6" r="3" style="stroke: var(--brand-color); fill: none;" stroke-width="2"/>
         						<!-- Bottom left circle -->
-        						<circle cx="6" cy="18" r="3" stroke="var(--brand-color)" stroke-width="2" fill="var(--brand-color")/>
+        						<circle cx="6" cy="18" r="3" stroke="var(--brand-color)" stroke-width="2" fill="var(--brand-color)"/>
         						<!-- Bottom right circle -->
-        						<circle cx="18" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="var(--brand-color")/>
+        						<circle cx="18" cy="18" r="3" style="stroke: var(--brand-color);" stroke-width="2" fill="var(--brand-color)"/>
         						<!-- Left diagonal line -->
         						<line x1="11" y1="9" x2="7" y2="15" style="stroke: var(--brand-color);" stroke-width="2"/>
         						<!-- Right diagonal line -->
@@ -561,6 +561,7 @@ $texts = [
             <a href="index.php" class="btn-gradient mt-4">
                 <?php echo ($texts[$lang]['login2']); ?>
             </a>
+        </div>
     <?php endif; ?>
 </div>
 

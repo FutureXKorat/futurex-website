@@ -222,7 +222,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
             background: #f8fafc;
         }
         /* 🔴 Color sample swaps blue for brand red */
-        .product-image.color { background: linear-gradient(135deg, #F59E0B, #10B981, #FF0000); border:2px dashed rgba(255,255,255,.6); }
+        .product-image.color { background: linear-gradient(135deg, #F59E0B, #10B981, var(--brand-color)); border:2px dashed rgba(255,255,255,.6); }
 
         .product-name { margin-top:8px; font-weight:700; text-align:center; }
 

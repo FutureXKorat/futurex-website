@@ -107,6 +107,9 @@ echo json_encode(['ok'=>true,'removed'=>true,'empty'=>empty($items),'cartTotal'=
 
 
 // clamp to stock if known; unknown => unlimited
+if (!function_exists('base_stock')) {
+    function base_stock($name, $price) { return 0; } // 0 = unknown, treated as unlimited
+}
 $stock = base_stock($name, $price);
 $max = $stock > 0 ? $stock : PHP_INT_MAX; // why: avoid locking when unknown
 $qty = max(1, min($qtyIn, $max));
@@ -272,7 +275,7 @@ exit; // important so the HTML below is not output for AJAX
         .qty-edit{ font-size:.95rem; display:flex; align-items:center; gap:8px; }
         .qty-edit input[type="number"]{ width:90px; text-align:center; border-radius:10px; border:1px solid #d1d5db; padding:6px 8px; font-weight:600; }
         .cap-note{ font-size:.85rem; color:#6b7280; min-height:1.2em; }
-        .cart-row a.delete{ color:red; text-decoration:none; margin-left:8px; font-size:1.2rem; }
+        .cart-row a.delete{ color:var(--brand-color); text-decoration:none; margin-left:8px; font-size:1.2rem; }
         .line-total{ min-width:100px; display:inline-block; text-align:right; }
         .total-line{ text-align:right; font-weight:600; font-size:1.3rem; margin-top:20px; }
 

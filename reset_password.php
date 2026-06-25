@@ -80,9 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --brand-red:#007BFF;
-	    --brand-red-hover:#0056b3;
-	    --brand-red-deep:#003f7f;
+            --brand-color:#007BFF;
+	    --brand-hover:#0056b3;
+	    --brand-deep:#003f7f;
             --ink:#111111;
         }
 
@@ -104,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             padding: 40px 35px;
             width: 95%;          /* ✅ Matches login.php */
             max-width: 462px;    /* ✅ Matches login.php */
-            box-shadow: 0 12px 32px rgba(204, 0, 0, 0.15);
+            box-shadow: 0 12px 32px rgba(0, 123, 255, 0.15);
         }
         .form-container h2 {
             font-size: 1.8rem;
@@ -121,7 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             transition: box-shadow .2s ease, border-color .2s ease;
         }
         .form-control:focus {
-            border-color: var(--brand-red);
+            border-color: var(--brand-color);
             box-shadow: 0 0 0 0.25rem rgba(0, 0, 255, 0.25);
             outline: none;
         }
@@ -138,12 +138,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             color: #fff;
         }
         .btn-modern.btn-primary {
-            background: linear-gradient(135deg, var(--brand-red), var(--brand-red-hover));
+            background: linear-gradient(135deg, var(--brand-color), var(--brand-hover));
         }
         .btn-modern.btn-primary:hover {
-            background: linear-gradient(135deg, var(--brand-red-hover), var(--brand-red-deep));
+            background: linear-gradient(135deg, var(--brand-hover), var(--brand-deep));
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.35);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
         }
 
         .lang-switch {
@@ -158,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-	    	color: blue;
+	    	color: var(--brand-color);
         }
         .lang-switch:hover {
             background: rgba(255, 255, 255, 0.9);
@@ -166,9 +166,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
 
-        .spinner-border { color: var(--brand-red); }
-        :focus-visible { outline: 2px solid var(--brand-red); outline-offset: 2px; }
-        ::selection { background: rgba(255,0,0,0.2); color: #111827; }
+        .spinner-border { color: var(--brand-color); }
+        :focus-visible { outline: 2px solid var(--brand-color); outline-offset: 2px; }
+        ::selection { background: rgba(0,123,255,0.2); color: #111827; }
     </style>
 </head>
 <body>
