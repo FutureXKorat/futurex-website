@@ -47,14 +47,17 @@ $profilePicture = "avatar.png"; // default fallback
 
 if (isset($_SESSION["user_id"])) {
     $userId = (int)$_SESSION["user_id"];
-    $sql = "SELECT name, profile_picture FROM users WHERE id = $userId";
-    $result = $conn->query($sql);
+    $stmt = $conn->prepare("SELECT name, profile_picture FROM users WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
     if ($result && $row = $result->fetch_assoc()) {
         $welcomeText = "Welcome to Future X, " . htmlspecialchars($row["name"]);
         if (!empty($row["profile_picture"])) {
             $profilePicture = "uploads/profile_pics/" . htmlspecialchars($row["profile_picture"]);
         }
     }
+    $stmt->close();
 }
 
 // Helpers for stock/remaining
