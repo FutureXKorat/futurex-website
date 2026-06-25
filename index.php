@@ -80,6 +80,8 @@ $texts = [
 			font-weight: 600;
 			padding: 10px 16px;
 			transition: background 0.3s ease;
+			white-space: normal;
+			word-break: break-word;
 		}
 
 		/* Hover effect */
