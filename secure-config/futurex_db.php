@@ -14,10 +14,10 @@ declare(strict_types=1);
  */
 
 return [
-    'DB_HOST' => 'interchange.proxy.rlwy.net',
-    'DB_USER' => 'root',
-    'DB_PASS' => 'bGuEFpSXnxEDjpcmhmiwvVIlcvYxUahW',
-    'DB_NAME' => 'railway',
-    'DB_PORT' => 39772,
+    'DB_HOST' => 'mysql-18c6ecfc-futurexkorat.h.aivencloud.com',
+    'DB_USER' => 'avnadmin',
+    'DB_PASS' => 'your-aiven-password-here',
+    'DB_NAME' => 'defaultdb',
+    'DB_PORT' => 11035,
     'DB_CHARSET' => 'utf8mb4',
 ];
