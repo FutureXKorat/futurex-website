@@ -276,14 +276,14 @@ $texts = [
             justify-content: center;
             text-align: center;
             padding: 36px 16px;
-            background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%);
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
             border-radius: 20px;
         }
         .feature-title {
             font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem);
             font-weight: 700;
             letter-spacing: -0.02em;
-            color: var(--brand-hover); /* darker red for titles */
+            color: var(--brand-hover);
             margin-bottom: 8px;
         }
         .feature-sub {
@@ -334,7 +334,7 @@ $texts = [
             max-width: 280px;
             height: auto;
             border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(204, 0, 0, 0.25);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.25);
         }
 
         /* Button (floats up on hover) — red gradient B */
