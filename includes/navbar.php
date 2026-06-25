@@ -13,7 +13,7 @@ $_navT = [
         'orders'  => 'Orders',
         'about'   => 'About Us',
         'source'  => 'Sources',
-        'profile' => 'Edit Profile',
+        'profile' => 'Settings',
         'out'     => 'Log Out',
         'login'   => 'Please log in to access your profile.',
     ],
@@ -24,7 +24,7 @@ $_navT = [
         'orders'  => 'รายการที่สั่ง',
         'about'   => 'เกี่ยวกับพวกเรา',
         'source'  => 'แหล่งที่มา',
-        'profile' => 'แก้ไขโปรไฟล์',
+        'profile' => 'การตั้งค่า',
         'out'     => 'ออกจากระบบ',
         'login'   => 'กรุณาเข้าสู่ระบบเพื่อแก้ไขโปรไฟล์ของคุณ',
     ],
@@ -82,7 +82,7 @@ if (isset($_SESSION['user_id'])) {
       <img src="<?php echo htmlspecialchars($_navPic); ?>" alt="Profile" class="profile-img" id="profileIcon">
       <div id="dropdownMenu" class="profile-dropdown-content">
         <?php if (isset($_SESSION['user_id'])): ?>
-          <a href="profile.php"><?php echo $_navL['profile']; ?></a>
+          <a href="settings.php"><?php echo $_navL['profile']; ?></a>
           <a href="logout.php"><?php echo $_navL['out']; ?></a>
         <?php else: ?>
           <a href="index.php"><?php echo $_navL['login']; ?></a>
