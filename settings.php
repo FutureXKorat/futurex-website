@@ -1,16 +1,16 @@
 <?php
 include 'database.php';
+include 'send_otp.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit();
 }
 
-$userId  = (int)$_SESSION['user_id'];
+$userId   = (int)$_SESSION['user_id'];
 $success  = "";
 $errors   = [];
-$pwSuccess = "";
-$pwErrors  = [];
+$pwErrors = [];
 
 $uploadDir = 'uploads/profile_pics/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
@@ -21,10 +21,10 @@ $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// AJAX: upload cropped profile picture
+// ── AJAX: upload cropped profile picture ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
-    $data = str_replace('data:image/png;base64,', '', $_POST['cropped_image']);
-    $data = base64_decode($data);
+    $data        = str_replace('data:image/png;base64,', '', $_POST['cropped_image']);
+    $data        = base64_decode($data);
     $newFileName = 'user_' . $userId . '_' . time() . '.png';
     file_put_contents($uploadDir . $newFileName, $data);
     if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']))
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
     exit();
 }
 
-// Delete profile picture
+// ── Delete profile picture ────────────────────────────────────────────────
 if (isset($_POST['delete_profile_picture'])) {
     if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
         unlink($uploadDir . $user['profile_picture']);
@@ -50,8 +50,8 @@ if (isset($_POST['delete_profile_picture'])) {
     }
 }
 
-// Change password — requires current password for security
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+// ── Change Password — Step 1: validate & send OTP ─────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_step1'])) {
     $currentPw = $_POST['current_password'] ?? '';
     $newPw     = $_POST['new_password']     ?? '';
     $confirmPw = $_POST['confirm_password'] ?? '';
@@ -65,16 +65,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     } elseif ($newPw !== $confirmPw) {
         $pwErrors[] = ($lang === 'en') ? 'Passwords do not match.' : 'รหัสผ่านไม่ตรงกัน';
     } else {
-        $hashed = password_hash($newPw, PASSWORD_DEFAULT);
-        $stmt   = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-        $stmt->bind_param("si", $hashed, $userId);
-        $stmt->execute();
-        $stmt->close();
-        $pwSuccess = ($lang === 'en') ? 'Password changed successfully.' : 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $_SESSION['pw_change'] = [
+            'otp'     => $otp,
+            'expires' => time() + 300, // 5 minutes
+            'hash'    => password_hash($newPw, PASSWORD_DEFAULT),
+        ];
+        if (sendOTPEmail($user['email'], $otp)) {
+            // step 2 form is shown via session state below
+        } else {
+            unset($_SESSION['pw_change']);
+            $pwErrors[] = ($lang === 'en') ? 'Failed to send OTP email. Please try again.' : 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่';
+        }
     }
 }
 
-$hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
+// ── Change Password — Step 2: verify OTP & apply ─────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_step2'])) {
+    $pending = $_SESSION['pw_change'] ?? null;
+    $entered = trim($_POST['otp_code'] ?? '');
+
+    if (!$pending) {
+        $pwErrors[] = ($lang === 'en') ? 'Session expired. Please start over.' : 'เซสชันหมดอายุ กรุณาเริ่มใหม่';
+    } elseif (time() > $pending['expires']) {
+        unset($_SESSION['pw_change']);
+        $pwErrors[] = ($lang === 'en') ? 'OTP has expired. Please start over.' : 'OTP หมดอายุแล้ว กรุณาเริ่มใหม่';
+    } elseif ($entered !== $pending['otp']) {
+        $pwErrors[] = ($lang === 'en') ? 'Incorrect OTP. Please try again.' : 'OTP ไม่ถูกต้อง กรุณาลองใหม่';
+    } else {
+        $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->bind_param("si", $pending['hash'], $userId);
+        $stmt->execute();
+        $stmt->close();
+        unset($_SESSION['pw_change']);
+        $success = ($lang === 'en') ? 'Password changed successfully.' : 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
+    }
+}
+
+// ── Change Password — Resend OTP ─────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_resend'])) {
+    $pending = $_SESSION['pw_change'] ?? null;
+    if ($pending) {
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $_SESSION['pw_change']['otp']     = $otp;
+        $_SESSION['pw_change']['expires'] = time() + 300;
+        if (!sendOTPEmail($user['email'], $otp)) {
+            $pwErrors[] = ($lang === 'en') ? 'Failed to resend OTP. Please try again.' : 'ไม่สามารถส่ง OTP ซ้ำได้ กรุณาลองใหม่';
+        }
+    } else {
+        $pwErrors[] = ($lang === 'en') ? 'Session expired. Please start over.' : 'เซสชันหมดอายุ กรุณาเริ่มใหม่';
+    }
+}
+
+// ── Cancel OTP step ───────────────────────────────────────────────────────
+if (isset($_POST['pw_cancel'])) {
+    unset($_SESSION['pw_change']);
+}
+
+$hasPic    = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
+$otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']['expires'];
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($lang); ?>">
@@ -93,7 +142,6 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       --brand-color: #007BFF;
       --brand-hover: #0056b3;
       --brand-deep:  #003f7f;
-      --gray-color:  #ccc;
       --ink: #1F2937;
     }
 
@@ -107,32 +155,27 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       min-height: 100vh;
     }
 
-    /* ── Page layout ── */
+    /* ── Centered content column ── */
     .page-wrapper {
-      display: flex;
-      align-items: flex-start;
-      gap: 28px;
-      max-width: 900px;
+      max-width: 580px;
       width: 100%;
-      margin: 50px auto;
-      padding: 0 20px 60px;
+      margin: 50px auto 60px;
+      padding: 0 20px;
       box-sizing: border-box;
     }
-
-    .settings-main { flex: 1; min-width: 0; }
 
     /* ── Settings cards ── */
     .settings-card {
       background: rgba(255,255,255,0.25);
       backdrop-filter: blur(12px);
       border-radius: 20px;
-      padding: 32px 32px;
+      padding: 32px;
       box-shadow: 0 12px 32px rgba(0,0,0,0.12);
       margin-bottom: 24px;
     }
 
     .settings-card h2 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
       margin: 0 0 20px;
       color: var(--brand-color);
@@ -141,17 +184,18 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       gap: 10px;
     }
 
-    /* ── TOC sidebar (Railway-style) ── */
+    /* ── TOC — fixed to viewport right, never shifts content ── */
     .toc-sidebar {
-      width: 175px;
-      flex-shrink: 0;
-      position: sticky;
+      position: fixed;
       top: 76px;
+      right: 24px;
+      width: 160px;
       background: rgba(255,255,255,0.35);
       backdrop-filter: blur(10px);
       border-radius: 14px;
       padding: 14px 0 10px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      z-index: 50;
     }
 
     .toc-title {
@@ -189,8 +233,12 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       background: rgba(0,123,255,0.08);
     }
 
-    @media (max-width: 768px) {
-      .toc-sidebar  { display: none; }
+    /* Hide TOC when screen is too narrow to show it beside the content */
+    @media (max-width: 900px) {
+      .toc-sidebar { display: none; }
+    }
+
+    @media (max-width: 640px) {
       .page-wrapper { margin-top: 24px; }
     }
 
@@ -203,43 +251,62 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       position: relative; overflow: hidden; background-color: #fff;
       border: 1px solid #d1d5db; border-radius: 12px; font-weight: 600;
       font-size: 0.95rem; padding: 10px 20px; cursor: pointer;
-      transition: background-color 0.2s ease; width: 150px; text-align: center;
+      transition: background-color 0.2s; width: 150px; text-align: center;
     }
     .choose-btn:hover { background-color: #e5e7eb; }
     .choose-btn input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
     .file-label { flex: 1; font-size: 0.95rem; color: #4B5563; }
 
-    /* ── Buttons ── */
+    /* ── Primary button ── */
     .btn-modern {
       width: 100%; margin-top: 12px; padding: 14px; font-size: 1.1rem;
       font-weight: 600; border-radius: 14px; transition: all 0.3s ease;
-      display: block; border: none; cursor: pointer; text-align: center;
-    }
-    .btn-modern.btn-primary {
+      display: block; border: none; cursor: pointer; text-align: center; color: #fff;
       background: linear-gradient(135deg, var(--brand-color), var(--brand-hover));
-      color: #fff;
     }
-    .btn-modern.btn-primary:hover {
+    .btn-modern:hover {
       background: linear-gradient(135deg, var(--brand-hover), var(--brand-deep));
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,123,255,0.35);
     }
+    .btn-modern:disabled { opacity: 0.7; transform: none; cursor: not-allowed; }
 
-    /* ── Password inputs ── */
+    /* ── Secondary button (cancel / resend) ── */
+    .btn-secondary-flat {
+      width: 100%; margin-top: 8px; padding: 12px; font-size: 1rem;
+      font-weight: 600; border-radius: 14px; transition: all 0.3s ease;
+      display: block; border: none; cursor: pointer; text-align: center;
+      background: #6B7280; color: #fff;
+    }
+    .btn-secondary-flat:hover { background: #4B5563; transform: translateY(-2px); }
+
+    /* ── Form inputs ── */
     .pw-input {
-      width: 100%;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 1rem;
-      border: 1px solid #E5E7EB;
-      transition: box-shadow .2s ease, border-color .2s ease;
-      margin-bottom: 12px;
-      box-sizing: border-box;
+      width: 100%; border-radius: 12px; padding: 12px; font-size: 1rem;
+      border: 1px solid #E5E7EB; transition: box-shadow .2s, border-color .2s;
+      margin-bottom: 12px; box-sizing: border-box; background: #fff;
     }
     .pw-input:focus {
       border-color: var(--brand-color);
-      box-shadow: 0 0 0 0.25rem rgba(0,123,255,0.2);
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.2);
       outline: none;
+    }
+
+    /* ── OTP input — large digits ── */
+    .otp-input {
+      width: 100%; border-radius: 12px; padding: 16px; font-size: 2rem;
+      font-weight: 700; letter-spacing: 0.4em; text-align: center;
+      border: 1px solid #E5E7EB; transition: box-shadow .2s, border-color .2s;
+      margin-bottom: 12px; box-sizing: border-box; background: #fff;
+    }
+    .otp-input:focus {
+      border-color: var(--brand-color);
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.2);
+      outline: none;
+    }
+
+    .otp-hint {
+      text-align: center; font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;
     }
 
     /* ── Crop controls ── */
@@ -264,7 +331,7 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       display: flex; justify-content: space-between; align-items: center;
       height: 60px; position: sticky; top: 0; z-index: 1000;
       box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
     .top-banner.scrolled { background-color: var(--brand-color); box-shadow: none; }
     .nav-links-container { flex: 1; overflow-x: auto; position: relative; padding: 12px 20px; }
@@ -272,12 +339,12 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
     .nav-links::-webkit-scrollbar { display: none; }
     .nav-scroll-indicator {
       position: absolute; top: 0; left: 0; height: 3px;
-      background: #fff; border-radius: 2px; width: 0%; transition: width 0.2s linear;
+      background: #fff; border-radius: 2px; width: 0%; transition: width 0.2s;
     }
     .nav-links a {
       text-decoration: none; color: #fff; font-weight: 500;
       padding: 8px 12px; border-radius: 4px; flex-shrink: 0;
-      transition: background 0.3s, transform 0.15s ease, opacity 0.15s ease;
+      transition: background 0.3s, transform 0.15s, opacity 0.15s;
     }
     .nav-links a:hover { background-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
     .lang-dropdown { position: relative; flex-shrink: 0; }
@@ -285,7 +352,7 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       width: 42px; height: 42px; display: grid; place-items: center;
       border: 1px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.18);
       color: #fff; border-radius: 50%; cursor: pointer;
-      transition: transform .15s ease, background .2s ease;
+      transition: transform .15s, background .2s;
     }
     .lang-btn-icon:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
     .lang-btn-icon:focus { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
@@ -305,7 +372,7 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       display: inline-block; padding: 8px 12px; border-radius: 10px; font-weight: 600;
       text-decoration: none; color: #fff; background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px);
-      transition: transform .15s ease, background .2s ease;
+      transition: transform .15s, background .2s;
     }
     .lang-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
   </style>
@@ -314,74 +381,107 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
 
   <?php include 'includes/navbar.php'; ?>
 
+  <!-- ── TOC sidebar (fixed, never shifts content) ── -->
+  <nav class="toc-sidebar" aria-label="On this page">
+    <div class="toc-title"><?php echo ($lang === 'en') ? 'On This Page' : 'ในหน้านี้'; ?></div>
+    <a class="toc-link" href="#section-profile">
+      <?php echo ($lang === 'en') ? 'Profile Picture' : 'รูปโปรไฟล์'; ?>
+    </a>
+    <a class="toc-link" href="#section-password">
+      <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
+    </a>
+  </nav>
+
   <div class="page-wrapper">
 
-    <!-- ── Main content ── -->
-    <div class="settings-main">
+    <!-- ── Profile Picture ── -->
+    <div class="settings-card" id="section-profile">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Profile Picture' : 'รูปโปรไฟล์'; ?>
+      </h2>
 
-      <!-- ── Profile Picture ── -->
-      <div class="settings-card" id="section-profile">
-        <h2>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-          </svg>
-          <?php echo ($lang === 'en') ? 'Profile Picture' : 'รูปโปรไฟล์'; ?>
-        </h2>
+      <?php if ($errors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
 
-        <?php if ($errors): ?>
-          <div class="alert alert-danger"><ul class="mb-0">
-            <?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
-          </ul></div>
-        <?php endif; ?>
+      <div class="centered">
+        <img id="currentProfilePic"
+             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
+             class="profile-pic" alt="Profile picture">
+      </div>
 
-        <div class="centered">
-          <img id="currentProfilePic"
-               src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
-               class="profile-pic" alt="Profile picture">
-        </div>
-
-        <div class="file-row">
-          <label class="choose-btn">
-            <?php echo ($lang === 'en') ? 'Choose File' : 'เลือกไฟล์'; ?>
-            <input type="file" accept="image/*" onchange="handleFileSelect(event)">
-          </label>
-          <div class="file-label" id="fileLabel">
-            <?php echo ($lang === 'en') ? 'No file chosen' : 'ยังไม่ได้เลือกไฟล์'; ?>
-          </div>
-        </div>
-
-        <div class="text-center mt-2">
-          <button
-            id="deleteProfileBtn"
-            type="button"
-            class="btn btn-danger mb-2 w-100 fw-bold"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteModal"
-            <?php echo $hasPic ? '' : 'style="display:none;"'; ?>
-          >
-            <?php echo ($lang === 'en') ? 'Delete Profile Picture' : 'ลบรูปโปรไฟล์'; ?>
-          </button>
+      <div class="file-row">
+        <label class="choose-btn">
+          <?php echo ($lang === 'en') ? 'Choose File' : 'เลือกไฟล์'; ?>
+          <input type="file" accept="image/*" onchange="handleFileSelect(event)">
+        </label>
+        <div class="file-label" id="fileLabel">
+          <?php echo ($lang === 'en') ? 'No file chosen' : 'ยังไม่ได้เลือกไฟล์'; ?>
         </div>
       </div>
 
-      <!-- ── Change Password ── -->
-      <div class="settings-card" id="section-password">
-        <h2>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
-        </h2>
+      <div class="text-center mt-2">
+        <button
+          id="deleteProfileBtn"
+          type="button"
+          class="btn btn-danger mb-2 w-100 fw-bold"
+          data-bs-toggle="modal"
+          data-bs-target="#deleteModal"
+          <?php echo $hasPic ? '' : 'style="display:none;"'; ?>
+        >
+          <?php echo ($lang === 'en') ? 'Delete Profile Picture' : 'ลบรูปโปรไฟล์'; ?>
+        </button>
+      </div>
+    </div>
 
-        <?php if ($pwErrors): ?>
-          <div class="alert alert-danger"><ul class="mb-0">
-            <?php foreach ($pwErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
-          </ul></div>
-        <?php endif; ?>
-        <?php if ($pwSuccess): ?>
-          <div class="alert alert-success"><?= htmlspecialchars($pwSuccess) ?></div>
-        <?php endif; ?>
+    <!-- ── Change Password ── -->
+    <div class="settings-card" id="section-password">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
+      </h2>
 
+      <?php if ($pwErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($pwErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <?php if ($otpPending): ?>
+        <!-- ── Step 2: Enter OTP ── -->
+        <p class="otp-hint">
+          <?php echo ($lang === 'en')
+            ? 'An OTP has been sent to your email address. Enter it below to confirm the password change.'
+            : 'ส่ง OTP ไปยังอีเมลของคุณแล้ว กรอกรหัสด้านล่างเพื่อยืนยันการเปลี่ยนรหัสผ่าน'; ?>
+        </p>
+        <form method="POST" id="otpForm">
+          <input class="otp-input" type="text" name="otp_code"
+                 inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+                 placeholder="000000" required>
+          <button type="submit" name="pw_step2" class="btn-modern" id="otpBtn">
+            <?php echo ($lang === 'en') ? 'Confirm Password Change' : 'ยืนยันการเปลี่ยนรหัสผ่าน'; ?>
+          </button>
+        </form>
+        <form method="POST" style="margin-top:8px;">
+          <button type="submit" name="pw_resend" class="btn-secondary-flat">
+            <?php echo ($lang === 'en') ? 'Resend OTP' : 'ส่ง OTP ใหม่'; ?>
+          </button>
+        </form>
+        <form method="POST" style="margin-top:8px;">
+          <button type="submit" name="pw_cancel" class="btn btn-outline-secondary w-100">
+            <?php echo ($lang === 'en') ? 'Cancel' : 'ยกเลิก'; ?>
+          </button>
+        </form>
+
+      <?php else: ?>
+        <!-- ── Step 1: Enter passwords ── -->
         <form method="POST" id="pwForm">
           <input class="pw-input" type="password" name="current_password"
             placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
@@ -389,41 +489,51 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
             placeholder="<?php echo ($lang === 'en') ? 'New Password' : 'รหัสผ่านใหม่'; ?>" required>
           <input class="pw-input" type="password" name="confirm_password"
             placeholder="<?php echo ($lang === 'en') ? 'Confirm New Password' : 'ยืนยันรหัสผ่านใหม่'; ?>" required>
-          <button type="submit" name="change_password" class="btn-modern btn-primary" id="pwBtn">
-            <?php echo ($lang === 'en') ? 'Update Password' : 'อัปเดตรหัสผ่าน'; ?>
+          <button type="submit" name="pw_step1" class="btn-modern" id="pwBtn">
+            <?php echo ($lang === 'en') ? 'Send OTP to Email' : 'ส่ง OTP ไปยังอีเมล'; ?>
           </button>
         </form>
-      </div>
+      <?php endif; ?>
+    </div>
 
-      <!-- ── Linked Accounts (coming soon) ──
-      <div class="settings-card" id="section-linked-accounts">
-        <h2>Link Your Accounts</h2>
-        <button class="btn btn-outline-success w-100 mb-2" disabled>Link Google Account (coming soon)</button>
-        <button class="btn btn-outline-success w-100" disabled>Link Apple Account (coming soon)</button>
-      </div>
-      -->
+    <!-- ── Linked Accounts (coming soon) ──
+    <div class="settings-card" id="section-linked-accounts">
+      <h2>Link Your Accounts</h2>
+      <button class="btn btn-outline-success w-100 mb-2" disabled>Link Google Account (coming soon)</button>
+      <button class="btn btn-outline-success w-100" disabled>Link Apple Account (coming soon)</button>
+    </div>
+    -->
 
-      <!-- ── Security (coming soon) ──
-      <div class="settings-card" id="section-security">
-        <h2>Security</h2>
-        <button class="btn btn-outline-success w-100" disabled>Create Passkey (coming soon)</button>
-      </div>
-      -->
-
-    </div><!-- /.settings-main -->
-
-    <!-- ── TOC Sidebar ── -->
-    <nav class="toc-sidebar" aria-label="On this page">
-      <div class="toc-title"><?php echo ($lang === 'en') ? 'On This Page' : 'ในหน้านี้'; ?></div>
-      <a class="toc-link" href="#section-profile">
-        <?php echo ($lang === 'en') ? 'Profile Picture' : 'รูปโปรไฟล์'; ?>
-      </a>
-      <a class="toc-link" href="#section-password">
-        <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
-      </a>
-    </nav>
+    <!-- ── Security (coming soon) ──
+    <div class="settings-card" id="section-security">
+      <h2>Security</h2>
+      <button class="btn btn-outline-success w-100" disabled>Create Passkey (coming soon)</button>
+    </div>
+    -->
 
   </div><!-- /.page-wrapper -->
+
+  <!-- ── Toast notifications (top-right, same as login.php) ── -->
+  <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index:1080;">
+    <?php if (!empty($success)): ?>
+      <div class="toast align-items-center text-bg-success border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+        <div class="d-flex">
+          <div class="toast-body"><?= htmlspecialchars($success) ?></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    <?php endif; ?>
+    <?php if (!empty($errors) || !empty($pwErrors)): ?>
+      <?php foreach (array_merge($errors, $pwErrors) as $e): ?>
+        <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="6000">
+          <div class="d-flex">
+            <div class="toast-body"><?= htmlspecialchars($e) ?></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
 
   <!-- ── Delete confirmation modal ── -->
   <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
@@ -448,24 +558,6 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
     </div></div>
   </div>
 
-  <!-- ── Success modal (profile picture deleted) ── -->
-  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><?php echo ($lang === 'en') ? 'Profile Picture Deleted' : 'รูปโปรไฟล์ถูกลบแล้ว'; ?></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <?php echo ($lang === 'en') ? 'Your profile picture has been successfully deleted.' : 'ลบรูปโปรไฟล์สำเร็จแล้ว'; ?>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success w-100" data-bs-dismiss="modal">
-          <?php echo ($lang === 'en') ? 'Close' : 'ปิด'; ?>
-        </button>
-      </div>
-    </div></div>
-  </div>
-
   <!-- ── Cropper modal ── -->
   <div class="modal fade" id="cropModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -484,6 +576,9 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script>
+    // ── Show all pending toasts ──
+    document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el).show());
+
     // ── Cropper ──
     let cropper, cropModalInstance;
 
@@ -493,8 +588,8 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       document.getElementById('fileLabel').textContent = file.name;
       const reader = new FileReader();
       reader.onload = () => {
-        const img = document.getElementById('cropImage');
-        img.src = reader.result;
+        const img    = document.getElementById('cropImage');
+        img.src      = reader.result;
         const modalEl = document.getElementById('cropModal');
         cropModalInstance = new bootstrap.Modal(modalEl);
         modalEl.addEventListener('shown.bs.modal', () => {
@@ -547,23 +642,31 @@ $hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['pr
       if (cropModalInstance) cropModalInstance.hide();
     }
 
-    // Show success modal after profile picture deletion
-    <?php if ($success): ?>
-      new bootstrap.Modal(document.getElementById('successModal')).show();
-    <?php endif; ?>
+    // ── Spinners on form submit ──
+    const pwForm  = document.getElementById('pwForm');
+    const otpForm = document.getElementById('otpForm');
 
-    // Password form — show spinner while submitting
-    document.getElementById('pwForm').addEventListener('submit', function () {
-      const btn = document.getElementById('pwBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<?php echo ($lang === 'en') ? 'Updating...' : 'กำลังอัปเดต...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
-    });
+    if (pwForm) {
+      pwForm.addEventListener('submit', () => {
+        const btn = document.getElementById('pwBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Sending OTP...' : 'กำลังส่ง OTP...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
 
-    // TOC active section highlight on scroll
-    const tocLinks  = document.querySelectorAll('.toc-link');
-    const sections  = ['section-profile', 'section-password']
-                        .map(id => document.getElementById(id))
-                        .filter(Boolean);
+    if (otpForm) {
+      otpForm.addEventListener('submit', () => {
+        const btn = document.getElementById('otpBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Verifying...' : 'กำลังตรวจสอบ...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+
+    // ── TOC active highlight on scroll ──
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = ['section-profile', 'section-password']
+                       .map(id => document.getElementById(id))
+                       .filter(Boolean);
 
     function updateToc() {
       let current = sections[0]?.id ?? '';
