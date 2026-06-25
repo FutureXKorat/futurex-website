@@ -1,0 +1,7 @@
+# Secret config files - never commit these
+secure-config/futurex_db.php
+secure-config/futurex_mail.php
+
+# OS files
+.DS_Store
+Thumbs.db
