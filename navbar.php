@@ -2,7 +2,7 @@
 session_start();
 include 'database.php';
 
-$welcomeText = "Welcome to Canasia";
+$welcomeText = "Welcome to Future X";
 $profilePicture = "avatar.png"; // default fallback
 
 if (isset($_SESSION["user_id"])) {
@@ -10,7 +10,7 @@ if (isset($_SESSION["user_id"])) {
     $sql = "SELECT name, profile_picture FROM users WHERE id = $userId";
     $result = $conn->query($sql);
     if ($result && $row = $result->fetch_assoc()) {
-        $welcomeText = "Welcome to Canasia, " . htmlspecialchars($row["name"]);
+        $welcomeText = "Welcome to Future X, " . htmlspecialchars($row["name"]);
         if (!empty($row["profile_picture"])) {
             $profilePicture = "uploads/profile_pics/" . htmlspecialchars($row["profile_picture"]);
         }
@@ -20,7 +20,7 @@ if (isset($_SESSION["user_id"])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Products - Canasia</title>
+    <title>Products - Future X</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
