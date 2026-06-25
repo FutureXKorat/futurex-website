@@ -663,23 +663,22 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       });
     }
 
-    // ── TOC active highlight via IntersectionObserver ──
+    // ── TOC active highlight on scroll ──
     const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = Array.from(document.querySelectorAll('.settings-card[id]'));
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          tocLinks.forEach(link => {
-            link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
-          });
-        }
+    function updateToc() {
+      let current = sections[0]?.id ?? '';
+      sections.forEach(sec => {
+        if (sec.getBoundingClientRect().top <= 100) current = sec.id;
       });
-    }, {
-      rootMargin: '-76px 0px -55% 0px',
-      threshold: 0
-    });
+      tocLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+      });
+    }
 
-    document.querySelectorAll('.settings-card[id]').forEach(sec => observer.observe(sec));
+    window.addEventListener('scroll', updateToc, { passive: true });
+    updateToc();
   </script>
 </body>
 </html>
