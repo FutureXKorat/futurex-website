@@ -1,5 +1,5 @@
 <?php
-include 'database.php';
+include_once 'database.php';
 
 function sendOTPEmail($recipientEmail, $otp) {
     global $lang;

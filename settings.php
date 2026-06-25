@@ -1,6 +1,6 @@
 <?php
-include 'database.php';
-include 'send_otp.php';
+include_once 'database.php';
+include_once 'send_otp.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
@@ -64,18 +64,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_step1'])) {
         $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one number.' : 'รหัสผ่านใหม่ต้องมีตัวเลขอย่างน้อยหนึ่งตัว';
     } elseif ($newPw !== $confirmPw) {
         $pwErrors[] = ($lang === 'en') ? 'Passwords do not match.' : 'รหัสผ่านไม่ตรงกัน';
+    } elseif (empty($user['email'])) {
+        $pwErrors[] = ($lang === 'en')
+            ? 'Your account has no email address. Please contact support.'
+            : 'บัญชีของคุณไม่มีที่อยู่อีเมล กรุณาติดต่อผู้ดูแลระบบ';
     } else {
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        // Mask email for display: d***@gmail.com
+        $emailParts  = explode('@', $user['email']);
+        $maskedEmail = substr($emailParts[0], 0, 1)
+                     . str_repeat('*', max(1, strlen($emailParts[0]) - 1))
+                     . '@' . $emailParts[1];
         $_SESSION['pw_change'] = [
-            'otp'     => $otp,
-            'expires' => time() + 300, // 5 minutes
-            'hash'    => password_hash($newPw, PASSWORD_DEFAULT),
+            'otp'          => $otp,
+            'expires'      => time() + 300,
+            'hash'         => password_hash($newPw, PASSWORD_DEFAULT),
+            'masked_email' => $maskedEmail,
         ];
         if (sendOTPEmail($user['email'], $otp)) {
-            // step 2 form is shown via session state below
+            // OTP step is shown via session state below
         } else {
             unset($_SESSION['pw_change']);
-            $pwErrors[] = ($lang === 'en') ? 'Failed to send OTP email. Please try again.' : 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่';
+            $pwErrors[] = ($lang === 'en')
+                ? 'Failed to send OTP email. Please try again.'
+                : 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่';
         }
     }
 }
@@ -458,9 +470,14 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       <?php if ($otpPending): ?>
         <!-- ── Step 2: Enter OTP ── -->
         <p class="otp-hint">
-          <?php echo ($lang === 'en')
-            ? 'An OTP has been sent to your email address. Enter it below to confirm the password change.'
-            : 'ส่ง OTP ไปยังอีเมลของคุณแล้ว กรอกรหัสด้านล่างเพื่อยืนยันการเปลี่ยนรหัสผ่าน'; ?>
+          <?php
+          $maskedDisplay = htmlspecialchars($_SESSION['pw_change']['masked_email'] ?? '');
+          if ($lang === 'en') {
+              echo "An OTP has been sent to <strong>{$maskedDisplay}</strong>. Check your inbox (and spam folder), then enter it below.";
+          } else {
+              echo "ส่ง OTP ไปยัง <strong>{$maskedDisplay}</strong> แล้ว ตรวจสอบกล่องจดหมาย (และสแปม) แล้วกรอกรหัสด้านล่าง";
+          }
+          ?>
         </p>
         <form method="POST" id="otpForm">
           <input class="otp-input" type="text" name="otp_code"
