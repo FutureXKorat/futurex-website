@@ -12,12 +12,18 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
-if (!file_exists($cfgPath)) {
-    http_response_code(500);
-    die("Database config file not found.");
+if (file_exists($cfgPath)) {
+    $config = require $cfgPath;
+} else {
+    $config = [
+        'DB_HOST'    => getenv('DB_HOST'),
+        'DB_USER'    => getenv('DB_USER'),
+        'DB_PASS'    => getenv('DB_PASS'),
+        'DB_NAME'    => getenv('DB_NAME'),
+        'DB_PORT'    => getenv('DB_PORT') ?: 3306,
+        'DB_CHARSET' => getenv('DB_CHARSET') ?: 'utf8mb4',
+    ];
 }
-
-$config = require $cfgPath;
 
 // Create the MySQL connection
 $conn = @new mysqli(
