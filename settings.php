@@ -172,6 +172,7 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       padding: 32px;
       box-shadow: 0 12px 32px rgba(0,0,0,0.12);
       margin-bottom: 24px;
+      scroll-margin-top: 76px;
     }
 
     .settings-card h2 {
@@ -662,24 +663,23 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       });
     }
 
-    // ── TOC active highlight on scroll ──
+    // ── TOC active highlight via IntersectionObserver ──
     const tocLinks = document.querySelectorAll('.toc-link');
-    const sections = ['section-profile', 'section-password']
-                       .map(id => document.getElementById(id))
-                       .filter(Boolean);
 
-    function updateToc() {
-      let current = sections[0]?.id ?? '';
-      sections.forEach(sec => {
-        if (window.scrollY + 120 >= sec.offsetTop) current = sec.id;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+          });
+        }
       });
-      tocLinks.forEach(link => {
-        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
-      });
-    }
+    }, {
+      rootMargin: '-76px 0px -55% 0px',
+      threshold: 0
+    });
 
-    window.addEventListener('scroll', updateToc, { passive: true });
-    updateToc();
+    document.querySelectorAll('.settings-card[id]').forEach(sec => observer.observe(sec));
   </script>
 </body>
 </html>
