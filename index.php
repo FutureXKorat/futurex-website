@@ -156,8 +156,8 @@ $texts = [
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 260px;
-            height: 260px;
+            width: min(260px, 90vw);
+            height: min(260px, 90vw);
             background: radial-gradient(circle, rgba(0,123,255,0.22) 0%, rgba(0,123,255,0) 70%);
             border-radius: 50%;
             z-index: 0;
@@ -172,7 +172,10 @@ $texts = [
         }
 
         .btn-modern {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             width: 100%;
             margin-bottom: 14px;
             padding: 14px;
@@ -180,6 +183,7 @@ $texts = [
             font-weight: 600;
             border-radius: 14px;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .btn-modern.btn-primary {
