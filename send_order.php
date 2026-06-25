@@ -10,10 +10,10 @@ if (session_status() === PHP_SESSION_NONE) {
 $cfgPath = __DIR__ . '/secure-config/futurex_mail.php';
 $mailCfg = is_file($cfgPath) ? require $cfgPath : [];
 
-$ADMIN_EMAIL    = (string)($mailCfg['ADMIN_EMAIL']     ?? 'futurexkorat@gmail.com');
-$FROM_EMAIL     = (string)($mailCfg['FROM_EMAIL_ORDER'] ?? 'order@futurexthailand.com');
-$FROM_NAME      = (string)($mailCfg['FROM_NAME_ORDER'] ?? 'Future X Order');
-$RESEND_API_KEY = (string)($mailCfg['RESEND_API_KEY']  ?? '');
+$ADMIN_EMAIL    = (string)($mailCfg['ADMIN_EMAIL']      ?? getenv('ADMIN_EMAIL')      ?: 'futurexkorat@gmail.com');
+$FROM_EMAIL     = (string)($mailCfg['FROM_EMAIL_ORDER'] ?? getenv('FROM_EMAIL_ORDER') ?: 'order@futurexthailand.com');
+$FROM_NAME      = (string)($mailCfg['FROM_NAME_ORDER']  ?? getenv('FROM_NAME_ORDER')  ?: 'Future X Order');
+$RESEND_API_KEY = (string)($mailCfg['RESEND_API_KEY']   ?? getenv('RESEND_API_KEY')   ?: '');
 
 function __email_local_part(?string $email): ?string {
     $e = trim((string)$email);

@@ -7,7 +7,13 @@ function sendResetEmail($email, $token) {
     $resetLink = "https://futurexthailand.com/reset_password.php?token=$token";
 
     // 1) Load config
-    $config = require __DIR__ . '/secure-config/futurex_mail.php';
+    $cfgPath = __DIR__ . '/secure-config/futurex_mail.php';
+    $config = file_exists($cfgPath) ? require $cfgPath : [
+        'RESEND_API_KEY'    => getenv('RESEND_API_KEY'),
+        'FROM_EMAIL_RESET'  => getenv('FROM_EMAIL_RESET'),
+        'FROM_NAME_RESET'   => getenv('FROM_NAME_RESET'),
+        'ADMIN_EMAIL'       => getenv('ADMIN_EMAIL'),
+    ];
 
     // 2) Build email content
     if ($lang === 'th') {
