@@ -663,21 +663,35 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       });
     }
 
-    // ── TOC active highlight on scroll ──
+    // ── TOC active highlight ──
     const tocLinks = document.querySelectorAll('.toc-link');
     const sections = Array.from(document.querySelectorAll('.settings-card[id]'));
+    const OFFSET   = 80; // px from viewport top that triggers a section as active
 
     function updateToc() {
-      let current = sections[0]?.id ?? '';
-      sections.forEach(sec => {
-        if (sec.getBoundingClientRect().top <= 100) current = sec.id;
-      });
-      tocLinks.forEach(link => {
-        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
-      });
+      // When scrolled to the bottom, always mark the last section active.
+      // This handles short pages where the last section never crosses OFFSET.
+      const atBottom = window.scrollY > 0 &&
+                       (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 20);
+
+      let bestId = sections[0]?.id ?? '';
+
+      if (atBottom) {
+        bestId = sections[sections.length - 1]?.id ?? bestId;
+      } else {
+        // Walk in order; last section whose top has passed OFFSET wins.
+        sections.forEach(sec => {
+          if (sec.getBoundingClientRect().top < OFFSET) bestId = sec.id;
+        });
+      }
+
+      tocLinks.forEach(link =>
+        link.classList.toggle('active', link.getAttribute('href') === '#' + bestId)
+      );
     }
 
     window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc, { passive: true });
     updateToc();
   </script>
 </body>
