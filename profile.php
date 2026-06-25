@@ -91,6 +91,7 @@ if (isset($_POST['delete_profile_picture'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 
   <style>
     :root{
@@ -362,53 +363,7 @@ if (isset($_POST['delete_profile_picture'])) {
 <body>
 
   <!-- NAVBAR -->
-  <div class="top-banner" id="topBanner">
-  <div class="nav-links-container" id="navLinksContainer">
-    <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
-    <div class="nav-links" id="navLinks">
-      <a href="home.php"><?php echo ($texts[$lang]['home']) ?></a>
-
-      <?php if (isset($_SESSION['user_id'])): ?>
-        <a href="products.php"><?php echo ($texts[$lang]['product']) ?></a>
-        <a href="cart.php"><?php echo ($texts[$lang]['cart']) ?></a>
-        <a href="orders.php"><?php echo ($texts[$lang]['orders']) ?></a>
-      <?php endif; ?>
-
-      <a href="about.php"><?php echo ($texts[$lang]['about']) ?></a>
-      <a href="source.php"><?php echo ($texts[$lang]['Source']) ?></a>
-    </div>
-  </div>
-
-  <div class="right-actions">
-  <div class="lang-dropdown">
-  <button class="lang-btn-icon" id="langIcon" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
-    <!-- Globe SVG -->
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-      <path d="M2 12h20M12 2c3 3 3 15 0 20M12 2c-3 3-3 15 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  </button>
-
-  <div id="langMenu" class="lang-dropdown-content">
-    <a href="?lang=en" class="<?php echo ($lang==='en'?'active':''); ?>">English</a>
-    <a href="?lang=th" class="<?php echo ($lang==='th'?'active':''); ?>">ไทย</a>
-  </div>
-</div>
-  
-  <!-- Profile dropdown -->
-  <div class="profile-dropdown">
-    <img src="<?php echo file_exists($profilePicture) ? $profilePicture : 'avatar.png'; ?>" alt="Profile" class="profile-img" id="profileIcon">
-    <div id="dropdownMenu" class="profile-dropdown-content">
-      <?php if (isset($_SESSION["user_id"])): ?>
-        <a href="profile.php"><?php echo ($texts[$lang]['profile']) ?></a>
-        <a href="logout.php"><?php echo ($texts[$lang]['out']) ?></a>
-      <?php else: ?>
-        <a href="index.php"><?php echo ($texts[$lang]['login']) ?></a>
-      <?php endif; ?>
-    </div>
-  </div>
-  </div>
-  </div>
+  <?php include 'includes/navbar.php'; ?>
 
   <!-- EDIT PROFILE FORM -->
   <div class="form-container" id="formContainer">
@@ -634,61 +589,6 @@ if (isset($_POST['delete_profile_picture'])) {
       new bootstrap.Modal(document.getElementById('successModal')).show();
     <?php endif; ?>
   </script>
-  <script>
-    // Profile dropdown
-    if (profileIcon) {
-        profileIcon.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", () => { dropdownMenu.style.display = "none"; });
-    }
-
-    // Navbar scroll state (kept, but background remains red)
-    const topBanner = document.getElementById("topBanner");
-    window.addEventListener("scroll", () => {
-        topBanner.classList.toggle("scrolled", window.scrollY > 10);
-    });
-
-// Language dropdown
-const langIcon = document.getElementById("langIcon");
-const langMenu = document.getElementById("langMenu");
-const profileIconEl = document.getElementById("profileIcon");
-const profileMenuEl = document.getElementById("dropdownMenu");
-
-if (langIcon) {
-    langIcon.addEventListener("click", (e) => {
-        e.stopPropagation();
-        // close profile menu if open
-        if (profileMenuEl) 
-            profileMenuEl.style.display = "none";
-        // toggle language menu
-        const open = langMenu.style.display === "block";
-        langMenu.style.display = open ? "none" : "block";
-        langIcon.setAttribute("aria-expanded", open ? "false" : "true");
-    });
-}
-
-// Close both menus when clicking outside
-document.addEventListener("click", () => {
-    if (langMenu) 
-        langMenu.style.display = "none";
-    if (profileMenuEl) 
-        profileMenuEl.style.display = "none";
-});
-
-// Optional: close on Escape key
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        if (langMenu) 
-            langMenu.style.display = "none";
-        if (profileMenuEl) 
-            profileMenuEl.style.display = "none";
-        if (langIcon) 
-            langIcon.setAttribute("aria-expanded","false");
-    }
-});
-</script>
 
 </body>
 </html>

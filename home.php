@@ -2,9 +2,6 @@
 session_start();
 include 'database.php';
 
-$welcomeText = "Welcome to Future X";
-$profilePicture = "avatar.png"; // default fallback
-
 $texts = [
     'en' => [
     'title'          => 'Home - Future X',
@@ -59,17 +56,6 @@ $texts = [
     ],
 ];
 
-if (isset($_SESSION["user_id"])) {
-    $userId = (int)$_SESSION["user_id"];
-    $sql = "SELECT name, profile_picture FROM users WHERE id = $userId";
-    $result = $conn->query($sql);
-    if ($result && $row = $result->fetch_assoc()) {
-        $welcomeText =  $texts[$lang]['Welcome'] . htmlspecialchars($row["name"]);
-        if (!empty($row["profile_picture"])) {
-            $profilePicture = "uploads/profile_pics/" . htmlspecialchars($row["profile_picture"]);
-        }
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +65,7 @@ if (isset($_SESSION["user_id"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.png" type="image/png">
     <style>
         :root {
@@ -475,53 +462,7 @@ if (isset($_SESSION["user_id"])) {
 </head>
 <body>
 <!-- NAVBAR -->
-<div class="top-banner" id="topBanner">
-  <div class="nav-links-container" id="navLinksContainer">
-    <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
-    <div class="nav-links" id="navLinks">
-      <a href="home.php"><?php echo ($texts[$lang]['home']) ?></a>
-
-      <?php if (isset($_SESSION['user_id'])): ?>
-        <a href="products.php"><?php echo ($texts[$lang]['product']) ?></a>
-        <a href="cart.php"><?php echo ($texts[$lang]['cart']) ?></a>
-        <a href="orders.php"><?php echo ($texts[$lang]['orders']) ?></a>
-      <?php endif; ?>
-
-      <a href="about.php"><?php echo ($texts[$lang]['about']) ?></a>
-      <a href="source.php"><?php echo ($texts[$lang]['Source']) ?></a>
-    </div>
-  </div>
-
-  <div class="right-actions">
-  <div class="lang-dropdown">
-  <button class="lang-btn-icon" id="langIcon" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
-    <!-- Globe SVG -->
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-      <path d="M2 12h20M12 2c3 3 3 15 0 20M12 2c-3 3-3 15 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  </button>
-
-  <div id="langMenu" class="lang-dropdown-content">
-    <a href="?lang=en" class="<?php echo ($lang==='en'?'active':''); ?>">English</a>
-    <a href="?lang=th" class="<?php echo ($lang==='th'?'active':''); ?>">ไทย</a>
-  </div>
-</div>
-  
-  <!-- Profile dropdown -->
-  <div class="profile-dropdown">
-    <img src="<?php echo file_exists($profilePicture) ? $profilePicture : 'avatar.png'; ?>" alt="Profile" class="profile-img" id="profileIcon">
-    <div id="dropdownMenu" class="profile-dropdown-content">
-      <?php if (isset($_SESSION["user_id"])): ?>
-        <a href="profile.php"><?php echo ($texts[$lang]['profile']) ?></a>
-        <a href="logout.php"><?php echo ($texts[$lang]['out']) ?></a>
-      <?php else: ?>
-        <a href="index.php"><?php echo ($texts[$lang]['login']) ?></a>
-      <?php endif; ?>
-    </div>
-  </div>
-  </div>
-  </div>
+<?php include 'includes/navbar.php'; ?>
 
 <!-- HERO -->
 <div class="logo-container" id="hero">
@@ -648,7 +589,7 @@ if (isset($_SESSION["user_id"])) {
 
 <!-- CONTENT -->
 <div class="content-section reveal" id="content">
-    <h1 class="reveal">👋 <?php echo $welcomeText; ?></h1>
+    <h1 class="reveal">👋 <?php echo isset($_navUserName) ? $texts[$lang]['Welcome'] . $_navUserName : 'Welcome to Future X'; ?></h1>
     <p class="lead reveal"><?php echo ($texts[$lang]['page']) ?></p>
     <?php if (isset($_SESSION["user_id"])): ?>
        <div class="reveal">
@@ -667,23 +608,6 @@ if (isset($_SESSION["user_id"])) {
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Profile dropdown
-    const profileIcon = document.getElementById("profileIcon");
-    const dropdownMenu = document.getElementById("dropdownMenu");
-    if (profileIcon) {
-        profileIcon.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", () => { dropdownMenu.style.display = "none"; });
-    }
-
-    // Navbar scroll state (kept, but background remains red)
-    const topBanner = document.getElementById("topBanner");
-    window.addEventListener("scroll", () => {
-        topBanner.classList.toggle("scrolled", window.scrollY > 10);
-    });
-
     // Scroll down button
     const scrollDown = document.getElementById("scrollDown");
     if (scrollDown) {
@@ -693,28 +617,12 @@ if (isset($_SESSION["user_id"])) {
         });
     }
 
-    // Nav scroll indicator (defensive)
-    const navLinksContainer = document.getElementById("navLinksContainer");
-    const navScrollIndicator = document.getElementById("navScrollIndicator");
-    function updateScrollIndicator() {
-      if (!navLinksContainer || !navScrollIndicator) return;
-      const maxScroll = navLinksContainer.scrollWidth - navLinksContainer.clientWidth;
-      const currentScroll = navLinksContainer.scrollLeft;
-      const progress = maxScroll > 0 ? (currentScroll / maxScroll) * 100 : 0;
-      navScrollIndicator.style.width = progress + "%";
-    }
-    if (navLinksContainer) {
-      navLinksContainer.addEventListener("scroll", updateScrollIndicator);
-      window.addEventListener("resize", updateScrollIndicator);
-      updateScrollIndicator();
-    }
-
     // Hero entrance
     window.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('hero-loaded');
     });
 
-    // Reveal on scroll (current: one-time)
+    // Reveal on scroll
     const revealEls = document.querySelectorAll('.reveal');
     const io = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -722,46 +630,6 @@ if (isset($_SESSION["user_id"])) {
         });
     }, { threshold: 0.12 });
     revealEls.forEach(el => io.observe(el));
-</script>
-<script>
-// Language dropdown
-const langIcon = document.getElementById("langIcon");
-const langMenu = document.getElementById("langMenu");
-const profileIconEl = document.getElementById("profileIcon");
-const profileMenuEl = document.getElementById("dropdownMenu");
-
-if (langIcon) {
-    langIcon.addEventListener("click", (e) => {
-        e.stopPropagation();
-        // close profile menu if open
-        if (profileMenuEl) 
-            profileMenuEl.style.display = "none";
-        // toggle language menu
-        const open = langMenu.style.display === "block";
-        langMenu.style.display = open ? "none" : "block";
-        langIcon.setAttribute("aria-expanded", open ? "false" : "true");
-    });
-}
-
-// Close both menus when clicking outside
-document.addEventListener("click", () => {
-    if (langMenu) 
-        langMenu.style.display = "none";
-    if (profileMenuEl) 
-        profileMenuEl.style.display = "none";
-});
-
-// Optional: close on Escape key
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        if (langMenu) 
-            langMenu.style.display = "none";
-        if (profileMenuEl) 
-            profileMenuEl.style.display = "none";
-        if (langIcon) 
-            langIcon.setAttribute("aria-expanded","false");
-    }
-});
 </script>
 </body>
 </html>
