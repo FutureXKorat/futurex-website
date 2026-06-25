@@ -103,46 +103,6 @@ $texts = [
         }
         .top-banner.scrolled .nav-links a { color: #fff; }
         .nav-links a:hover { background-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
-		#profileIcon + .profile-dropdown-content {
-  	    	margin-top: 8px; /* or whatever gap you want */
-		}
-        .profile-dropdown {
-            transition: transform .15s ease;
-            will-change: transform;
-        }
-
-        .profile-dropdown:hover {
-            transform: translateY(-1px);
-        }
-        .profile-dropdown-content {
-            display: none;
-            position: absolute;
-            right: 10px;
-            background-color: white;
-            min-width: 190px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            padding: 0;
-        }
-        .profile-dropdown-content a {
-            display: block;
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            transition: background 0.3s;
-            white-space: nowrap;
-        }
-        .profile-dropdown-content a:hover { background-color: #f2f2f2; color: #333;}
-        .profile-img {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
-            background-color: var(--gray-color);
-            border: none; /* no border */
-        }
         /* Language dropdown container */
         .lang-dropdown{
                 position: relative;

@@ -74,9 +74,7 @@ body {
 .profile-dropdown {
     position: relative;
     flex-shrink: 0;
-    transition: transform .15s ease;
 }
-.profile-dropdown:hover { transform: translateY(-1px); }
 .profile-dropdown-content {
     display: none;
     position: absolute;
@@ -105,7 +103,9 @@ body {
     cursor: pointer;
     background-color: var(--gray-color);
     border: none;
+    transition: transform .15s ease;
 }
+.profile-img:hover { transform: translateY(-1px); }
 
 /* Language dropdown */
 .lang-dropdown {
