@@ -203,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .item-table tbody tr + tr td { border-top: 1px dashed rgba(0,0,0,.08); }
         .col-name { width:60%; }
         .col-qty  { width:15%; text-align:center; }
-        .col-price{ width:25%; text-align:right; white-space:nowrap; }
+        .col-price{ width:25%; text-align:right; white-space:nowrap; min-width:90px; }
 
         .summary-totals { margin-top:10px; font-size: .98rem; }
         .summary-row { display:flex; justify-content:space-between; padding:6px 0; }

@@ -13,7 +13,7 @@ $texts = [
         'redirect' => 'Log In at Official Website',
         'klang'    => 'Log In<wbr> to<wbr> 7<wbr> Warehouse<wbr> (Nakhon Ratchasima)',
         'lang'     => 'ภาษาไทย',
-        'register_klang'    => 'Register for 7 Warehouse (Nakhon Ratchasima)',
+        'register_klang'    => 'Register<wbr> for<wbr> 7<wbr> Warehouse<wbr> (Nakhon Ratchasima)',
         'register_official' => 'Register at Official Website'
     ],
     'th' => [
@@ -25,7 +25,7 @@ $texts = [
         'redirect' => 'เข้าสู่ระบบที่เว็บไซต์ทางการ',
         'klang'    => 'เข้าสู่ระบบที่คลัง<wbr> 7<wbr> (นครราชสีมา)',
         'lang'     => 'English',
-        'register_klang'    => 'ลงทะเบียนสำหรับคลัง 7 (นครราชสีมา)',
+        'register_klang'    => 'ลงทะเบียนสำหรับคลัง<wbr> 7<wbr> (นครราชสีมา)',
         'register_official' => 'ลงทะเบียนที่เว็บไซต์ทางการ'
     ]
 ];
