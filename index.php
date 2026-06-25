@@ -146,10 +146,8 @@ $texts = [
 
         .logo-wrapper {
             position: relative;
-            display: block;
+            display: inline-block;
             padding: 10px;
-            overflow: hidden;
-            text-align: center;
         }
 
         .logo-wrapper::before {
@@ -168,7 +166,6 @@ $texts = [
 
         .logo {
             max-width: 210px;
-            width: 100%;
             height: auto;
             position: relative;
             z-index: 1;
