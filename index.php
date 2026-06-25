@@ -11,7 +11,7 @@ $texts = [
         'login'    => 'Log In Here',
         'guest'    => 'Continue as Guest',
         'redirect' => 'Log In at Official Website',
-        'klang'    => 'Log In to 7 Warehouse (Nakhon Ratchasima)',
+        'klang'    => 'Log In<wbr> to<wbr> 7<wbr> Warehouse<wbr> (Nakhon Ratchasima)',
         'lang'     => 'ภาษาไทย',
         'register_klang'    => 'Register for 7 Warehouse (Nakhon Ratchasima)',
         'register_official' => 'Register at Official Website'
@@ -23,7 +23,7 @@ $texts = [
         'login'    => 'เข้าสู่ระบบ',
         'guest'    => 'เข้าสู่เว็บไซต์โดยไม่ลงชื่อ',
         'redirect' => 'เข้าสู่ระบบที่เว็บไซต์ทางการ',
-        'klang'    => 'เข้าสู่ระบบที่คลัง 7 (นครราชสีมา)',
+        'klang'    => 'เข้าสู่ระบบที่คลัง<wbr> 7<wbr> (นครราชสีมา)',
         'lang'     => 'English',
         'register_klang'    => 'ลงทะเบียนสำหรับคลัง 7 (นครราชสีมา)',
         'register_official' => 'ลงทะเบียนที่เว็บไซต์ทางการ'
@@ -80,8 +80,6 @@ $texts = [
 			font-weight: 600;
 			padding: 10px 16px;
 			transition: background 0.3s ease;
-			white-space: normal;
-			word-break: break-word;
 		}
 
 		/* Hover effect */
