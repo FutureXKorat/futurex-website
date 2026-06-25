@@ -2,6 +2,11 @@
 session_start();
 include 'database.php';
 
+if (isset($_SESSION['user_id'])) {
+    header('Location: home.php');
+    exit();
+}
+
 // Define translations
 $texts = [
     'en' => [

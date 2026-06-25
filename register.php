@@ -3,6 +3,11 @@ session_start();
 include 'database.php';
 include 'send_otp.php';
 
+if (isset($_SESSION['user_id'])) {
+    header('Location: home.php');
+    exit();
+}
+
 // Language text map (keep this)
 $texts = [
 	'en' => [

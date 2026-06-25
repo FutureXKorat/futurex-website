@@ -2,6 +2,11 @@
 session_start();
 include 'database.php'; // defines $conn and $lang
 
+if (isset($_SESSION['user_id'])) {
+    header('Location: home.php');
+    exit();
+}
+
 $texts = [
     'en' => [
         'tabbar'        => 'Log In - Future X',
