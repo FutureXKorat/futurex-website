@@ -480,10 +480,11 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
           ?>
         </p>
         <form method="POST" id="otpForm">
+          <input type="hidden" name="pw_step2" value="1">
           <input class="otp-input" type="text" name="otp_code"
                  inputmode="numeric" maxlength="6" autocomplete="one-time-code"
                  placeholder="000000" required>
-          <button type="submit" name="pw_step2" class="btn-modern" id="otpBtn">
+          <button type="submit" class="btn-modern" id="otpBtn">
             <?php echo ($lang === 'en') ? 'Confirm Password Change' : 'ยืนยันการเปลี่ยนรหัสผ่าน'; ?>
           </button>
         </form>
@@ -501,13 +502,14 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       <?php else: ?>
         <!-- ── Step 1: Enter passwords ── -->
         <form method="POST" id="pwForm">
+          <input type="hidden" name="pw_step1" value="1">
           <input class="pw-input" type="password" name="current_password"
             placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
           <input class="pw-input" type="password" name="new_password"
             placeholder="<?php echo ($lang === 'en') ? 'New Password' : 'รหัสผ่านใหม่'; ?>" required>
           <input class="pw-input" type="password" name="confirm_password"
             placeholder="<?php echo ($lang === 'en') ? 'Confirm New Password' : 'ยืนยันรหัสผ่านใหม่'; ?>" required>
-          <button type="submit" name="pw_step1" class="btn-modern" id="pwBtn">
+          <button type="submit" class="btn-modern" id="pwBtn">
             <?php echo ($lang === 'en') ? 'Send OTP to Email' : 'ส่ง OTP ไปยังอีเมล'; ?>
           </button>
         </form>
