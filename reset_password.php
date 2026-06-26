@@ -1,7 +1,5 @@
 <?php
-session_start();
-include 'database.php';
-session_write_close(); // release session lock — this page doesn't write to session
+echo "PHP is running"; exit;
 
 // Set timezone to Kuala Lumpur
 date_default_timezone_set('Asia/Kuala_Lumpur');
