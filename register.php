@@ -276,7 +276,7 @@ function old($key) {
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-	    	color: var(--brand-color);
+	    	color: #007BFF;
         }
         .lang-switch:hover {
             background: rgba(255, 255, 255, 0.9);
