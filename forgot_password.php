@@ -44,21 +44,6 @@ $success = '';
 
 // ── RESET MODE (token in URL) ──────────────────────────────────────────────
 if ($mode === 'reset') {
-    $stmt = $conn->prepare("SELECT id, username FROM users WHERE reset_token = ? AND reset_expires > NOW()");
-    if (!$stmt) {
-        die("Database error. Please request a new reset link.");
-    }
-    $stmt->bind_param("s", $token);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $stmt->close();
-
-    if (!$result || $result->num_rows === 0) {
-        die("Invalid or expired token. Please <a href='forgot_password.php'>request a new reset link</a>.");
-    }
-
-    $user = $result->fetch_assoc();
-
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password         = $_POST['password']         ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
@@ -74,19 +59,36 @@ if ($mode === 'reset') {
         }
 
         if (empty($errors)) {
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $upd = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
-            if (!$upd) {
+            $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_expires > NOW()");
+            if (!$stmt) {
                 $errors[] = ($lang === 'th') ? 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง' : 'Database error. Please try again.';
             } else {
-                $upd->bind_param("si", $hashed, $user['id']);
-                if ($upd->execute()) {
-                    $upd->close();
-                    header("Location: login.php?reset=success");
-                    exit();
+                $stmt->bind_param("s", $token);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows === 0) {
+                    $stmt->close();
+                    $errors[] = ($lang === 'th') ? 'ลิงค์หมดอายุแล้ว กรุณาขอลิงค์ใหม่' : 'Link expired. Please request a new reset link.';
                 } else {
-                    $upd->close();
-                    $errors[] = ($lang === 'th') ? 'ไม่สามารถอัปเดตรหัสผ่านได้' : 'Failed to update password. Please try again.';
+                    $stmt->bind_result($uid);
+                    $stmt->fetch();
+                    $stmt->close();
+
+                    $hashed = password_hash($password, PASSWORD_DEFAULT);
+                    $upd = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
+                    if (!$upd) {
+                        $errors[] = ($lang === 'th') ? 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง' : 'Database error. Please try again.';
+                    } else {
+                        $upd->bind_param("si", $hashed, $uid);
+                        if ($upd->execute()) {
+                            $upd->close();
+                            header("Location: login.php?reset=success");
+                            exit();
+                        } else {
+                            $upd->close();
+                            $errors[] = ($lang === 'th') ? 'ไม่สามารถอัปเดตรหัสผ่านได้' : 'Failed to update password. Please try again.';
+                        }
+                    }
                 }
             }
         }
