@@ -10,6 +10,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Auto-logout when "remember me" session has passed midnight
+if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
+    $_SESSION = [];
+    session_destroy();
+}
+
 $cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
 if (file_exists($cfgPath)) {

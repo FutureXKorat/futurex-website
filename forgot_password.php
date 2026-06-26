@@ -34,19 +34,23 @@ $success = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
 
-    $sql = "SELECT * FROM users WHERE username = '$username'";
-    $result = $conn->query($sql);
+    $stmt = $conn->prepare("SELECT id, email FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $email = $row['email'];
-        
-        $token = bin2hex(random_bytes(32));
-        $expires = date("Y-m-d H:i:s", strtotime('+30 minutes')); // ✅ Expiry 30 mins
 
-        // Update DB
-        $update = "UPDATE users SET reset_token = '$token', reset_expires = '$expires' WHERE username = '$username'";
-        $conn->query($update);
+        $token   = bin2hex(random_bytes(32));
+        $expires = date("Y-m-d H:i:s", strtotime('+30 minutes'));
+
+        $upd = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
+        $upd->bind_param("ssi", $token, $expires, $row['id']);
+        $upd->execute();
+        $upd->close();
 
         if (sendResetEmail($email, $token)) {
             $success = ($lang === 'th') ? 'ลิงค์รีเซ็ตรหัสผ่านได้ถูกส่งไปยังอีเมล์ของคุณแล้ว' : "A password reset link has been sent to your email.";

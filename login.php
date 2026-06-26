@@ -24,6 +24,7 @@ $texts = [
         'db_error'      => 'Database error. Please try again.',
         'reset_success' => 'Your password has been reset successfully.',
     	'reg_success'   => 'Your account has been created successfully! Please log in.',
+        'remember_me'   => 'Remember me today',
         'lang'          => 'ภาษาไทย',
     ],
     'th' => [
@@ -42,6 +43,7 @@ $texts = [
         'db_error'      => 'เกิดข้อผิดพลาดของฐานข้อมูล โปรดลองอีกครั้ง',
         'reset_success' => 'เปลี่ยนรหัสผ่านสำเร็จ',
             'reg_success'   => 'สร้างบัญชีสำเร็จ',
+        'remember_me'   => 'จดจำฉันวันนี้',
         'lang'          => 'English',
     ],
 ];
@@ -93,6 +95,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } elseif (function_exists('sendOTPEmail')) {
                     sendOTPEmail($email, $otp);
                 }
+
+                // carry the "remember me" choice through the OTP step
+                $_SESSION['pending_remember'] = !empty($_POST['remember_me']);
 
                 // redirect to verify page
                 header("Location: verify_otp.php?username=" . urlencode($username) . "&login=1");
@@ -243,6 +248,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <input type="password" name="password" class="form-control"
                    placeholder="<?php echo htmlspecialchars($texts[$lang]['password_ph']); ?>"
                    required>
+        </div>
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input type="checkbox" name="remember_me" id="remember_me"
+                   class="form-check-input" style="width:1.1em;height:1.1em;cursor:pointer;flex-shrink:0;">
+            <label for="remember_me" class="mb-0" style="cursor:pointer;font-size:0.95rem;user-select:none;">
+                <?php echo htmlspecialchars($texts[$lang]['remember_me']); ?>
+            </label>
         </div>
         <button type="submit" class="btn btn-modern btn-primary" id="loginBtn">
             <?php echo htmlspecialchars($texts[$lang]['login_btn']); ?>

@@ -65,8 +65,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upd->execute();
                 $upd->close();
 
-                $_SESSION["user_id"] = $row["id"];
-                $_SESSION['username']     = (string)($row['username'] ?? '');
+                $_SESSION["user_id"]  = $row["id"];
+                $_SESSION['username'] = (string)($row['username'] ?? '');
+
+                if (!empty($_SESSION['pending_remember'])) {
+                    // Expire at midnight tonight (Asia/Kuala_Lumpur)
+                    $tz       = new DateTimeZone('Asia/Kuala_Lumpur');
+                    $midnight = (new DateTime('tomorrow midnight', $tz))->getTimestamp();
+                    $_SESSION['session_expires'] = $midnight;
+
+                    // Overwrite the session cookie so it survives browser close until midnight
+                    $p = session_get_cookie_params();
+                    setcookie(session_name(), session_id(), [
+                        'expires'  => $midnight,
+                        'path'     => $p['path'],
+                        'domain'   => $p['domain'],
+                        'secure'   => $p['secure'],
+                        'httponly' => $p['httponly'],
+                        'samesite' => 'Lax',
+                    ]);
+                }
+                unset($_SESSION['pending_remember']);
+
                 header("Location: home.php");
                 exit();
             } else {

@@ -33,8 +33,11 @@ if (empty($token)) {
     die("Invalid request. No token provided.");
 }
 
-$sql = "SELECT * FROM users WHERE reset_token = '$token' AND reset_expires > NOW()";
-$result = $conn->query($sql);
+$stmt = $conn->prepare("SELECT id, username FROM users WHERE reset_token = ? AND reset_expires > NOW()");
+$stmt->bind_param("s", $token);
+$stmt->execute();
+$result = $stmt->get_result();
+$stmt->close();
 
 if (!$result || $result->num_rows === 0) {
     die("Invalid or expired token.");
@@ -59,12 +62,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        $update = "UPDATE users SET password = '$hashed_password', reset_token = NULL, reset_expires = NULL WHERE id = " . $user["id"];
-        if ($conn->query($update)) {
+        $upd = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
+        $upd->bind_param("si", $hashed_password, $user["id"]);
+        if ($upd->execute()) {
+            $upd->close();
             // Redirect to login with success message
             header("Location: login.php?reset=success");
             exit();
         } else {
+            $upd->close();
             $errors[] = "Failed to update password. Please try again.";
         }
     }
