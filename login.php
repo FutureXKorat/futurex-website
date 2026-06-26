@@ -227,6 +227,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             transform: translateY(-2px);
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
+        .pw-wrap { position: relative; }
+        .pw-wrap .form-control { padding-right: 2.75rem; }
+        .pwd-eye {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; padding: 0; cursor: pointer;
+            color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
+            touch-action: none;
+        }
+        .pwd-eye:focus { outline: none; }
+        .pwd-eye:hover { color: #374151; }
     </style>
 </head>
 <body>
@@ -244,10 +254,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                    placeholder="<?php echo htmlspecialchars($texts[$lang]['username_ph']); ?>"
                    required value="<?php echo htmlspecialchars($username); ?>">
         </div>
-        <div class="mb-3">
+        <div class="mb-3 pw-wrap">
             <input type="password" name="password" class="form-control"
                    placeholder="<?php echo htmlspecialchars($texts[$lang]['password_ph']); ?>"
                    required>
+            <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
         <div class="mb-3 d-flex align-items-center gap-2">
             <input type="checkbox" name="remember_me" id="remember_me"
@@ -279,6 +290,15 @@ document.getElementById("loginForm").addEventListener("submit", function() {
     const btn = document.getElementById("loginBtn");
     btn.disabled = true;
     btn.innerHTML = `<?php echo $texts[$lang]['login_btn']; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>`;
+});
+
+document.querySelectorAll('.pwd-eye').forEach(function(btn) {
+    var inp = btn.previousElementSibling;
+    btn.addEventListener('mousedown',  function()  { inp.type = 'text'; });
+    btn.addEventListener('mouseup',    function()  { inp.type = 'password'; });
+    btn.addEventListener('mouseleave', function()  { inp.type = 'password'; });
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
+    btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

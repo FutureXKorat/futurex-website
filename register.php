@@ -337,6 +337,16 @@ function old($key) {
 			background-color: #007BFF;
 			color: #fff;
 		}
+		.pw-wrap { position: relative; }
+		.pw-wrap .form-control { padding-right: 2.75rem; }
+		.pwd-eye {
+			position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+			background: none; border: none; padding: 0; cursor: pointer;
+			color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
+			touch-action: none;
+		}
+		.pwd-eye:focus { outline: none; }
+		.pwd-eye:hover { color: #374151; }
 	</style>
 </head>
 <body>
@@ -408,14 +418,16 @@ function old($key) {
 			</div>
 		</div>
 
-		<div class="mb-3">
+		<div class="mb-3 pw-wrap">
 			<input type="password" name="password" class="form-control"
 				   placeholder="<?php echo $texts[$lang]['password']; ?>" required>
+			<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
 		</div>
 
-		<div class="mb-3">
+		<div class="mb-3 pw-wrap">
 			<input type="password" name="confirm_password" class="form-control"
 				   placeholder="<?php echo $texts[$lang]['confirm']; ?>" required>
+			<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
 		</div>
 
 		<button type="submit" class="btn btn-modern btn-primary" id="registerBtn">
@@ -442,6 +454,15 @@ document.getElementById("registerForm").addEventListener("submit", function() {
 	const btn = document.getElementById("registerBtn");
 	btn.disabled = true;
 	btn.innerHTML = `<?php echo $texts[$lang]['registering']; ?> <span class="spinner-border spinner-border-sm ms-2" role="status"></span>`;
+});
+
+document.querySelectorAll('.pwd-eye').forEach(function(btn) {
+    var inp = btn.previousElementSibling;
+    btn.addEventListener('mousedown',  function()  { inp.type = 'text'; });
+    btn.addEventListener('mouseup',    function()  { inp.type = 'password'; });
+    btn.addEventListener('mouseleave', function()  { inp.type = 'password'; });
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
+    btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
 });
 
 // Country code selection logic (custom dropdown)

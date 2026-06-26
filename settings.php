@@ -388,6 +388,16 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       transition: transform .15s, background .2s;
     }
     .lang-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
+    .pw-wrap { position: relative; }
+    .pw-wrap .pw-input { padding-right: 2.75rem; }
+    .pwd-eye {
+      position: absolute; right: 12px; top: calc(50% - 6px);
+      background: none; border: none; padding: 0; cursor: pointer;
+      color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
+      touch-action: none;
+    }
+    .pwd-eye:focus { outline: none; }
+    .pwd-eye:hover { color: #374151; }
   </style>
 </head>
 <body>
@@ -503,12 +513,21 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
         <!-- ── Step 1: Enter passwords ── -->
         <form method="POST" id="pwForm">
           <input type="hidden" name="pw_step1" value="1">
-          <input class="pw-input" type="password" name="current_password"
-            placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
-          <input class="pw-input" type="password" name="new_password"
-            placeholder="<?php echo ($lang === 'en') ? 'New Password' : 'รหัสผ่านใหม่'; ?>" required>
-          <input class="pw-input" type="password" name="confirm_password"
-            placeholder="<?php echo ($lang === 'en') ? 'Confirm New Password' : 'ยืนยันรหัสผ่านใหม่'; ?>" required>
+          <div class="pw-wrap">
+            <input class="pw-input" type="password" name="current_password"
+              placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
+            <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-wrap">
+            <input class="pw-input" type="password" name="new_password"
+              placeholder="<?php echo ($lang === 'en') ? 'New Password' : 'รหัสผ่านใหม่'; ?>" required>
+            <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-wrap">
+            <input class="pw-input" type="password" name="confirm_password"
+              placeholder="<?php echo ($lang === 'en') ? 'Confirm New Password' : 'ยืนยันรหัสผ่านใหม่'; ?>" required>
+            <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
           <button type="submit" class="btn-modern" id="pwBtn">
             <?php echo ($lang === 'en') ? 'Send OTP to Email' : 'ส่ง OTP ไปยังอีเมล'; ?>
           </button>
@@ -712,6 +731,15 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
     window.addEventListener('scroll', updateToc, { passive: true });
     window.addEventListener('resize', updateToc, { passive: true });
     updateToc();
+
+    document.querySelectorAll('.pwd-eye').forEach(function(btn) {
+      var inp = btn.previousElementSibling;
+      btn.addEventListener('mousedown',  function()  { inp.type = 'text'; });
+      btn.addEventListener('mouseup',    function()  { inp.type = 'password'; });
+      btn.addEventListener('mouseleave', function()  { inp.type = 'password'; });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
+      btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
+    });
   </script>
 </body>
 </html>
