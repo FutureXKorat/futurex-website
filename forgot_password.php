@@ -3,7 +3,7 @@ session_start();
 include 'database.php';
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-$token = $_GET['token'] ?? '';
+$token = $_GET['k'] ?? '';
 $mode  = !empty($token) ? 'reset' : 'forgot';
 
 $texts = [
@@ -132,7 +132,7 @@ if ($mode === 'reset') {
 
 $langToggle = ($lang === 'en') ? 'th' : 'en';
 $langHref   = ($mode === 'reset')
-    ? '?token=' . urlencode($token) . '&lang=' . $langToggle
+    ? '?k=' . urlencode($token) . '&lang=' . $langToggle
     : '?lang=' . $langToggle;
 ?>
 <!DOCTYPE html>
@@ -280,7 +280,7 @@ $langHref   = ($mode === 'reset')
         </div>
     <?php endif; ?>
 
-    <form method="post" action="?token=<?php echo urlencode($token); ?>&lang=<?php echo htmlspecialchars($lang); ?>" id="resetForm">
+    <form method="post" action="?k=<?php echo urlencode($token); ?>&lang=<?php echo htmlspecialchars($lang); ?>" id="resetForm">
         <div class="pw-wrap">
             <input type="password" id="pw1" name="password" class="form-control"
                    placeholder="<?php echo htmlspecialchars($texts[$lang]['pass']); ?>" required>
