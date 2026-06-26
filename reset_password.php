@@ -34,13 +34,16 @@ if (empty($token)) {
 }
 
 $stmt = $conn->prepare("SELECT id, username FROM users WHERE reset_token = ? AND reset_expires > NOW()");
+if (!$stmt) {
+    die("Database error. Please request a new reset link.");
+}
 $stmt->bind_param("s", $token);
 $stmt->execute();
 $result = $stmt->get_result();
 $stmt->close();
 
 if (!$result || $result->num_rows === 0) {
-    die("Invalid or expired token.");
+    die("Invalid or expired token. Please request a new reset link.");
 }
 
 $user = $result->fetch_assoc();
@@ -63,15 +66,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         $upd = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
-        $upd->bind_param("si", $hashed_password, $user["id"]);
-        if ($upd->execute()) {
-            $upd->close();
-            // Redirect to login with success message
-            header("Location: login.php?reset=success");
-            exit();
+        if (!$upd) {
+            $errors[] = "Database error. Please try again.";
         } else {
-            $upd->close();
-            $errors[] = "Failed to update password. Please try again.";
+            $upd->bind_param("si", $hashed_password, $user["id"]);
+            if ($upd->execute()) {
+                $upd->close();
+                header("Location: login.php?reset=success");
+                exit();
+            } else {
+                $upd->close();
+                $errors[] = "Failed to update password. Please try again.";
+            }
         }
     }
 }
