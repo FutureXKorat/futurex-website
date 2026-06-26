@@ -4,7 +4,7 @@ include_once 'database.php';
 function sendResetEmail($email, $token) {
     global $lang;
 
-    $resetLink = "https://futurexthailand.com/reset_password.php?token=$token";
+    $resetLink = "https://futurexthailand.com/forgot_password.php?token=$token";
 
     // 1) Load config
     $cfgPath = __DIR__ . '/secure-config/futurex_mail.php';
