@@ -336,6 +336,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var t = new bootstrap.Toast(toastEl);
     t.show();
   });
+
+  // Remove ?reset=success from URL so re-submitting the form doesn't re-show the success toast
+  if (window.location.search.includes('reset=success')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
 });
 </script>
 
