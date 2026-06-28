@@ -314,10 +314,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     vertical-align: middle;
   }
   .file-inline {
-    display: inline-flex !important;
+    display: flex !important;
     align-items: center !important;
     gap: 10px !important;
+    min-width: 0;
+  }
+  .file-label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    min-width: 0;
   }
   .choose-btn {
     display: inline-flex !important;

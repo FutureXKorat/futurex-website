@@ -275,7 +275,7 @@ exit; // important so the HTML below is not output for AJAX
         .qty-edit{ font-size:.95rem; display:flex; align-items:center; gap:8px; }
         .qty-edit input[type="number"]{ width:90px; text-align:center; border-radius:10px; border:1px solid #d1d5db; padding:6px 8px; font-weight:600; }
         .cap-note{ font-size:.85rem; color:#6b7280; min-height:1.2em; }
-        .cart-row a.delete{ color:var(--brand-color); text-decoration:none; margin-left:8px; font-size:1.2rem; }
+        .cart-row a.delete{ color:#dc2626; text-decoration:none; margin-left:8px; line-height:1; display:inline-flex; align-items:center; }
         .line-total{ min-width:100px; display:inline-block; text-align:right; }
         .total-line{ text-align:right; font-weight:600; font-size:1.3rem; margin-top:20px; }
 
@@ -388,7 +388,7 @@ exit; // important so the HTML below is not output for AJAX
                         <a href="cart.php?idu=<?php echo $idx; ?>" class="delete"
                            data-name="<?php echo htmlspecialchars($name); ?>"
                            data-price="<?php echo htmlspecialchars($price); ?>"
-                           title="Remove">✕</a>
+                           title="Remove"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg></a>
                     </div>
                 </div>
             <?php endforeach; ?>

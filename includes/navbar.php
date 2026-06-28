@@ -49,14 +49,31 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 ?>
+<style>
+.nav-logo-link { padding: 0 4px !important; display: inline-flex !important; align-items: center !important; background: none !important; }
+.nav-logo-link:hover { background: none !important; transform: none !important; }
+.nav-logo-img { height: 36px; width: auto; display: block; }
+.nav-cart-btn {
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: transform .15s ease, background .2s ease;
+}
+.nav-cart-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); color: #fff; }
+</style>
 <div class="top-banner" id="topBanner">
   <div class="nav-links-container" id="navLinksContainer">
     <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
     <div class="nav-links" id="navLinks">
-      <a href="home.php"><?php echo $_navL['home']; ?></a>
+      <a href="home.php" class="nav-logo-link"><img src="logo_transparent.png" alt="Home" class="nav-logo-img"></a>
       <?php if (isset($_SESSION['user_id'])): ?>
         <a href="products.php"><?php echo $_navL['product']; ?></a>
-        <a href="cart.php"><?php echo $_navL['cart']; ?></a>
         <a href="orders.php"><?php echo $_navL['orders']; ?></a>
       <?php endif; ?>
       <a href="about.php"><?php echo $_navL['about']; ?></a>
@@ -65,6 +82,13 @@ if (isset($_SESSION['user_id'])) {
   </div>
 
   <div class="right-actions">
+    <?php if (isset($_SESSION['user_id'])): ?>
+    <a href="cart.php" class="nav-cart-btn" aria-label="<?php echo $_navL['cart']; ?>">
+      <svg viewBox="0 0 16 16" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+      </svg>
+    </a>
+    <?php endif; ?>
     <div class="lang-dropdown">
       <button class="lang-btn-icon" id="langIcon" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
