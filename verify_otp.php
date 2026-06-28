@@ -199,6 +199,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight:700;
             font-size:1.3rem;
         }
+        @media (max-width:400px){
+            .otp-input{ font-size:1rem; letter-spacing:2px; }
+            .form-container{ padding:32px 20px; }
+        }
         .btn-modern{ display:block; width:100%; margin-top:16px; padding:14px;
             font-size:1.1rem; font-weight:600; border-radius:14px; transition:all .3s ease; border:none; color:#fff; }
         .btn-modern.btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand-hover)); }

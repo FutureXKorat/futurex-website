@@ -7,11 +7,12 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$userId      = (int)$_SESSION['user_id'];
-$success     = "";
-$errors      = [];
-$pwErrors    = [];
-$emailErrors = [];
+$userId       = (int)$_SESSION['user_id'];
+$success      = "";
+$errors       = [];
+$pwErrors     = [];
+$emailErrors  = [];
+$deleteErrors = [];
 
 $uploadDir = 'uploads/profile_pics/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
@@ -211,6 +212,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_resend'])) {
 // ── Cancel email change ───────────────────────────────────────────────────
 if (isset($_POST['email_cancel'])) {
     unset($_SESSION['email_change']);
+}
+
+// ── Delete Account ────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
+    $confirmText = trim($_POST['confirm_delete'] ?? '');
+    $expected    = ($user['username'] ?? '') . '-delete';
+    if ($confirmText !== $expected) {
+        $deleteErrors[] = ($lang === 'en') ? 'Confirmation text does not match.' : 'ข้อความยืนยันไม่ตรงกัน';
+    } else {
+        if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
+            unlink($uploadDir . $user['profile_picture']);
+        }
+        $del = $conn->prepare("DELETE FROM users WHERE id = ?");
+        $del->bind_param("i", $userId);
+        $del->execute();
+        $del->close();
+        $_SESSION = [];
+        session_destroy();
+        header('Location: index.php');
+        exit();
+    }
 }
 
 $hasPic          = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
@@ -496,6 +518,9 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     <a class="toc-link" href="#section-email">
       <?php echo ($lang === 'en') ? 'Change Email' : 'เปลี่ยนอีเมล'; ?>
     </a>
+    <a class="toc-link" href="#section-delete" style="color:#ef4444;">
+      <?php echo ($lang === 'en') ? 'Delete Account' : 'ลบบัญชี'; ?>
+    </a>
   </nav>
 
   <div class="page-wrapper">
@@ -576,7 +601,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           <input type="hidden" name="pw_step2" value="1">
           <input class="otp-input" type="text" name="otp_code"
                  inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-                 placeholder="000000" required>
+                 placeholder="<?php echo ($lang === 'en') ? 'Enter 6-Digit OTP' : 'กรอก OTP 6 หลัก'; ?>" required>
           <button type="submit" class="btn-modern" id="otpBtn">
             <?php echo ($lang === 'en') ? 'Confirm Password Change' : 'ยืนยันการเปลี่ยนรหัสผ่าน'; ?>
           </button>
@@ -651,7 +676,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           <input type="hidden" name="email_step2" value="1">
           <input class="otp-input" type="text" name="email_otp_code"
                  inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-                 placeholder="000000" required>
+                 placeholder="<?php echo ($lang === 'en') ? 'Enter 6-Digit OTP' : 'กรอก OTP 6 หลัก'; ?>" required>
           <button type="submit" class="btn-modern" id="emailOtpBtn">
             <?php echo ($lang === 'en') ? 'Confirm Email Change' : 'ยืนยันการเปลี่ยนอีเมล'; ?>
           </button>
@@ -691,6 +716,47 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       <?php endif; ?>
     </div>
 
+    <!-- ── Delete Account ── -->
+    <div class="settings-card" id="section-delete" style="border: 1px solid rgba(239,68,68,0.35);">
+      <h2 style="color:#ef4444;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Delete Account' : 'ลบบัญชี'; ?>
+      </h2>
+
+      <p style="color:#6b7280;font-size:0.9rem;margin-bottom:16px;">
+        <?php echo ($lang === 'en')
+          ? 'This permanently deletes your account and all data. This cannot be undone.'
+          : 'การดำเนินการนี้จะลบบัญชีและข้อมูลทั้งหมดอย่างถาวร ไม่สามารถยกเลิกได้'; ?>
+      </p>
+
+      <?php if ($deleteErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($deleteErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <form method="POST" id="deleteForm">
+        <input type="hidden" name="delete_account" value="1">
+        <label style="font-size:0.9rem;font-weight:600;display:block;margin-bottom:6px;">
+          <?php
+          $uname = htmlspecialchars($user['username'] ?? '');
+          echo ($lang === 'en')
+            ? "Type <strong>{$uname}-delete</strong> to confirm:"
+            : "พิมพ์ <strong>{$uname}-delete</strong> เพื่อยืนยัน:";
+          ?>
+        </label>
+        <input class="pw-input" type="text" name="confirm_delete"
+          placeholder="<?php echo htmlspecialchars(($user['username'] ?? '') . '-delete'); ?>"
+          autocomplete="off" required>
+        <button type="submit" class="btn-modern" id="deleteBtn"
+          style="background:linear-gradient(135deg,#ef4444,#b91c1c);">
+          <?php echo ($lang === 'en') ? 'Delete My Account' : 'ลบบัญชีของฉัน'; ?>
+        </button>
+      </form>
+    </div>
+
     <!-- ── Linked Accounts (coming soon) ──
     <div class="settings-card" id="section-linked-accounts">
       <h2>Link Your Accounts</h2>
@@ -718,8 +784,8 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         </div>
       </div>
     <?php endif; ?>
-    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors)): ?>
-      <?php foreach (array_merge($errors, $pwErrors, $emailErrors) as $e): ?>
+    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors) || !empty($deleteErrors)): ?>
+      <?php foreach (array_merge($errors, $pwErrors, $emailErrors, $deleteErrors) as $e): ?>
         <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="6000">
           <div class="d-flex">
             <div class="toast-body"><?= htmlspecialchars($e) ?></div>
@@ -872,6 +938,15 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         const btn = document.getElementById('emailOtpBtn');
         btn.disabled = true;
         btn.innerHTML = '<?php echo ($lang === 'en') ? 'Verifying...' : 'กำลังตรวจสอบ...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+
+    const deleteForm = document.getElementById('deleteForm');
+    if (deleteForm) {
+      deleteForm.addEventListener('submit', () => {
+        const btn = document.getElementById('deleteBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Deleting...' : 'กำลังลบ...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
       });
     }
 
