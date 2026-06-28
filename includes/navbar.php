@@ -50,8 +50,8 @@ if (isset($_SESSION['user_id'])) {
 }
 ?>
 <style>
-.nav-logo-link { padding: 0 4px !important; display: inline-flex !important; align-items: center !important; background: none !important; }
-.nav-logo-link:hover { background: none !important; transform: none !important; }
+.nav-logo-link { padding: 4px 8px !important; display: inline-flex !important; align-items: center !important; border-radius: 4px; transition: background 0.3s, transform 0.15s ease !important; }
+.nav-logo-link:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
 .nav-logo-img { height: 36px; width: auto; display: block; }
 .nav-cart-btn {
   width: 42px; height: 42px;
