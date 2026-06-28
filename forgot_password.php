@@ -109,7 +109,7 @@ if ($mode === 'reset') {
 
         if ($result && $result->num_rows > 0) {
             $row     = $result->fetch_assoc();
-            $tkn     = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');
+            $tkn     = bin2hex(random_bytes(16));
             $expires = date("Y-m-d H:i:s", strtotime('+30 minutes'));
 
             $upd = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
