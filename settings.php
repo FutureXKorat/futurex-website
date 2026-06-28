@@ -239,6 +239,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     }
 }
 
+// ── Google — flash messages from callback ────────────────────────────────
+$googleErrors = [];
+if (!empty($_SESSION['flash_google_error'])) {
+    $googleErrors[] = $_SESSION['flash_google_error'];
+    unset($_SESSION['flash_google_error']);
+}
+if (!empty($_SESSION['flash_google_success'])) {
+    $success = $_SESSION['flash_google_success'];
+    unset($_SESSION['flash_google_success']);
+}
+
+// ── Google — unlink ───────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unlink_google'])) {
+    $upd = $conn->prepare("UPDATE users SET google_id = NULL WHERE id = ?");
+    $upd->bind_param("i", $userId);
+    $upd->execute();
+    $upd->close();
+    $user['google_id'] = null;
+    $success = ($lang === 'en') ? 'Google account unlinked.' : 'ยกเลิกการเชื่อมต่อ Google สำเร็จแล้ว';
+}
+
+$googleLinked = !empty($user['google_id']);
 $hasPic          = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
 $otpPending      = !empty($_SESSION['pw_change'])     && time() <= $_SESSION['pw_change']['expires'];
 $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['email_change']['expires'];
@@ -522,6 +544,9 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     <a class="toc-link" href="#section-email">
       <?php echo ($lang === 'en') ? 'Change Email' : 'เปลี่ยนอีเมล'; ?>
     </a>
+    <a class="toc-link" href="#section-linked-accounts">
+      <?php echo ($lang === 'en') ? 'Linked Accounts' : 'บัญชีที่เชื่อมต่อ'; ?>
+    </a>
     <a class="toc-link" href="#section-delete" style="color:#ef4444;">
       <?php echo ($lang === 'en') ? 'Delete Account' : 'ลบบัญชี'; ?>
     </a>
@@ -766,13 +791,57 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       </form>
     </div>
 
-    <!-- ── Linked Accounts (coming soon) ──
+    <!-- ── Linked Accounts ── -->
     <div class="settings-card" id="section-linked-accounts">
-      <h2>Link Your Accounts</h2>
-      <button class="btn btn-outline-success w-100 mb-2" disabled>Link Google Account (coming soon)</button>
-      <button class="btn btn-outline-success w-100" disabled>Link Apple Account (coming soon)</button>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Linked Accounts' : 'บัญชีที่เชื่อมต่อ'; ?>
+      </h2>
+
+      <?php if ($googleErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($googleErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <svg width="22" height="22" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2Z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/>
+            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z"/>
+          </svg>
+          <div>
+            <div style="font-weight:600;font-size:0.95rem;">Google</div>
+            <div style="font-size:0.82rem;color:#6b7280;">
+              <?php echo $googleLinked
+                ? (($lang === 'en') ? 'Connected' : 'เชื่อมต่อแล้ว')
+                : (($lang === 'en') ? 'Not connected' : 'ยังไม่ได้เชื่อมต่อ'); ?>
+            </div>
+          </div>
+        </div>
+        <?php if ($googleLinked): ?>
+          <form method="POST">
+            <button type="submit" name="unlink_google"
+              style="background:none;border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:#6b7280;cursor:pointer;transition:all 0.2s;"
+              onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444';"
+              onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#6b7280';">
+              <?php echo ($lang === 'en') ? 'Unlink' : 'ยกเลิกการเชื่อมต่อ'; ?>
+            </button>
+          </form>
+        <?php else: ?>
+          <a href="google_auth.php?action=link"
+            style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:#374151;text-decoration:none;transition:all 0.2s;background:#fff;"
+            onmouseover="this.style.background='#f9fafb';this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)';"
+            onmouseout="this.style.background='#fff';this.style.boxShadow='none';">
+            <?php echo ($lang === 'en') ? 'Connect' : 'เชื่อมต่อ'; ?>
+          </a>
+        <?php endif; ?>
+      </div>
     </div>
-    -->
 
     <!-- ── Security (coming soon) ──
     <div class="settings-card" id="section-security">
@@ -793,8 +862,8 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         </div>
       </div>
     <?php endif; ?>
-    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors) || !empty($deleteErrors)): ?>
-      <?php foreach (array_merge($errors, $pwErrors, $emailErrors, $deleteErrors) as $e): ?>
+    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors) || !empty($deleteErrors) || !empty($googleErrors)): ?>
+      <?php foreach (array_merge($errors, $pwErrors, $emailErrors, $deleteErrors, $googleErrors) as $e): ?>
         <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="6000">
           <div class="d-flex">
             <div class="toast-body"><?= htmlspecialchars($e) ?></div>

@@ -52,6 +52,12 @@ $errors = [];
 $username = "";
 $success = "";
 
+// flash error from Google OAuth
+if (!empty($_SESSION['flash_google_error'])) {
+    $errors[] = $_SESSION['flash_google_error'];
+    unset($_SESSION['flash_google_error']);
+}
+
 // flash success from verify/register
 if (!empty($_SESSION['flash_success'])) {
     $flash = $_SESSION['flash_success'];
@@ -237,6 +243,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
         .pwd-eye:focus { outline: none; }
         .pwd-eye:hover { color: #374151; }
+        .divider {
+            display: flex; align-items: center; gap: 12px; margin: 16px 0;
+        }
+        .divider hr {
+            flex: 1; border: none; border-top: 1px solid #e5e7eb; margin: 0;
+        }
+        .divider span { color: #9ca3af; font-size: 0.85rem; white-space: nowrap; }
+        .btn-google {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 12px; font-size: 1rem; font-weight: 600;
+            border-radius: 14px; border: 1.5px solid #e5e7eb; background: #fff;
+            color: #374151; text-decoration: none; transition: all 0.3s ease;
+            box-sizing: border-box; margin-top: 4px;
+        }
+        .btn-google:hover {
+            background: #f9fafb; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px); color: #374151; text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -271,6 +295,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php echo htmlspecialchars($texts[$lang]['login_btn']); ?>
         </button>
     </form>
+
+    <div class="divider"><hr><span><?php echo ($lang === 'en') ? 'or continue with' : 'หรือเข้าสู่ระบบด้วย'; ?></span><hr></div>
+    <a href="google_auth.php" class="btn-google">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2Z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/>
+        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z"/>
+      </svg>
+      <?php echo ($lang === 'en') ? 'Sign in with Google' : 'เข้าสู่ระบบด้วย Google'; ?>
+    </a>
 
     <div class="link-section">
         <p>
