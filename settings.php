@@ -190,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_step2'])) {
         $upd->execute();
         $upd->close();
         unset($_SESSION['email_change']);
+        $user['email'] = $newEmail;
         $success = ($lang === 'en') ? 'Email changed successfully.' : 'เปลี่ยนอีเมลสำเร็จแล้ว';
     }
 }
@@ -218,8 +219,11 @@ if (isset($_POST['email_cancel'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     $confirmText = trim($_POST['confirm_delete'] ?? '');
     $expected    = ($user['username'] ?? '') . '-delete';
+    $delPassword = $_POST['delete_password'] ?? '';
     if ($confirmText !== $expected) {
         $deleteErrors[] = ($lang === 'en') ? 'Confirmation text does not match.' : 'ข้อความยืนยันไม่ตรงกัน';
+    } elseif (!password_verify($delPassword, $user['password'])) {
+        $deleteErrors[] = ($lang === 'en') ? 'Incorrect password.' : 'รหัสผ่านไม่ถูกต้อง';
     } else {
         if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
             unlink($uploadDir . $user['profile_picture']);
@@ -601,7 +605,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           <input type="hidden" name="pw_step2" value="1">
           <input class="otp-input" type="text" name="otp_code"
                  inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-                 placeholder="<?php echo ($lang === 'en') ? 'Enter 6-Digit OTP' : 'กรอก OTP 6 หลัก'; ?>" required>
+                 placeholder="000000" required>
           <button type="submit" class="btn-modern" id="otpBtn">
             <?php echo ($lang === 'en') ? 'Confirm Password Change' : 'ยืนยันการเปลี่ยนรหัสผ่าน'; ?>
           </button>
@@ -676,7 +680,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           <input type="hidden" name="email_step2" value="1">
           <input class="otp-input" type="text" name="email_otp_code"
                  inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-                 placeholder="<?php echo ($lang === 'en') ? 'Enter 6-Digit OTP' : 'กรอก OTP 6 หลัก'; ?>" required>
+                 placeholder="000000" required>
           <button type="submit" class="btn-modern" id="emailOtpBtn">
             <?php echo ($lang === 'en') ? 'Confirm Email Change' : 'ยืนยันการเปลี่ยนอีเมล'; ?>
           </button>
@@ -750,6 +754,11 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         <input class="pw-input" type="text" name="confirm_delete"
           placeholder="<?php echo htmlspecialchars(($user['username'] ?? '') . '-delete'); ?>"
           autocomplete="off" required>
+        <div class="pw-wrap">
+          <input class="pw-input" type="password" name="delete_password"
+            placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
+          <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
         <button type="submit" class="btn-modern" id="deleteBtn"
           style="background:linear-gradient(135deg,#ef4444,#b91c1c);">
           <?php echo ($lang === 'en') ? 'Delete My Account' : 'ลบบัญชีของฉัน'; ?>
