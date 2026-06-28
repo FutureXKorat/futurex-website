@@ -7,10 +7,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$userId   = (int)$_SESSION['user_id'];
-$success  = "";
-$errors   = [];
-$pwErrors = [];
+$userId      = (int)$_SESSION['user_id'];
+$success     = "";
+$errors      = [];
+$pwErrors    = [];
+$emailErrors = [];
 
 $uploadDir = 'uploads/profile_pics/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
@@ -134,8 +135,87 @@ if (isset($_POST['pw_cancel'])) {
     unset($_SESSION['pw_change']);
 }
 
-$hasPic    = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
-$otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']['expires'];
+// ── Change Email — Step 1: validate & send OTP to new email ──────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_step1'])) {
+    $currentPw = $_POST['email_current_password'] ?? '';
+    $newEmail  = trim($_POST['new_email'] ?? '');
+
+    if (!password_verify($currentPw, $user['password'])) {
+        $emailErrors[] = ($lang === 'en') ? 'Current password is incorrect.' : 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
+    } elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+        $emailErrors[] = ($lang === 'en') ? 'Please enter a valid email address.' : 'กรุณากรอกที่อยู่อีเมลที่ถูกต้อง';
+    } elseif (strtolower($newEmail) === strtolower($user['email'] ?? '')) {
+        $emailErrors[] = ($lang === 'en') ? 'New email is the same as your current email.' : 'อีเมลใหม่ตรงกับอีเมลปัจจุบันของคุณ';
+    } else {
+        $chk = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        $chk->bind_param("si", $newEmail, $userId);
+        $chk->execute();
+        $chk->store_result();
+        $taken = $chk->num_rows > 0;
+        $chk->close();
+        if ($taken) {
+            $emailErrors[] = ($lang === 'en') ? 'That email address is already in use.' : 'ที่อยู่อีเมลนี้ถูกใช้งานแล้ว';
+        } else {
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $_SESSION['email_change'] = [
+                'otp'       => $otp,
+                'expires'   => time() + 300,
+                'new_email' => $newEmail,
+            ];
+            if (!sendOTPEmail($newEmail, $otp)) {
+                unset($_SESSION['email_change']);
+                $emailErrors[] = ($lang === 'en') ? 'Failed to send OTP. Please try again.' : 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่';
+            }
+        }
+    }
+}
+
+// ── Change Email — Step 2: verify OTP & apply ────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_step2'])) {
+    $pending = $_SESSION['email_change'] ?? null;
+    $entered = trim($_POST['email_otp_code'] ?? '');
+
+    if (!$pending) {
+        $emailErrors[] = ($lang === 'en') ? 'Session expired. Please start over.' : 'เซสชันหมดอายุ กรุณาเริ่มใหม่';
+    } elseif (time() > $pending['expires']) {
+        unset($_SESSION['email_change']);
+        $emailErrors[] = ($lang === 'en') ? 'OTP has expired. Please start over.' : 'OTP หมดอายุแล้ว กรุณาเริ่มใหม่';
+    } elseif ($entered !== $pending['otp']) {
+        $emailErrors[] = ($lang === 'en') ? 'Incorrect OTP. Please try again.' : 'OTP ไม่ถูกต้อง กรุณาลองใหม่';
+    } else {
+        $newEmail = $pending['new_email'];
+        $upd = $conn->prepare("UPDATE users SET email = ? WHERE id = ?");
+        $upd->bind_param("si", $newEmail, $userId);
+        $upd->execute();
+        $upd->close();
+        unset($_SESSION['email_change']);
+        $success = ($lang === 'en') ? 'Email changed successfully.' : 'เปลี่ยนอีเมลสำเร็จแล้ว';
+    }
+}
+
+// ── Change Email — Resend OTP ─────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_resend'])) {
+    $pending = $_SESSION['email_change'] ?? null;
+    if ($pending) {
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $_SESSION['email_change']['otp']     = $otp;
+        $_SESSION['email_change']['expires'] = time() + 300;
+        if (!sendOTPEmail($pending['new_email'], $otp)) {
+            $emailErrors[] = ($lang === 'en') ? 'Failed to resend OTP. Please try again.' : 'ไม่สามารถส่ง OTP ซ้ำได้ กรุณาลองใหม่';
+        }
+    } else {
+        $emailErrors[] = ($lang === 'en') ? 'Session expired. Please start over.' : 'เซสชันหมดอายุ กรุณาเริ่มใหม่';
+    }
+}
+
+// ── Cancel email change ───────────────────────────────────────────────────
+if (isset($_POST['email_cancel'])) {
+    unset($_SESSION['email_change']);
+}
+
+$hasPic          = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
+$otpPending      = !empty($_SESSION['pw_change'])     && time() <= $_SESSION['pw_change']['expires'];
+$emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['email_change']['expires'];
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($lang); ?>">
@@ -413,6 +493,9 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
     <a class="toc-link" href="#section-password">
       <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
     </a>
+    <a class="toc-link" href="#section-email">
+      <?php echo ($lang === 'en') ? 'Change Email' : 'เปลี่ยนอีเมล'; ?>
+    </a>
   </nav>
 
   <div class="page-wrapper">
@@ -535,6 +618,79 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
       <?php endif; ?>
     </div>
 
+    <!-- ── Change Email ── -->
+    <div class="settings-card" id="section-email">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Change Email' : 'เปลี่ยนอีเมล'; ?>
+      </h2>
+
+      <?php if ($emailErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($emailErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <?php if ($emailOtpPending): ?>
+        <!-- ── Step 2: Enter OTP ── -->
+        <p class="otp-hint">
+          <?php
+          $newEmailDisplay = htmlspecialchars($_SESSION['email_change']['new_email'] ?? '');
+          $parts = explode('@', $_SESSION['email_change']['new_email'] ?? '');
+          $masked = substr($parts[0], 0, 1) . str_repeat('*', max(1, strlen($parts[0]) - 1)) . '@' . ($parts[1] ?? '');
+          if ($lang === 'en') {
+              echo "An OTP has been sent to <strong>" . htmlspecialchars($masked) . "</strong>. Check your inbox (and spam folder), then enter it below.";
+          } else {
+              echo "ส่ง OTP ไปยัง <strong>" . htmlspecialchars($masked) . "</strong> แล้ว ตรวจสอบกล่องจดหมาย (และสแปม) แล้วกรอกรหัสด้านล่าง";
+          }
+          ?>
+        </p>
+        <form method="POST" id="emailOtpForm">
+          <input type="hidden" name="email_step2" value="1">
+          <input class="otp-input" type="text" name="email_otp_code"
+                 inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+                 placeholder="000000" required>
+          <button type="submit" class="btn-modern" id="emailOtpBtn">
+            <?php echo ($lang === 'en') ? 'Confirm Email Change' : 'ยืนยันการเปลี่ยนอีเมล'; ?>
+          </button>
+        </form>
+        <form method="POST" style="margin-top:8px;">
+          <button type="submit" name="email_resend" class="btn-secondary-flat">
+            <?php echo ($lang === 'en') ? 'Resend OTP' : 'ส่ง OTP ใหม่'; ?>
+          </button>
+        </form>
+        <form method="POST" style="margin-top:8px;">
+          <button type="submit" name="email_cancel" class="btn btn-outline-secondary w-100">
+            <?php echo ($lang === 'en') ? 'Cancel' : 'ยกเลิก'; ?>
+          </button>
+        </form>
+
+      <?php else: ?>
+        <!-- ── Step 1: Enter new email + current password ── -->
+        <?php if (!empty($user['email'])): ?>
+          <p style="font-size:0.9rem;color:#6b7280;margin-bottom:16px;">
+            <?php echo ($lang === 'en') ? 'Current email: ' : 'อีเมลปัจจุบัน: '; ?>
+            <strong><?= htmlspecialchars($user['email']) ?></strong>
+          </p>
+        <?php endif; ?>
+        <form method="POST" id="emailForm">
+          <input type="hidden" name="email_step1" value="1">
+          <input class="pw-input" type="email" name="new_email"
+            placeholder="<?php echo ($lang === 'en') ? 'New Email Address' : 'ที่อยู่อีเมลใหม่'; ?>" required>
+          <div class="pw-wrap">
+            <input class="pw-input" type="password" name="email_current_password"
+              placeholder="<?php echo ($lang === 'en') ? 'Current Password' : 'รหัสผ่านปัจจุบัน'; ?>" required>
+            <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <button type="submit" class="btn-modern" id="emailBtn">
+            <?php echo ($lang === 'en') ? 'Send OTP to New Email' : 'ส่ง OTP ไปยังอีเมลใหม่'; ?>
+          </button>
+        </form>
+      <?php endif; ?>
+    </div>
+
     <!-- ── Linked Accounts (coming soon) ──
     <div class="settings-card" id="section-linked-accounts">
       <h2>Link Your Accounts</h2>
@@ -562,8 +718,8 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
         </div>
       </div>
     <?php endif; ?>
-    <?php if (!empty($errors) || !empty($pwErrors)): ?>
-      <?php foreach (array_merge($errors, $pwErrors) as $e): ?>
+    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors)): ?>
+      <?php foreach (array_merge($errors, $pwErrors, $emailErrors) as $e): ?>
         <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="6000">
           <div class="d-flex">
             <div class="toast-body"><?= htmlspecialchars($e) ?></div>
@@ -696,6 +852,24 @@ $otpPending = !empty($_SESSION['pw_change']) && time() <= $_SESSION['pw_change']
     if (otpForm) {
       otpForm.addEventListener('submit', () => {
         const btn = document.getElementById('otpBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Verifying...' : 'กำลังตรวจสอบ...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+
+    const emailForm    = document.getElementById('emailForm');
+    const emailOtpForm = document.getElementById('emailOtpForm');
+
+    if (emailForm) {
+      emailForm.addEventListener('submit', () => {
+        const btn = document.getElementById('emailBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Sending OTP...' : 'กำลังส่ง OTP...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+    if (emailOtpForm) {
+      emailOtpForm.addEventListener('submit', () => {
+        const btn = document.getElementById('emailOtpBtn');
         btn.disabled = true;
         btn.innerHTML = '<?php echo ($lang === 'en') ? 'Verifying...' : 'กำลังตรวจสอบ...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
       });
