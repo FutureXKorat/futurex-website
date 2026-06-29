@@ -417,6 +417,15 @@ $texts = [
             .scroll-down { animation: none !important; }
             .logo-container::before, .logo-container::after { animation: none !important; }
         }
+        .version-footer {
+            text-align: center;
+            padding: 16px 0 30px;
+            font-size: 0.85rem;
+            color: #6B7280;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
     </style>
 </head>
 <body>
@@ -563,6 +572,12 @@ $texts = [
             </a>
         </div>
     <?php endif; ?>
+</div>
+
+<!-- Version Footer -->
+<div class="version-footer">
+    <span>V.10.1</span>
+    <span>Last updated: June 29, 2026</span>
 </div>
 
 <!-- Bootstrap JS -->
