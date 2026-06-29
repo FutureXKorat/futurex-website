@@ -263,6 +263,9 @@ $texts = [
                 <li><?php echo ($lang === 'th') ? 'เนื้อหาเขียนขึ้นโดยได้รับความช่วยเหลือจาก' : 'Text written with assistance from' ?>
                     <a href="https://openai.com/" target="_blank" rel="noopener noreferrer">ChatGPT (OpenAI)</a>.
                 </li>
+                <li><?php echo ($lang === 'th') ? 'เนื้อหาเขียนขึ้นโดยได้รับความช่วยเหลือจาก' : 'Text written with assistance from' ?>
+                    <a href="https://www.anthropic.com/" target="_blank" rel="noopener noreferrer">Claude (Anthropic)</a>.
+                </li>
             </ul>
 
             <div class="divider"></div>
@@ -311,6 +314,7 @@ $texts = [
             <div class="footer-min">
                 <?php echo ($lang === 'en') ? 'Future X Korat — All rights reserved.' : 'Future X Korat — สงวนลิขสิทธิ์' ?>
                 <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
+                <span class="small-muted">V10.1</span>
             </div>
         </div>
     </div>

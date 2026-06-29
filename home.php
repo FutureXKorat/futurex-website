@@ -417,6 +417,19 @@ $texts = [
             .scroll-down { animation: none !important; }
             .logo-container::before, .logo-container::after { animation: none !important; }
         }
+        .footer-min {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: #4B5563;
+            text-align: center;
+        }
+        .small-muted {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            color: #6B7280;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -563,6 +576,11 @@ $texts = [
             </a>
         </div>
     <?php endif; ?>
+</div>
+
+<div class="footer-min">
+    <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
+    <span class="small-muted">V10.1</span>
 </div>
 
 <!-- Bootstrap JS -->
