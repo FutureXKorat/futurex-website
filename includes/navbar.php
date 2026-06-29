@@ -43,7 +43,7 @@ if (isset($_SESSION['user_id'])) {
     $_navStmt->close();
     if ($_navRow) {
         $_navUserName = htmlspecialchars($_navRow['name'] ?? '');
-        if (!empty($_navRow['profile_picture'])) {
+        if (!empty($_navRow['profile_picture']) && file_exists('uploads/profile_pics/' . $_navRow['profile_picture'])) {
             $_navPic = 'uploads/profile_pics/' . htmlspecialchars($_navRow['profile_picture']);
         }
     }
@@ -103,7 +103,7 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <div class="profile-dropdown">
-      <img src="<?php echo htmlspecialchars($_navPic); ?>" alt="Profile" class="profile-img" id="profileIcon">
+      <img src="<?php echo htmlspecialchars($_navPic); ?>" onerror="this.onerror=null;this.src='avatar.png';" alt="Profile" class="profile-img" id="profileIcon">
       <div id="dropdownMenu" class="profile-dropdown-content">
         <?php if (isset($_SESSION['user_id'])): ?>
           <a href="settings.php"><?php echo $_navL['profile']; ?></a>
