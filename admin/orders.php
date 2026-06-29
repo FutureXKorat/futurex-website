@@ -141,6 +141,18 @@ $texts = [
 ];
 $t = $texts[$lang] ?? $texts['en'];
 
+// Handle POST: delete order
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
+    $oid  = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
+    if ($oid !== '') {
+        $file = dirname(__DIR__) . '/storage/orders/' . $oid . '.json';
+        if (is_file($file)) unlink($file);
+    }
+    $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
+    header('Location: orders.php' . $qs);
+    exit;
+}
+
 // Handle POST: status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $oid       = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
@@ -225,12 +237,12 @@ function statusClass(string $status): string {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
-      padding: 0 20px 56px;
+      padding: 0;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
 
-    .page-wrap { max-width: 1300px; margin: 0 auto; }
+    .page-wrap { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -325,6 +337,8 @@ function statusClass(string $status): string {
     .act-approve:hover { box-shadow: 0 3px 10px rgba(25,135,84,0.4); transform: translateY(-1px); }
     .act-reject  { background: linear-gradient(135deg, #dc3545, #9c1826); color: #fff; }
     .act-reject:hover  { box-shadow: 0 3px 10px rgba(220,53,69,0.4); transform: translateY(-1px); }
+    .act-delete  { background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid rgba(220,53,69,0.3); }
+    .act-delete:hover  { background: rgba(220,53,69,0.2); transform: translateY(-1px); }
 
     .oid {
       font-family: 'Courier New', monospace; font-size: 0.75rem;
@@ -546,6 +560,10 @@ function statusClass(string $status): string {
                     </button>
                   </form>
                 <?php endif; ?>
+
+                <button class="act-btn act-delete" onclick="confirmDeleteOrder('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
+                  <?= $lang === 'th' ? 'ลบ' : 'Delete' ?>
+                </button>
 
               </div>
             </td>
@@ -790,6 +808,22 @@ if (searchInput) {
     _searchTerm = this.value.toLowerCase().trim();
     applyFilters();
   });
+}
+
+function confirmDeleteOrder(oid) {
+  var input = prompt('Type "delete-order" to permanently delete this order:');
+  if (input === null) return;
+  if (input.trim() !== 'delete-order') {
+    alert('Text did not match. Order not deleted.');
+    return;
+  }
+  var form = document.createElement('form');
+  form.method = 'post';
+  form.innerHTML =
+    '<input type="hidden" name="action" value="delete_order">' +
+    '<input type="hidden" name="order_id" value="' + oid + '">';
+  document.body.appendChild(form);
+  form.submit();
 }
 </script>
 </body>

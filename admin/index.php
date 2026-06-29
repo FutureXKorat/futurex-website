@@ -50,11 +50,11 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
     body {
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
       min-height: 100vh;
-      padding: 0 20px 56px;
+      padding: 0;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
-    .page-wrap { max-width: 900px; margin: 0 auto; }
+    .page-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; }
     .page-title { font-size: 1.75rem; font-weight: 700; margin: 0 0 4px; }
     .page-subtitle { font-size: 0.84rem; color: #666; margin-bottom: 32px; }
     .cards-grid {

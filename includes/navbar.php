@@ -34,9 +34,10 @@ $_navL = $_navT[$lang] ?? $_navT['en'];
 $_navPic      = 'avatar.png';
 $_navUserName = null;
 
+$_navIsAdmin = false;
 if (isset($_SESSION['user_id'])) {
     $_navUid  = (int)$_SESSION['user_id'];
-    $_navStmt = $conn->prepare("SELECT name, profile_picture FROM users WHERE id = ?");
+    $_navStmt = $conn->prepare("SELECT name, email, profile_picture FROM users WHERE id = ?");
     $_navStmt->bind_param("i", $_navUid);
     $_navStmt->execute();
     $_navRow = $_navStmt->get_result()->fetch_assoc();
@@ -46,6 +47,10 @@ if (isset($_SESSION['user_id'])) {
         if (!empty($_navRow['profile_picture']) && file_exists('uploads/profile_pics/' . $_navRow['profile_picture'])) {
             $_navPic = 'uploads/profile_pics/' . htmlspecialchars($_navRow['profile_picture']);
         }
+        // Check if this user is the admin
+        $_navMailCfg  = is_file(dirname(__DIR__) . '/secure-config/futurex_mail.php') ? require dirname(__DIR__) . '/secure-config/futurex_mail.php' : [];
+        $_navAdminEmail = strtolower(trim((string)($_navMailCfg['ADMIN_EMAIL'] ?? getenv('ADMIN_EMAIL') ?: 'futurexkorat@gmail.com')));
+        $_navIsAdmin  = strtolower(trim((string)($_navRow['email'] ?? ''))) === $_navAdminEmail;
     }
 }
 ?>
@@ -106,6 +111,9 @@ if (isset($_SESSION['user_id'])) {
       <img src="<?php echo htmlspecialchars($_navPic); ?>" onerror="this.onerror=null;this.src='avatar.png';" alt="Profile" class="profile-img" id="profileIcon">
       <div id="dropdownMenu" class="profile-dropdown-content">
         <?php if (isset($_SESSION['user_id'])): ?>
+          <?php if ($_navIsAdmin): ?>
+            <a href="/admin/" style="color:#007BFF;font-weight:600;">Admin Page</a>
+          <?php endif; ?>
           <a href="settings.php"><?php echo $_navL['profile']; ?></a>
           <a href="logout.php"><?php echo $_navL['out']; ?></a>
         <?php else: ?>

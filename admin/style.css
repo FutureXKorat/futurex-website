@@ -50,16 +50,16 @@ body {
     transition: width 0.2s linear;
 }
 .nav-links a {
-    text-decoration: none;
-    color: #fff;
-    font-weight: 500;
+    text-decoration: none !important;
+    color: #fff !important;
+    font-weight: 500 !important;
     padding: 8px 12px;
     border-radius: 4px;
     flex-shrink: 0;
-    transition: background 0.3s, transform 0.15s ease;
+    transition: background 0.3s, transform 0.15s ease, opacity 0.15s ease;
 }
 .nav-links a:hover {
-    background-color: rgba(255,255,255,0.15);
+    background-color: rgba(255,255,255,0.15) !important;
     transform: translateY(-1px);
 }
 .right-actions {

@@ -1,10 +1,10 @@
 <?php
-include_once 'database.php';
-include_once 'send_otp.php';
+include_once '../database.php';
+include_once '../send_otp.php';
 
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php');
+    header('Location: /index.php');
     exit();
 }
 
@@ -15,7 +15,7 @@ $pwErrors     = [];
 $emailErrors  = [];
 $deleteErrors = [];
 
-$uploadDir = 'uploads/profile_pics/';
+$uploadDir = '../uploads/profile_pics/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
@@ -531,7 +531,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
 </head>
 <body>
 
-  <?php include 'includes/navbar.php'; ?>
+  <?php include 'navbar.php'; ?>
 
   <!-- ── TOC sidebar (fixed, never shifts content) ── -->
   <nav class="toc-sidebar" aria-label="On this page">
@@ -572,7 +572,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
 
       <div class="centered">
         <img id="currentProfilePic"
-             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
+             src="<?php echo $hasPic ? '/uploads/profile_pics/' . htmlspecialchars($user['profile_picture']) : '/avatar.png'; ?>"
              class="profile-pic" alt="Profile picture">
       </div>
 
@@ -788,7 +788,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
             </button>
           </form>
         <?php else: ?>
-          <a href="google_auth.php?action=link"
+          <a href="/google_auth.php?action=link"
             style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:#374151;text-decoration:none;transition:all 0.2s;background:#fff;"
             onmouseover="this.style.background='#f9fafb';this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)';"
             onmouseout="this.style.background='#fff';this.style.boxShadow='none';">
