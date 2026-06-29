@@ -572,7 +572,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
 
       <div class="centered">
         <img id="currentProfilePic"
-             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2364748b'/%3E%3Ccircle cx='32' cy='24' r='11' fill='%23cbd5e1'/%3E%3Cellipse cx='32' cy='54' rx='19' ry='14' fill='%23cbd5e1'/%3E%3C/svg%3E"; ?>"
+             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
              class="profile-pic" alt="Profile picture">
       </div>
 
