@@ -8,6 +8,21 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = (int)$_SESSION['user_id'];
 
+// Handle delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
+    $oid  = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
+    $file = __DIR__ . '/storage/orders/' . $oid . '.json';
+    if ($oid !== '' && is_file($file)) {
+        $rec = json_decode(@file_get_contents($file), true);
+        // Only delete if it belongs to this user
+        if (is_array($rec) && (int)($rec['user_id'] ?? -1) === $userId) {
+            unlink($file);
+        }
+    }
+    $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
+    header('Location: orders.php' . $qs); exit;
+}
+
 $texts = [
     'en' => [
         'title'        => 'My Orders — Future X',
@@ -40,9 +55,11 @@ $texts = [
         'note_pending' => 'We received your payment slip and are reviewing it. We\'ll confirm shortly.',
         'note_approved'=> 'Your payment has been verified. Your order is confirmed!',
         'note_rejected'=> 'Your payment could not be verified. Please contact us for help.',
-        'click_slip'   => 'Click to open full size',
-        'img_error'    => 'Image not available',
-        'lang'         => 'ภาษาไทย',
+        'click_slip'     => 'Click to open full size',
+        'img_error'      => 'Image not available',
+        'lang'           => 'ภาษาไทย',
+        'btn_delete'     => 'Delete',
+        'confirm_delete' => 'Delete this order? This cannot be undone.',
     ],
     'th' => [
         'title'        => 'คำสั่งซื้อของฉัน — Future X',
@@ -75,9 +92,11 @@ $texts = [
         'note_pending' => 'เราได้รับสลิปของคุณแล้วและกำลังตรวจสอบ จะแจ้งผลเร็ว ๆ นี้',
         'note_approved'=> 'ยืนยันการชำระเงินแล้ว คำสั่งซื้อของคุณได้รับการยืนยัน!',
         'note_rejected'=> 'ไม่สามารถยืนยันการชำระเงินได้ กรุณาติดต่อเราเพื่อขอความช่วยเหลือ',
-        'click_slip'   => 'คลิกเพื่อดูขนาดเต็ม',
-        'img_error'    => 'ไม่พบรูปภาพ',
-        'lang'         => 'English',
+        'click_slip'     => 'คลิกเพื่อดูขนาดเต็ม',
+        'img_error'      => 'ไม่พบรูปภาพ',
+        'lang'           => 'English',
+        'btn_delete'     => 'ลบ',
+        'confirm_delete' => 'ลบคำสั่งซื้อนี้? ไม่สามารถกู้คืนได้',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
@@ -115,6 +134,7 @@ function ordFmtDate(string $iso): string {
   <link rel="icon" type="image/png" href="logo_transparent_onlyblack.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -123,7 +143,7 @@ function ordFmtDate(string $iso): string {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
-      padding: 80px 20px 56px;
+      padding: 80px 20px 24px;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
@@ -214,7 +234,7 @@ function ordFmtDate(string $iso): string {
     }
     .grand-total { font-size: 1.05rem; font-weight: 700; color: #111; }
 
-    /* ── View Details Button ── */
+    /* ── Buttons ── */
     .btn-details {
       display: inline-flex; align-items: center; gap: 6px;
       background: linear-gradient(135deg, #007BFF, #0056b3);
@@ -226,6 +246,16 @@ function ordFmtDate(string $iso): string {
       background: linear-gradient(135deg, #0056b3, #003f7f);
       transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,86,179,0.3);
       color: #fff;
+    }
+    .btn-delete {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(220,53,69,0.1); color: #b02a37; border: 1px solid rgba(220,53,69,0.25);
+      padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-delete:hover {
+      background: #dc3545; color: #fff; border-color: #dc3545;
+      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,53,69,0.3);
     }
 
     /* ── Empty State ── */
@@ -249,20 +279,6 @@ function ordFmtDate(string $iso): string {
       background: linear-gradient(135deg, #0056b3, #003f7f);
       transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,86,179,0.35);
       color: #fff;
-    }
-
-    /* ── Language Switch ── */
-    .lang-switch {
-      position: fixed; top: 16px; right: 16px; z-index: 300;
-      background: rgba(255,255,255,0.75); border: none;
-      padding: 7px 14px; border-radius: 9px; font-weight: 600;
-      cursor: pointer; text-decoration: none; color: #007BFF;
-      transition: all .2s; font-size: 0.85rem; backdrop-filter: blur(8px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .lang-switch:hover {
-      background: rgba(255,255,255,0.97); transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.14); color: #0056b3;
     }
 
     /* ── Modal ── */
@@ -347,11 +363,6 @@ function ordFmtDate(string $iso): string {
 <body>
 
 <?php include 'includes/navbar.php'; ?>
-
-<!-- Language switch -->
-<a class="lang-switch" href="?lang=<?= $lang === 'en' ? 'th' : 'en' ?>">
-  <?= htmlspecialchars($t['lang']) ?>
-</a>
 
 <div class="page-wrap">
 
@@ -451,10 +462,21 @@ function ordFmtDate(string $iso): string {
         </span>
         <span class="grand-total"><?= number_format($total, 2) ?> ฿</span>
       </div>
-      <button class="btn-details" data-order="<?= $dataJson ?>" onclick="openModal(this)">
-        <?= htmlspecialchars($t['view_details']) ?>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn-details" data-order="<?= $dataJson ?>" onclick="openModal(this)">
+          <?= htmlspecialchars($t['view_details']) ?>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <form method="post" style="display:contents;">
+          <input type="hidden" name="action"   value="delete_order">
+          <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
+          <button type="submit" class="btn-delete"
+                  onclick="return confirm(<?= json_encode($t['confirm_delete']) ?>)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <?= htmlspecialchars($t['btn_delete']) ?>
+          </button>
+        </form>
+      </div>
     </div>
 
   </div>
