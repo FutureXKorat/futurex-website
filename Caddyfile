@@ -4,13 +4,6 @@
 }
 
 http://:80 {
-	@admin host admin.futurexthailand.com
-	handle @admin {
-		root * /app/admin
-		php_server
-	}
-	handle {
-		root * /app
-		php_server
-	}
+	root * /app
+	php_server
 }

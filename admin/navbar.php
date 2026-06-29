@@ -24,7 +24,7 @@ if (isset($_SESSION['user_id'])) {
     <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
     <div class="nav-links">
       <a href="index.php" class="nav-logo-link">
-        <img src="https://futurexthailand.com/logo_transparent.png" alt="FutureX" class="nav-logo-img">
+        <img src="/logo_transparent.png" alt="FutureX" class="nav-logo-img">
       </a>
       <a href="orders.php"><?= htmlspecialchars($_anL['orders']) ?></a>
     </div>
