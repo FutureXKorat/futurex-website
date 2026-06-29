@@ -5,9 +5,13 @@ $clientId     = getenv('GOOGLE_CLIENT_ID');
 $clientSecret = getenv('GOOGLE_CLIENT_SECRET');
 $redirectUri  = 'https://futurexthailand.com/google_callback.php';
 
-// CSRF check — silently redirect on failure
+$loginError    = 'login.php';
+$settingsError = 'settings.php';
+
+// CSRF check
 if (empty($_GET['state']) || $_GET['state'] !== ($_SESSION['google_oauth_state'] ?? '')) {
-    header('Location: login.php');
+    error_log('Google OAuth: state mismatch. Got: ' . ($_GET['state'] ?? 'none'));
+    header('Location: ' . $loginError);
     exit();
 }
 unset($_SESSION['google_oauth_state']);
@@ -17,47 +21,85 @@ $action = $_SESSION['google_oauth_action'] ?? 'login';
 unset($_SESSION['google_oauth_action']);
 
 if (empty($code)) {
-    header('Location: login.php');
+    error_log('Google OAuth: no code in callback');
+    header('Location: ' . $loginError);
     exit();
 }
 
-// Exchange authorization code for access token
+// ── Exchange code for access token ────────────────────────────────────────
 $ch = curl_init('https://oauth2.googleapis.com/token');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-    'code'          => $code,
-    'client_id'     => $clientId,
-    'client_secret' => $clientSecret,
-    'redirect_uri'  => $redirectUri,
-    'grant_type'    => 'authorization_code',
-]));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-$tokenData   = json_decode(curl_exec($ch), true);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_TIMEOUT        => 15,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_POSTFIELDS     => http_build_query([
+        'code'          => $code,
+        'client_id'     => $clientId,
+        'client_secret' => $clientSecret,
+        'redirect_uri'  => $redirectUri,
+        'grant_type'    => 'authorization_code',
+    ]),
+    CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+]);
+$tokenRaw  = curl_exec($ch);
+$curlError = curl_error($ch);
+$curlErrno = curl_errno($ch);
 curl_close($ch);
 
-$accessToken = $tokenData['access_token'] ?? '';
-if (empty($accessToken)) {
-    header('Location: login.php');
+if ($curlErrno || $tokenRaw === false) {
+    error_log("Google OAuth: token exchange curl failed [{$curlErrno}] {$curlError}");
+    $_SESSION['flash_google_error'] = ($lang === 'en')
+        ? 'Could not connect to Google. Please try again.'
+        : 'ไม่สามารถเชื่อมต่อ Google ได้ กรุณาลองใหม่';
+    header('Location: ' . ($action === 'link' ? $settingsError : $loginError));
     exit();
 }
 
-// Fetch Google user info
+$tokenData   = json_decode($tokenRaw, true);
+$accessToken = $tokenData['access_token'] ?? '';
+
+if (empty($accessToken)) {
+    error_log('Google OAuth: no access_token in response: ' . $tokenRaw);
+    $_SESSION['flash_google_error'] = ($lang === 'en')
+        ? 'Google login failed. Please try again.'
+        : 'เข้าสู่ระบบ Google ล้มเหลว กรุณาลองใหม่';
+    header('Location: ' . ($action === 'link' ? $settingsError : $loginError));
+    exit();
+}
+
+// ── Fetch user info ───────────────────────────────────────────────────────
 $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
-$userInfo = json_decode(curl_exec($ch), true);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT        => 15,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $accessToken],
+]);
+$userInfoRaw = curl_exec($ch);
+$curlError   = curl_error($ch);
+$curlErrno   = curl_errno($ch);
 curl_close($ch);
 
+if ($curlErrno || $userInfoRaw === false) {
+    error_log("Google OAuth: userinfo curl failed [{$curlErrno}] {$curlError}");
+    $_SESSION['flash_google_error'] = ($lang === 'en')
+        ? 'Could not fetch Google profile. Please try again.'
+        : 'ไม่สามารถดึงข้อมูล Google ได้ กรุณาลองใหม่';
+    header('Location: ' . ($action === 'link' ? $settingsError : $loginError));
+    exit();
+}
+
+$userInfo = json_decode($userInfoRaw, true);
 $googleId = $userInfo['id']    ?? '';
 $email    = $userInfo['email'] ?? '';
 
 if (empty($googleId) || empty($email)) {
-    header('Location: login.php');
+    error_log('Google OAuth: missing id or email in userinfo: ' . $userInfoRaw);
+    $_SESSION['flash_google_error'] = ($lang === 'en')
+        ? 'Google login failed. Please try again.'
+        : 'เข้าสู่ระบบ Google ล้มเหลว กรุณาลองใหม่';
+    header('Location: ' . ($action === 'link' ? $settingsError : $loginError));
     exit();
 }
 
