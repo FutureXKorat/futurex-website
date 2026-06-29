@@ -32,42 +32,45 @@ $conn = @new mysqli(
 
 if (session_status() === PHP_SESSION_NONE) {
     // Store sessions in MySQL so deploys don't log users out
-    session_set_save_handler(
-        fn($path, $name) => true,
-        fn() => true,
-        function ($id) use ($conn) {
+    class DbSessionHandler implements SessionHandlerInterface {
+        public function __construct(private mysqli $conn) {}
+        public function open(string $path, string $name): bool { return true; }
+        public function close(): bool { return true; }
+        public function read(string $id): string|false {
             $expire = time() - (int)ini_get('session.gc_maxlifetime');
-            $stmt   = $conn->prepare("SELECT data FROM sessions WHERE id = ? AND last_activity > ?");
+            $stmt   = $this->conn->prepare("SELECT data FROM sessions WHERE id = ? AND last_activity > ?");
             $stmt->bind_param("si", $id, $expire);
             $stmt->execute();
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             return $row ? $row['data'] : '';
-        },
-        function ($id, $data) use ($conn) {
+        }
+        public function write(string $id, string $data): bool {
             $time = time();
-            $stmt = $conn->prepare("REPLACE INTO sessions (id, data, last_activity) VALUES (?, ?, ?)");
+            $stmt = $this->conn->prepare("REPLACE INTO sessions (id, data, last_activity) VALUES (?, ?, ?)");
             $stmt->bind_param("ssi", $id, $data, $time);
             $result = $stmt->execute();
             $stmt->close();
             return $result;
-        },
-        function ($id) use ($conn) {
-            $stmt = $conn->prepare("DELETE FROM sessions WHERE id = ?");
+        }
+        public function destroy(string $id): bool {
+            $stmt = $this->conn->prepare("DELETE FROM sessions WHERE id = ?");
             $stmt->bind_param("s", $id);
             $result = $stmt->execute();
             $stmt->close();
             return $result;
-        },
-        function ($maxlifetime) use ($conn) {
-            $expire = time() - $maxlifetime;
-            $stmt   = $conn->prepare("DELETE FROM sessions WHERE last_activity < ?");
-            $stmt->bind_param("i", $expire);
-            $result = $stmt->execute();
-            $stmt->close();
-            return $result;
         }
-    );
+        public function gc(int $maxlifetime): int|false {
+            $expire = time() - $maxlifetime;
+            $stmt   = $this->conn->prepare("DELETE FROM sessions WHERE last_activity < ?");
+            $stmt->bind_param("i", $expire);
+            $stmt->execute();
+            $count = $this->conn->affected_rows;
+            $stmt->close();
+            return $count;
+        }
+    }
+    session_set_save_handler(new DbSessionHandler($conn));
     register_shutdown_function('session_write_close');
     session_start();
 }
