@@ -143,12 +143,19 @@ function ordFmtDate(string $iso): string {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
-      padding: 80px 20px 24px;
+      padding: 0 20px 24px;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
 
-    .page-wrap { max-width: 780px; margin: 0 auto; }
+    .top-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      z-index: 1000;
+    }
+
+    .page-wrap { max-width: 780px; margin: 80px auto 0; padding: 0 0 8px; }
 
     /* ── Page Heading ── */
     .page-heading {
