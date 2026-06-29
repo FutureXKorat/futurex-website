@@ -4,51 +4,123 @@
  * Requires: session started, $conn (mysqli), $lang (from ../database.php).
  */
 $_anT = [
-    'en' => ['orders' => 'Orders', 'main_site' => 'Main Site', 'logout' => 'Log Out'],
-    'th' => ['orders' => 'คำสั่งซื้อ', 'main_site' => 'เว็บหลัก', 'logout' => 'ออกจากระบบ'],
+    'en' => ['orders' => 'Orders', 'main_page' => 'Main Page', 'settings' => 'Settings', 'logout' => 'Log Out'],
+    'th' => ['orders' => 'คำสั่งซื้อ', 'main_page' => 'เว็บหลัก', 'settings' => 'การตั้งค่า', 'logout' => 'ออกจากระบบ'],
 ];
 $_anL = $_anT[$lang] ?? $_anT['en'];
 
-$_adminDisplayName = 'Admin';
+$_navPic = '/avatar.png';
+$_adminDisplayName = null;
 if (isset($_SESSION['user_id'])) {
-    $_s = $conn->prepare("SELECT name FROM users WHERE id = ? LIMIT 1");
+    $_s = $conn->prepare("SELECT name, profile_picture FROM users WHERE id = ? LIMIT 1");
     $_s->bind_param('i', $_SESSION['user_id']);
     $_s->execute();
     $_r = $_s->get_result()->fetch_assoc();
     $_s->close();
-    if ($_r) $_adminDisplayName = htmlspecialchars((string)($_r['name'] ?? 'Admin'));
+    if ($_r) {
+        $_adminDisplayName = htmlspecialchars((string)($_r['name'] ?? ''));
+        $picFile = (string)($_r['profile_picture'] ?? '');
+        if ($picFile !== '' && file_exists(dirname(__DIR__) . '/uploads/profile_pics/' . $picFile)) {
+            $_navPic = '/uploads/profile_pics/' . htmlspecialchars($picFile);
+        }
+    }
 }
 ?>
+<style>
+.nav-logo-link { padding: 4px 8px !important; display: inline-flex !important; align-items: center !important; border-radius: 4px; transition: background 0.3s, transform 0.15s ease !important; }
+.nav-logo-link:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
+.nav-logo-img { height: 36px; width: auto; display: block; }
+</style>
 <div class="top-banner" id="topBanner">
   <div class="nav-links-container" id="navLinksContainer">
     <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
     <div class="nav-links">
       <a href="index.php" class="nav-logo-link">
-        <img src="/logo_transparent.png" alt="FutureX" class="nav-logo-img">
+        <img src="/logo_transparent.png" alt="FutureX Admin" class="nav-logo-img">
       </a>
       <a href="orders.php"><?= htmlspecialchars($_anL['orders']) ?></a>
     </div>
   </div>
   <div class="right-actions">
-    <span class="nav-admin-name"><?= $_adminDisplayName ?></span>
-    <a href="https://futurexthailand.com/home.php" class="nav-btn nav-btn-ghost">
-      <?= htmlspecialchars($_anL['main_site']) ?>
-    </a>
-    <a href="https://futurexthailand.com/logout.php" class="nav-btn nav-btn-danger">
-      <?= htmlspecialchars($_anL['logout']) ?>
-    </a>
+
+    <!-- Language dropdown — same as main site -->
+    <div class="lang-dropdown">
+      <button class="lang-btn-icon" id="langIcon" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M2 12h20M12 2c3 3 3 15 0 20M12 2c-3 3-3 15 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div id="langMenu" class="lang-dropdown-content">
+        <a href="?lang=en"<?= $lang === 'en' ? ' class="active"' : '' ?>>English</a>
+        <a href="?lang=th"<?= $lang === 'th' ? ' class="active"' : '' ?>>ไทย</a>
+      </div>
+    </div>
+
+    <!-- Profile picture dropdown -->
+    <div class="profile-dropdown">
+      <img
+        src="<?= htmlspecialchars($_navPic) ?>"
+        onerror="this.onerror=null;this.src='/avatar.png';"
+        alt="Profile"
+        class="profile-img"
+        id="profileIcon"
+      >
+      <div id="dropdownMenu" class="profile-dropdown-content">
+        <a href="/home.php"><?= htmlspecialchars($_anL['main_page']) ?></a>
+        <a href="/settings.php"><?= htmlspecialchars($_anL['settings']) ?></a>
+        <a href="/logout.php"><?= htmlspecialchars($_anL['logout']) ?></a>
+      </div>
+    </div>
+
   </div>
 </div>
 <script>
 (function () {
+    var pIcon  = document.getElementById('profileIcon');
+    var pMenu  = document.getElementById('dropdownMenu');
+    var lIcon  = document.getElementById('langIcon');
+    var lMenu  = document.getElementById('langMenu');
     var banner = document.getElementById('topBanner');
     var nlc    = document.getElementById('navLinksContainer');
     var nsi    = document.getElementById('navScrollIndicator');
+
+    function closeAll() {
+        if (pMenu) pMenu.style.display = 'none';
+        if (lMenu) lMenu.style.display = 'none';
+    }
+
+    if (pIcon) {
+        pIcon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (lMenu) lMenu.style.display = 'none';
+            pMenu.style.display = pMenu.style.display === 'block' ? 'none' : 'block';
+        });
+    }
+    if (lIcon) {
+        lIcon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (pMenu) pMenu.style.display = 'none';
+            var open = lMenu.style.display === 'block';
+            lMenu.style.display = open ? 'none' : 'block';
+            lIcon.setAttribute('aria-expanded', open ? 'false' : 'true');
+        });
+    }
+
+    document.addEventListener('click', closeAll);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAll();
+            if (lIcon) lIcon.setAttribute('aria-expanded', 'false');
+        }
+    });
+
     if (banner) {
         window.addEventListener('scroll', function () {
             banner.classList.toggle('scrolled', window.scrollY > 10);
         });
     }
+
     function updateScroll() {
         if (!nlc || !nsi) return;
         var max = nlc.scrollWidth - nlc.clientWidth;

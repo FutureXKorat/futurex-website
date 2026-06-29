@@ -87,7 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 unset($_SESSION['pending_remember']);
 
-                header("Location: home.php");
+                $pendingRedirect = $_SESSION['pending_redirect'] ?? '';
+                unset($_SESSION['pending_redirect']);
+                header("Location: " . ($pendingRedirect === 'admin' ? '/admin/' : 'home.php'));
                 exit();
             } else {
                 // ----- REGISTRATION OTP PATH -----

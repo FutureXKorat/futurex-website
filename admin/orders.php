@@ -225,7 +225,7 @@ function statusClass(string $status): string {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
-      padding: 40px 20px 56px;
+      padding: 0 20px 56px;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
@@ -402,11 +402,6 @@ function statusClass(string $status): string {
 <body>
 
 <?php include 'navbar.php'; ?>
-
-<!-- Language switch -->
-<a class="lang-switch" href="?lang=<?= $lang === 'en' ? 'th' : 'en' ?>">
-  <?= htmlspecialchars($t['lang']) ?>
-</a>
 
 <div class="page-wrap" style="margin-top: 36px;">
 

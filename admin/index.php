@@ -50,7 +50,7 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
     body {
       background: linear-gradient(135deg, #E6F0FF, #CCE0FF, #FFFFFF);
       min-height: 100vh;
-      padding: 40px 20px 56px;
+      padding: 0 20px 56px;
       color: #111;
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }

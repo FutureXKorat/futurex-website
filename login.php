@@ -14,6 +14,7 @@ $texts = [
         'username_ph'   => 'Username',
         'password_ph'   => 'Password',
         'login_btn'     => 'Log In',
+        'admin_btn'     => 'Log In for Admin',
         'no_account'    => "Don't have an account?",
         'register_here' => 'Register here',
         'forgot_pw'     => 'Forgot password?',
@@ -33,6 +34,7 @@ $texts = [
         'username_ph'   => 'ชื่อผู้ใช้',
         'password_ph'   => 'รหัสผ่าน',
         'login_btn'     => 'เข้าสู่ระบบ',
+        'admin_btn'     => 'เข้าสู่ระบบ (แอดมิน)',
         'no_account'    => 'ยังไม่มีบัญชี?',
         'register_here' => 'สมัครสมาชิก',
         'forgot_pw'     => 'ลืมรหัสผ่าน?',
@@ -104,6 +106,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // carry the "remember me" choice through the OTP step
                 $_SESSION['pending_remember'] = !empty($_POST['remember_me']);
+                // carry the "log in for admin" choice through the OTP step
+                $_SESSION['pending_redirect'] = (($_POST['submit_type'] ?? '') === 'admin') ? 'admin' : '';
 
                 // redirect to verify page
                 header("Location: verify_otp.php?username=" . urlencode($username) . "&login=1");
@@ -191,6 +195,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             background: linear-gradient(135deg, #0056b3, #003f7f);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        }
+        .btn-modern.btn-outline-primary {
+            background: transparent;
+            border: 2px solid #007BFF;
+            color: #007BFF;
+        }
+        .btn-modern.btn-outline-primary:hover {
+            background: rgba(0,123,255,0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
         }
         .link-section {
             margin-top: 18px;
@@ -291,8 +305,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <?php echo htmlspecialchars($texts[$lang]['remember_me']); ?>
             </label>
         </div>
-        <button type="submit" class="btn btn-modern btn-primary" id="loginBtn">
+        <button type="submit" name="submit_type" value="normal" class="btn btn-modern btn-primary" id="loginBtn">
             <?php echo htmlspecialchars($texts[$lang]['login_btn']); ?>
+        </button>
+        <button type="submit" name="submit_type" value="admin" class="btn btn-modern btn-outline-primary" id="adminLoginBtn">
+            <?php echo htmlspecialchars($texts[$lang]['admin_btn']); ?>
         </button>
     </form>
 
