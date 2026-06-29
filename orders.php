@@ -10,14 +10,12 @@ $userId = (int)$_SESSION['user_id'];
 
 // Handle delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
-    $oid  = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
-    $file = __DIR__ . '/storage/orders/' . $oid . '.json';
-    if ($oid !== '' && is_file($file)) {
-        $rec = json_decode(@file_get_contents($file), true);
-        // Only delete if it belongs to this user
-        if (is_array($rec) && (int)($rec['user_id'] ?? -1) === $userId) {
-            unlink($file);
-        }
+    $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
+    if ($oid !== '') {
+        $stmt = $conn->prepare("DELETE FROM `orders` WHERE order_id = ? AND user_id = ?");
+        $stmt->bind_param('si', $oid, $userId);
+        $stmt->execute();
+        $stmt->close();
     }
     $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
     header('Location: orders.php' . $qs); exit;
@@ -101,19 +99,24 @@ $texts = [
 ];
 $t = $texts[$lang] ?? $texts['en'];
 
-// Read only this user's orders
-$ordersDir = __DIR__ . '/storage/orders';
+// Read only this user's orders from MySQL (newest first)
 $orders = [];
-if (is_dir($ordersDir)) {
-    foreach (glob($ordersDir . '/*.json') ?: [] as $f) {
-        $rec = json_decode(@file_get_contents($f), true);
-        if (is_array($rec) && (int)($rec['user_id'] ?? -1) === $userId) {
-            $orders[] = $rec;
-        }
+$stmt = $conn->prepare(
+    "SELECT data, status, created_at, updated_at FROM `orders` WHERE user_id = ? ORDER BY created_at DESC"
+);
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $rec = json_decode((string)$row['data'], true);
+    if (is_array($rec)) {
+        $rec['status']     = $row['status']; // DB column is authoritative
+        $rec['created_at'] = $row['created_at'];
+        if ($row['updated_at']) $rec['updated_at'] = $row['updated_at'];
+        $orders[] = $rec;
     }
 }
-// Newest first
-usort($orders, fn($a, $b) => strcmp((string)($b['created_at'] ?? ''), (string)($a['created_at'] ?? '')));
+$stmt->close();
 
 // Helpers
 function ordFmtDate(string $iso): string {

@@ -74,3 +74,17 @@ if (! $conn->set_charset($charset)) {
     $conn->query("SET NAMES utf8mb4");
     $conn->query("SET CHARACTER SET utf8mb4");
 }
+
+// Ensure orders table exists (fast no-op once created)
+$conn->query("CREATE TABLE IF NOT EXISTS `orders` (
+  `order_id`   VARCHAR(60)  NOT NULL,
+  `user_id`    INT          NOT NULL DEFAULT 0,
+  `status`     VARCHAR(30)  NOT NULL DEFAULT 'awaiting_review',
+  `data`       MEDIUMTEXT   NOT NULL,
+  `created_at` DATETIME     NOT NULL,
+  `updated_at` DATETIME     DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  KEY `idx_user_id`  (`user_id`),
+  KEY `idx_status`   (`status`),
+  KEY `idx_created`  (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");

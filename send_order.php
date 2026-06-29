@@ -67,17 +67,19 @@ function __db_username_by_id(int $userId): ?string {
 
 // ---------- Core mail sender ----------
 function send_order_mail(string $orderId): array {
-    global $ADMIN_EMAIL, $FROM_EMAIL, $FROM_NAME, $RESEND_API_KEY;
+    global $ADMIN_EMAIL, $FROM_EMAIL, $FROM_NAME, $RESEND_API_KEY, $conn;
 
-    // Load order JSON
-    $ordersDir = __DIR__ . '/storage/orders';
-    $orderFile = $ordersDir . '/' . basename($orderId) . '.json';
-    if (!is_file($orderFile)) return ['ok' => false, 'error' => 'order_not_found'];
+    // Load order from MySQL
+    if (!($conn instanceof mysqli)) return ['ok' => false, 'error' => 'no_db'];
+    $stmt = $conn->prepare("SELECT data FROM `orders` WHERE order_id = ? LIMIT 1");
+    if (!$stmt) return ['ok' => false, 'error' => 'prepare_failed'];
+    $stmt->bind_param('s', $orderId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$row) return ['ok' => false, 'error' => 'order_not_found'];
 
-    $json = @file_get_contents($orderFile);
-    if ($json === false) return ['ok' => false, 'error' => 'read_failed'];
-
-    $record = json_decode($json, true);
+    $record = json_decode((string)$row['data'], true);
     if (!is_array($record)) return ['ok' => false, 'error' => 'json_invalid'];
 
     // Extract fields

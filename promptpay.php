@@ -3,7 +3,8 @@
 declare(strict_types=1);
 ini_set('display_errors', '1'); error_reporting(E_ALL);
 session_start();
-include 'database.php'; // for $lang (optional)
+include 'database.php'; // for $conn, $lang
+require_once __DIR__ . '/cloudinary.php';
 
 // must arrive from checkout
 if (empty($_SESSION['pending_checkout'])) {
@@ -17,12 +18,7 @@ $delivery   = $order['delivery'] ?? 'pickup';
 $address    = $order['address'] ?? '';
 $items      = $order['items'] ?? [];
 
-// storage (auto-create)
-$baseDir   = __DIR__ . '/storage';
-$ordersDir = $baseDir . '/orders';
-$slipsDir  = $baseDir . '/slips';
-if (!is_dir($ordersDir)) { @mkdir($ordersDir, 0755, true); }
-if (!is_dir($slipsDir))  { @mkdir($slipsDir, 0755, true); }
+$slipPathWeb = ''; // will hold Cloudinary URL after successful upload
 
 // i18n (minimal)
 $texts = [
@@ -65,9 +61,7 @@ $t = $texts[$lang] ?? $texts['en'];
 $PROMPTPAY_ID = '061-969-9249';
 
 $errors = [];           // <-- collect errors for display
-$slipPathWeb = '';      // relative path for viewing if saved
-
-// handle submit (save order JSON + slip)
+// handle submit (save order to MySQL + slip to Cloudinary)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Must have a file
     if (empty($_FILES['slip']['name']) || !is_uploaded_file($_FILES['slip']['tmp_name'])) {
@@ -97,14 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = $t['err_size'];
         }
 
-        // Move only when no validation errors
+        // Upload to Cloudinary when no validation errors
         if (!$errors) {
-            $ext = pathinfo($_FILES['slip']['name'], PATHINFO_EXTENSION) ?: 'jpg';
-            $ext = preg_replace('/[^a-z0-9.]/i','', $ext);
-            $fname = $order_id . '_' . time() . '.' . $ext;
-            $dest  = $slipsDir . '/' . $fname;
-            if (move_uploaded_file($_FILES['slip']['tmp_name'], $dest)) {
-                $slipPathWeb = 'storage/slips/' . $fname;
+            $slipPublicId = $order_id . '_' . time();
+            $cloudUrl = uploadSlipToCloudinary($_FILES['slip']['tmp_name'], $slipPublicId);
+            if ($cloudUrl !== null) {
+                $slipPathWeb = $cloudUrl;
             } else {
                 $errors[] = $t['err_move'];
             }
@@ -126,7 +118,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'slip'       => $slipPathWeb,
             'created_at' => date('c'),
         ];
-        @file_put_contents($ordersDir . '/' . $order_id . '.json', json_encode($record, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+        $orderJson  = json_encode($record, JSON_UNESCAPED_UNICODE);
+        $createdDt  = date('Y-m-d H:i:s');
+        $insertStmt = $conn->prepare(
+            "INSERT INTO `orders` (order_id, user_id, status, data, created_at)
+             VALUES (?, ?, 'awaiting_review', ?, ?)
+             ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()"
+        );
+        $insertStmt->bind_param('siss', $order_id, $record['user_id'], $orderJson, $createdDt);
+        $insertStmt->execute();
+        $insertStmt->close();
 
         // clear cart
         $_SESSION['cart'] = [];

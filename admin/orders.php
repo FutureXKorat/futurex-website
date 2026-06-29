@@ -143,10 +143,12 @@ $t = $texts[$lang] ?? $texts['en'];
 
 // Handle POST: delete order
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
-    $oid  = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
+    $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
     if ($oid !== '') {
-        $file = dirname(__DIR__) . '/storage/orders/' . $oid . '.json';
-        if (is_file($file)) unlink($file);
+        $stmt = $conn->prepare("DELETE FROM `orders` WHERE order_id = ?");
+        $stmt->bind_param('s', $oid);
+        $stmt->execute();
+        $stmt->close();
     }
     $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
     header('Location: orders.php' . $qs);
@@ -159,32 +161,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $allowed   = ['approved', 'rejected', 'awaiting_review'];
     $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
     if ($oid !== '' && $newStatus !== '') {
-        $file = dirname(__DIR__) . '/storage/orders/' . $oid . '.json';
-        if (is_file($file)) {
-            $rec = json_decode(@file_get_contents($file), true) ?? [];
-            $rec['status']     = $newStatus;
-            $rec['updated_at'] = date('c');
-            file_put_contents($file, json_encode($rec, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        }
+        $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ?");
+        $stmt->bind_param('ss', $newStatus, $oid);
+        $stmt->execute();
+        $stmt->close();
     }
     $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
     header('Location: orders.php' . $qs);
     exit;
 }
 
-// Read all orders from storage
-$ordersDir = dirname(__DIR__) . '/storage/orders';
+// Read all orders from MySQL (newest first)
 $orders = [];
-if (is_dir($ordersDir)) {
-    foreach (glob($ordersDir . '/*.json') ?: [] as $f) {
-        $rec = json_decode(@file_get_contents($f), true);
+$result = $conn->query(
+    "SELECT data, status, created_at, updated_at FROM `orders` ORDER BY created_at DESC"
+);
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $rec = json_decode((string)$row['data'], true);
         if (is_array($rec) && isset($rec['order_id'])) {
+            $rec['status']     = $row['status']; // DB column is authoritative
+            $rec['created_at'] = $row['created_at'];
+            if ($row['updated_at']) $rec['updated_at'] = $row['updated_at'];
             $orders[] = $rec;
         }
     }
 }
-// Newest first
-usort($orders, fn($a, $b) => strcmp((string)($b['created_at'] ?? ''), (string)($a['created_at'] ?? '')));
 
 // Stats
 $cnt = ['all' => count($orders), 'awaiting_review' => 0, 'approved' => 0, 'rejected' => 0];
