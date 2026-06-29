@@ -6,6 +6,16 @@ declare(strict_types=1);
  * Loads credentials from /htdocs/secure-config/futurex_db.php
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Auto-logout when "remember me" session has passed midnight
+if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
+    $_SESSION = [];
+    session_destroy();
+}
+
 $cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
 if (file_exists($cfgPath)) {
@@ -29,63 +39,6 @@ $conn = @new mysqli(
     $config['DB_NAME'],
     (int)$config['DB_PORT']
 );
-
-// Store sessions in MySQL so deploys don't log users out
-class DbSessionHandler implements SessionHandlerInterface {
-    public function __construct(private mysqli $conn) {}
-    public function open(string $path, string $name): bool { return true; }
-    public function close(): bool { return true; }
-    public function read(string $id): string|false {
-        $lifetime = max(1, (int)ini_get('session.gc_maxlifetime') ?: 1440);
-        $expire   = time() - $lifetime;
-        $stmt     = $this->conn->prepare("SELECT data FROM sessions WHERE id = ? AND last_activity > ?");
-        if (!$stmt) return '';
-        $stmt->bind_param("si", $id, $expire);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        return $row['data'] ?? '';
-    }
-    public function write(string $id, string $data): bool {
-        $time = time();
-        $stmt = $this->conn->prepare("REPLACE INTO sessions (id, data, last_activity) VALUES (?, ?, ?)");
-        if (!$stmt) return false;
-        $stmt->bind_param("ssi", $id, $data, $time);
-        $ok = $stmt->execute();
-        $stmt->close();
-        return $ok;
-    }
-    public function destroy(string $id): bool {
-        $stmt = $this->conn->prepare("DELETE FROM sessions WHERE id = ?");
-        if (!$stmt) return false;
-        $stmt->bind_param("s", $id);
-        $ok = $stmt->execute();
-        $stmt->close();
-        return $ok;
-    }
-    public function gc(int $maxlifetime): int|false {
-        $expire = time() - $maxlifetime;
-        $stmt   = $this->conn->prepare("DELETE FROM sessions WHERE last_activity < ?");
-        if (!$stmt) return false;
-        $stmt->bind_param("i", $expire);
-        $stmt->execute();
-        $count = $this->conn->affected_rows;
-        $stmt->close();
-        return $count;
-    }
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_save_handler(new DbSessionHandler($conn));
-    register_shutdown_function('session_write_close');
-    session_start();
-}
-
-// Auto-logout when "remember me" session has passed midnight
-if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
-    $_SESSION = [];
-    session_destroy();
-}
 
 // --- Language persistence via cookie (EN/TH) ---
 $__allowedLangs = ['en', 'th'];
