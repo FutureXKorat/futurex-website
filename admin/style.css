@@ -1,0 +1,123 @@
+/* ── FutureX Admin Shared Styles ── */
+
+:root {
+    --brand-color:      #007BFF;
+    --brand-hover:      #0056b3;
+    --gray-color:       #ccc;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Navbar ── */
+.top-banner {
+    background-color: var(--brand-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.top-banner.scrolled {
+    background-color: var(--brand-color);
+    box-shadow: none;
+}
+.nav-links-container {
+    flex: 1;
+    overflow-x: auto;
+    position: relative;
+    padding: 12px 20px;
+}
+.nav-links {
+    display: flex;
+    gap: 12px;
+    white-space: nowrap;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-scroll-indicator {
+    position: absolute;
+    top: 0; left: 0;
+    height: 3px;
+    background: #fff;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.2s linear;
+}
+.nav-links a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: background 0.3s, transform 0.15s ease;
+}
+.nav-links a:hover {
+    background-color: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+.nav-logo-link {
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 4px;
+    transition: background 0.3s, transform 0.15s ease !important;
+}
+.nav-logo-link:hover {
+    background: rgba(255,255,255,0.15) !important;
+    transform: translateY(-1px) !important;
+}
+.nav-logo-img {
+    height: 36px;
+    width: auto;
+    display: block;
+}
+.right-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 16px;
+}
+.nav-admin-name {
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 500;
+    opacity: .85;
+    white-space: nowrap;
+}
+.nav-btn {
+    font-size: .82rem;
+    text-decoration: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all .2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+}
+.nav-btn-ghost {
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.25);
+    background: transparent;
+}
+.nav-btn-ghost:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    transform: translateY(-1px);
+}
+.nav-btn-danger {
+    color: #fff;
+    border: 1px solid rgba(220,53,69,0.4);
+    background: rgba(220,53,69,0.55);
+}
+.nav-btn-danger:hover {
+    background: rgba(220,53,69,0.85);
+    transform: translateY(-1px);
+}
