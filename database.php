@@ -6,16 +6,6 @@ declare(strict_types=1);
  * Loads credentials from /htdocs/secure-config/futurex_db.php
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Auto-logout when "remember me" session has passed midnight
-if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
-    $_SESSION = [];
-    session_destroy();
-}
-
 $cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
 if (file_exists($cfgPath)) {
@@ -39,6 +29,54 @@ $conn = @new mysqli(
     $config['DB_NAME'],
     (int)$config['DB_PORT']
 );
+
+if (session_status() === PHP_SESSION_NONE) {
+    // Store sessions in MySQL so deploys don't log users out
+    session_set_save_handler(
+        fn($path, $name) => true,
+        fn() => true,
+        function ($id) use ($conn) {
+            $expire = time() - (int)ini_get('session.gc_maxlifetime');
+            $stmt   = $conn->prepare("SELECT data FROM sessions WHERE id = ? AND last_activity > ?");
+            $stmt->bind_param("si", $id, $expire);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            return $row ? $row['data'] : '';
+        },
+        function ($id, $data) use ($conn) {
+            $time = time();
+            $stmt = $conn->prepare("REPLACE INTO sessions (id, data, last_activity) VALUES (?, ?, ?)");
+            $stmt->bind_param("ssi", $id, $data, $time);
+            $result = $stmt->execute();
+            $stmt->close();
+            return $result;
+        },
+        function ($id) use ($conn) {
+            $stmt = $conn->prepare("DELETE FROM sessions WHERE id = ?");
+            $stmt->bind_param("s", $id);
+            $result = $stmt->execute();
+            $stmt->close();
+            return $result;
+        },
+        function ($maxlifetime) use ($conn) {
+            $expire = time() - $maxlifetime;
+            $stmt   = $conn->prepare("DELETE FROM sessions WHERE last_activity < ?");
+            $stmt->bind_param("i", $expire);
+            $result = $stmt->execute();
+            $stmt->close();
+            return $result;
+        }
+    );
+    register_shutdown_function('session_write_close');
+    session_start();
+}
+
+// Auto-logout when "remember me" session has passed midnight
+if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
+    $_SESSION = [];
+    session_destroy();
+}
 
 // --- Language persistence via cookie (EN/TH) ---
 $__allowedLangs = ['en', 'th'];
