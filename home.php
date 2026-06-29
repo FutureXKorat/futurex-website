@@ -298,7 +298,7 @@ $texts = [
         /* CONTENT */
         .content-section {
             text-align: center;
-            padding: 60px 20px 30px 20px;
+            padding: 60px 20px 0 20px;
             margin-top: -20px;
             color: var(--ink);
             max-width: 900px;
@@ -419,6 +419,7 @@ $texts = [
         }
         .footer-min {
             margin-top: 16px;
+            padding-bottom: 40px;
             font-size: 0.95rem;
             color: #4B5563;
             text-align: center;
@@ -579,7 +580,6 @@ $texts = [
 </div>
 
 <div class="footer-min">
-    <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
     <span class="small-muted">V10.1</span>
 </div>
 
