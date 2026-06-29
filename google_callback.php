@@ -25,6 +25,8 @@ if (empty($code)) {
 $ch = curl_init('https://oauth2.googleapis.com/token');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
     'code'          => $code,
     'client_id'     => $clientId,
@@ -45,6 +47,8 @@ if (empty($accessToken)) {
 // Fetch Google user info
 $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
 $userInfo = json_decode(curl_exec($ch), true);
 curl_close($ch);

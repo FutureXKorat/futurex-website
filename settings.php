@@ -12,6 +12,8 @@ function cloudinaryUpload($base64DataUrl, $userId) {
     $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud}/image/upload");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_POSTFIELDS, [
         'file'       => $base64DataUrl,
         'api_key'    => $key,
@@ -34,6 +36,8 @@ function cloudinaryDelete($userId) {
     $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud}/image/destroy");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_POSTFIELDS, [
         'public_id' => $pubId,
         'api_key'   => $key,
