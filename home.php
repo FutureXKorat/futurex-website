@@ -419,7 +419,7 @@ $texts = [
         }
         .footer-min {
             margin-top: 16px;
-            padding-bottom: 40px;
+            padding-bottom: 20px;
             font-size: 0.95rem;
             color: #4B5563;
             text-align: center;
