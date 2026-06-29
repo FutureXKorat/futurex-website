@@ -2,6 +2,48 @@
 include_once 'database.php';
 include_once 'send_otp.php';
 
+function cloudinaryUpload($base64DataUrl, $userId) {
+    $cloud  = getenv('CLOUDINARY_CLOUD_NAME');
+    $key    = getenv('CLOUDINARY_API_KEY');
+    $secret = getenv('CLOUDINARY_API_SECRET');
+    $pubId  = 'futurex_profile_user_' . $userId;
+    $ts     = time();
+    $sigStr = "invalidate=true&public_id={$pubId}&timestamp={$ts}{$secret}";
+    $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud}/image/upload");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'file'       => $base64DataUrl,
+        'api_key'    => $key,
+        'timestamp'  => $ts,
+        'public_id'  => $pubId,
+        'invalidate' => 'true',
+        'signature'  => sha1($sigStr),
+    ]);
+    $resp = json_decode(curl_exec($ch), true);
+    curl_close($ch);
+    return $resp['secure_url'] ?? null;
+}
+
+function cloudinaryDelete($userId) {
+    $cloud  = getenv('CLOUDINARY_CLOUD_NAME');
+    $key    = getenv('CLOUDINARY_API_KEY');
+    $secret = getenv('CLOUDINARY_API_SECRET');
+    $pubId  = 'futurex_profile_user_' . $userId;
+    $ts     = time();
+    $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud}/image/destroy");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'public_id' => $pubId,
+        'api_key'   => $key,
+        'timestamp' => $ts,
+        'signature' => sha1("public_id={$pubId}&timestamp={$ts}{$secret}"),
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit();
@@ -23,25 +65,33 @@ $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// ── AJAX: upload cropped profile picture ──────────────────────────────────
+// ── AJAX: upload cropped profile picture → Cloudinary ────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
-    $data        = str_replace('data:image/png;base64,', '', $_POST['cropped_image']);
-    $data        = base64_decode($data);
-    $newFileName = 'user_' . $userId . '_' . time() . '.png';
-    file_put_contents($uploadDir . $newFileName, $data);
-    if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']))
-        unlink($uploadDir . $user['profile_picture']);
-    $stmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE id = ?");
-    $stmt->bind_param("si", $newFileName, $userId);
-    $stmt->execute();
-    echo json_encode(["success" => true, "filename" => $newFileName]);
+    $secureUrl = cloudinaryUpload($_POST['cropped_image'], $userId);
+    if ($secureUrl) {
+        // Clean up any old local file from before Cloudinary migration
+        $old = $user['profile_picture'] ?? '';
+        if ($old && !str_starts_with($old, 'http') && file_exists($uploadDir . $old))
+            unlink($uploadDir . $old);
+        $stmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE id = ?");
+        $stmt->bind_param("si", $secureUrl, $userId);
+        $stmt->execute();
+        echo json_encode(["success" => true, "url" => $secureUrl]);
+    } else {
+        echo json_encode(["success" => false]);
+    }
     exit();
 }
 
 // ── Delete profile picture ────────────────────────────────────────────────
 if (isset($_POST['delete_profile_picture'])) {
-    if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
-        unlink($uploadDir . $user['profile_picture']);
+    $pic = $user['profile_picture'] ?? '';
+    if (!empty($pic)) {
+        if (str_starts_with($pic, 'http')) {
+            cloudinaryDelete($userId);
+        } elseif (file_exists($uploadDir . $pic)) {
+            unlink($uploadDir . $pic);
+        }
         $stmt = $conn->prepare("UPDATE users SET profile_picture = NULL WHERE id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -261,7 +311,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unlink_google'])) {
 }
 
 $googleLinked = !empty($user['google_id']);
-$hasPic          = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
+$_pic   = $user['profile_picture'] ?? '';
+$hasPic = !empty($_pic) && (str_starts_with($_pic, 'http') || file_exists($uploadDir . $_pic));
 $otpPending      = !empty($_SESSION['pw_change'])     && time() <= $_SESSION['pw_change']['expires'];
 $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['email_change']['expires'];
 ?>
@@ -571,7 +622,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
 
       <div class="centered">
         <img id="currentProfilePic"
-             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
+             src="<?php echo $hasPic ? (str_starts_with($_pic, 'http') ? htmlspecialchars($_pic) : $uploadDir . htmlspecialchars($_pic)) : 'avatar.png'; ?>"
              class="profile-pic" alt="Profile picture">
       </div>
 
@@ -961,7 +1012,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       .then(r => r.json())
       .then(d => {
         if (d.success) {
-          const newSrc = '<?= $uploadDir ?>' + d.filename + '?t=' + Date.now();
+          const newSrc = d.url;
           document.getElementById('currentProfilePic').src = newSrc;
           const navPic = document.getElementById('profileIcon');
           if (navPic) navPic.src = newSrc;

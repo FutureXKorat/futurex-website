@@ -44,7 +44,10 @@ if (isset($_SESSION['user_id'])) {
     if ($_navRow) {
         $_navUserName = htmlspecialchars($_navRow['name'] ?? '');
         if (!empty($_navRow['profile_picture'])) {
-            $_navPic = 'uploads/profile_pics/' . htmlspecialchars($_navRow['profile_picture']);
+            $_p = $_navRow['profile_picture'];
+            $_navPic = str_starts_with($_p, 'http')
+                ? htmlspecialchars($_p)
+                : 'uploads/profile_pics/' . htmlspecialchars($_p);
         }
     }
 }
