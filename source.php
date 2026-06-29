@@ -111,12 +111,6 @@ $texts = [
             color: #6B7280;
             text-align: center;
         }
-        .chatgpt-text {
-            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            font-size: 1rem;
-            color: #0d0d0d;
-            line-height: 1.75;
-        }
         .divider {
             height: 1px;
             background: rgba(0,0,0,0.07);
@@ -266,8 +260,8 @@ $texts = [
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Text Content' : 'เนื้อหาข้อความ' ?></h2>
             <ul>
-                <li class="chatgpt-text"><?php echo ($lang === 'th') ? 'เนื้อหาเขียนขึ้นโดยได้รับความช่วยเหลือจาก' : 'Text written with assistance from' ?>
-                    <a href="https://www.anthropic.com/" target="_blank" rel="noopener noreferrer">Claude (Anthropic)</a>.
+                <li><?php echo ($lang === 'th') ? 'เนื้อหาเขียนขึ้นโดยได้รับความช่วยเหลือจาก' : 'Text written with assistance from' ?>
+                    <a href="https://openai.com/" target="_blank" rel="noopener noreferrer">ChatGPT (OpenAI)</a>.
                 </li>
             </ul>
 
@@ -316,8 +310,7 @@ $texts = [
 
             <div class="footer-min">
                 <?php echo ($lang === 'en') ? 'Future X Korat — All rights reserved.' : 'Future X Korat — สงวนลิขสิทธิ์' ?>
-                <span class="small-muted">V.10.1</span>
-                <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> June 29, 2026</span>
+                <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
             </div>
         </div>
     </div>
