@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V20.2',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Add Admin form: all fields are now required, phone number field uses the same country code dropdown as the registration page (+66/+60/+856).', 'th' => 'ฟอร์มเพิ่มแอดมิน: ทุกช่องต้องกรอก และช่องเบอร์โทรใช้เมนูรหัสประเทศเหมือนกับหน้าสมัครสมาชิก (+66/+60/+856)'],
+        ],
+    ],
+    [
         'version' => 'V20.1A',
         'date'    => '2026-06-30',
         'changes' => [

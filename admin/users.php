@@ -19,7 +19,7 @@ $success = '';
 $errors  = [];
 
 // form sticky values
-$f = ['name' => '', 'surname' => '', 'username' => '', 'email' => '', 'phoneno' => ''];
+$f = ['name' => '', 'surname' => '', 'username' => '', 'email' => '', 'phoneno' => '', 'cc' => '+66'];
 
 // ── Add new admin ──────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
@@ -27,13 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     $f['surname']  = trim((string)($_POST['surname']  ?? ''));
     $f['username'] = trim((string)($_POST['username'] ?? ''));
     $f['email']    = strtolower(trim((string)($_POST['email'] ?? '')));
-    $f['phoneno']  = trim((string)($_POST['phoneno']  ?? ''));
     $password      = (string)($_POST['password']         ?? '');
     $confirm       = (string)($_POST['confirm_password'] ?? '');
 
+    // Phone: same as register.php
+    $allowed_cc    = ['+66', '+60', '+856'];
+    $f['cc']       = in_array($_POST['cc'] ?? '', $allowed_cc, true) ? $_POST['cc'] : '+66';
+    $f['phoneno']  = trim((string)($_POST['phoneno'] ?? ''));
+    $digits_only   = preg_replace('/\D+/', '', $f['phoneno']);
+    $phoneno_full  = $f['cc'] . $digits_only;
+
     // Required
-    if ($f['name'] === '' || $f['username'] === '' || $f['email'] === '' || $password === '') {
-        $errors[] = 'Name, username, email, and password are required.';
+    if ($f['name'] === '' || $f['surname'] === '' || $f['username'] === '' || $f['email'] === '' || $digits_only === '' || $password === '') {
+        $errors[] = 'All fields are required.';
     }
 
     // Username rules (same as register.php)
@@ -48,6 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     // Email must be valid and end with .com
     if ($f['email'] !== '' && (!filter_var($f['email'], FILTER_VALIDATE_EMAIL) || !preg_match('/@[^@]+\.com$/i', $f['email']))) {
         $errors[] = 'Please enter a valid email address ending with .com.';
+    }
+
+    // Phone format (same as register.php)
+    if ($digits_only !== '' && !preg_match('/^\+(66|60|856)\d{7,12}$/', $phoneno_full)) {
+        $errors[] = 'Invalid phone number format.';
     }
 
     // Password rules (same as register.php)
@@ -83,10 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
             $ins = $conn->prepare(
                 "INSERT INTO admins (name, surname, username, email, phoneno, password, verified) VALUES (?, ?, ?, ?, ?, ?, 1)"
             );
-            $ins->bind_param('ssssss', $f['name'], $f['surname'], $f['username'], $f['email'], $f['phoneno'], $hashed);
+            $ins->bind_param('ssssss', $f['name'], $f['surname'], $f['username'], $f['email'], $phoneno_full, $hashed);
             if ($ins->execute()) {
                 $success = "Admin account created for {$f['name']} ({$f['username']}).";
-                $f = ['name' => '', 'surname' => '', 'username' => '', 'email' => '', 'phoneno' => ''];
+                $f = ['name' => '', 'surname' => '', 'username' => '', 'email' => '', 'phoneno' => '', 'cc' => '+66'];
             } else {
                 $errors[] = 'Database error — please try again.';
             }
@@ -114,6 +125,9 @@ if ($res) {
     while ($r = $res->fetch_assoc()) $admins[] = $r;
     $res->free();
 }
+
+// CC button label helper
+$ccLabel = $f['cc'] === '+60' ? '🇲🇾 +60' : ($f['cc'] === '+856' ? '🇱🇦 +856' : '🇹🇭 +66');
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($lang) ?>">
@@ -177,7 +191,28 @@ if ($res) {
 
     .empty-note { color: #888; font-size: .9rem; }
 
-    /* Password requirements checklist (copied from register.php) */
+    /* Phone input — same as register.php */
+    .phone-input { position: relative; }
+    .cc-btn {
+      display: block; width: 100%; text-align: left;
+      border-radius: 12px 0 0 12px;
+      font-weight: 600; padding: 12px 16px;
+      background-color: #fff; border-color: #ced4da; color: #212529;
+    }
+    .cc-btn:hover { background-color: #f1f1f1; border-color: #80bdff; }
+    .cc-btn:focus { box-shadow: 0 0 0 0.25rem rgba(0,123,255,0.25); border-color: #80bdff; }
+    .phone-input .form-control { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+    .cc-btn { border-right-width: 0; }
+    .phone-input .form-control:focus { position: relative; z-index: 2; }
+    .phone-input .dropdown-menu {
+      border-radius: 12px; background-color: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      overflow: hidden; margin-top: 8px; z-index: 1055;
+    }
+    .phone-input .dropdown-item { padding: 10px 16px; font-size: 1rem; font-weight: 500; transition: background .2s, color .2s; }
+    .phone-input .dropdown-item:hover { background-color: #007BFF; color: #fff; }
+
+    /* Password requirements checklist — same as register.php */
     .pw-wrap { position: relative; }
     .pw-wrap .form-control { padding-right: 2.75rem; }
     .pwd-eye {
@@ -188,18 +223,11 @@ if ($res) {
     }
     .pwd-eye:focus { outline: none; }
     .pwd-eye:hover { color: #374151; }
-    .pw-reqs {
-      list-style: none; margin: 7px 0 0; padding: 0;
-      display: flex; flex-direction: column; gap: 5px;
-    }
-    .pw-req {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.79rem; color: #9ca3af; transition: color .2s;
-    }
+    .pw-reqs { list-style: none; margin: 7px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .pw-req { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: #9ca3af; transition: color .2s; }
     .pw-req.met { color: #15803d; }
     .pw-req-dot {
-      width: 17px; height: 17px; border-radius: 50%;
-      border: 2px solid #d1d5db;
+      width: 17px; height: 17px; border-radius: 50%; border: 2px solid #d1d5db;
       display: inline-flex; align-items: center; justify-content: center;
       flex-shrink: 0; transition: background .2s, border-color .2s;
     }
@@ -275,35 +303,56 @@ if ($res) {
     <form method="post" autocomplete="off" id="addAdminForm">
       <input type="hidden" name="action" value="add">
       <div class="row g-3">
+
         <div class="col-sm-6">
-          <label for="name">First Name *</label>
+          <label for="name">First Name</label>
           <input type="text" id="name" name="name" class="form-control"
             value="<?= htmlspecialchars($f['name']) ?>" required>
         </div>
+
         <div class="col-sm-6">
           <label for="surname">Last Name</label>
           <input type="text" id="surname" name="surname" class="form-control"
-            value="<?= htmlspecialchars($f['surname']) ?>">
+            value="<?= htmlspecialchars($f['surname']) ?>" required>
         </div>
+
         <div class="col-sm-6">
-          <label for="username">Username * <span style="color:#888;font-weight:400;font-size:.8rem;">(min 5, letters/numbers/._)</span></label>
+          <label for="username">Username</label>
           <input type="text" id="username" name="username" class="form-control"
             value="<?= htmlspecialchars($f['username']) ?>" required>
         </div>
+
         <div class="col-sm-6">
-          <label for="email">Email *</label>
+          <label for="email">Email</label>
           <input type="email" id="email" name="email" class="form-control"
             value="<?= htmlspecialchars($f['email']) ?>" required>
         </div>
+
+        <!-- Phone with country code — same as register.php -->
         <div class="col-sm-6">
-          <label for="phoneno">Phone</label>
-          <input type="text" id="phoneno" name="phoneno" class="form-control"
-            value="<?= htmlspecialchars($f['phoneno']) ?>">
+          <label>Phone Number</label>
+          <div class="input-group phone-input">
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary dropdown-toggle cc-btn" type="button"
+                id="ccDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <span id="selectedCC"><?= $ccLabel ?></span>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="ccDropdown">
+                <li><a class="dropdown-item cc-option" href="#" data-cc="+66">🇹🇭 +66</a></li>
+                <li><a class="dropdown-item cc-option" href="#" data-cc="+60">🇲🇾 +60</a></li>
+                <li><a class="dropdown-item cc-option" href="#" data-cc="+856">🇱🇦 +856</a></li>
+              </ul>
+            </div>
+            <input type="hidden" name="cc" id="ccInput" value="<?= htmlspecialchars($f['cc']) ?>">
+            <input type="tel" name="phoneno" class="form-control"
+              value="<?= htmlspecialchars($f['phoneno']) ?>"
+              placeholder="Phone Number" required>
+          </div>
         </div>
 
         <!-- Password + requirements -->
         <div class="col-sm-6">
-          <label for="password">Password *</label>
+          <label for="pwInput">Password</label>
           <div class="pw-wrap">
             <input type="password" id="pwInput" name="password" class="form-control"
               autocomplete="new-password" required>
@@ -337,7 +386,7 @@ if ($res) {
 
         <!-- Confirm password -->
         <div class="col-sm-6">
-          <label for="confirm_password">Confirm Password *</label>
+          <label for="cfInput">Confirm Password</label>
           <div class="pw-wrap">
             <input type="password" id="cfInput" name="confirm_password" class="form-control"
               autocomplete="new-password" required>
@@ -362,8 +411,9 @@ if ($res) {
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Hold-to-show password eyes (same as register.php)
+// Hold-to-show password eyes
 document.querySelectorAll('.pwd-eye').forEach(function(btn) {
     var inp = btn.previousElementSibling;
     btn.addEventListener('mousedown',  function()  { inp.type = 'text'; });
@@ -373,7 +423,7 @@ document.querySelectorAll('.pwd-eye').forEach(function(btn) {
     btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
 });
 
-// Live password requirements check (same as register.php)
+// Live password requirements check
 var pwInput = document.getElementById('pwInput');
 var cfInput = document.getElementById('cfInput');
 function checkReqs() {
@@ -395,6 +445,17 @@ function checkMatch() {
 }
 if (pwInput) pwInput.addEventListener('input', checkReqs);
 if (cfInput) cfInput.addEventListener('input', checkMatch);
+
+// Country code dropdown — same as register.php
+document.querySelectorAll('.cc-option').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('selectedCC').innerText = this.innerText;
+        document.getElementById('ccInput').value = this.dataset.cc;
+        var dd = bootstrap.Dropdown.getOrCreateInstance(document.getElementById('ccDropdown'));
+        dd.hide();
+    });
+});
 </script>
 </body>
 </html>
