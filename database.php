@@ -75,8 +75,11 @@ $conn->query("CREATE TABLE IF NOT EXISTS `sessions` (
   `last_access` INT UNSIGNED  NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-// Add last_access if the table pre-existed without it
-$conn->query("ALTER TABLE `sessions` ADD COLUMN IF NOT EXISTS `last_access` INT UNSIGNED NOT NULL DEFAULT 0");
+// Add last_access if the table pre-existed without it (compatible with MySQL 5.7+)
+$_colCheck = $conn->query("SHOW COLUMNS FROM `sessions` LIKE 'last_access'");
+if ($_colCheck && $_colCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `sessions` ADD COLUMN `last_access` INT UNSIGNED NOT NULL DEFAULT 0");
+}
 
 class MySQLSessionHandler implements SessionHandlerInterface {
     private mysqli $conn;
