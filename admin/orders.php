@@ -80,6 +80,7 @@ $texts = [
         'order_id_label' => 'Order ID',
         'created_label'  => 'Placed',
         'updated_label'  => 'Updated',
+        'modal_pickup_time' => 'Pick-Up Appointment',
         'search_ph'           => 'Search by ID or customer…',
         'bulk_approve'        => 'Approve Selected',
         'bulk_reject'         => 'Reject Selected',
@@ -154,6 +155,7 @@ $texts = [
         'order_id_label' => 'เลขที่',
         'created_label'  => 'สั่งเมื่อ',
         'updated_label'  => 'อัปเดต',
+        'modal_pickup_time' => 'นัดรับสินค้า',
         'search_ph'           => 'ค้นหาด้วยเลขที่หรือลูกค้า…',
         'bulk_approve'        => 'อนุมัติที่เลือก',
         'bulk_reject'         => 'ปฏิเสธที่เลือก',
@@ -842,10 +844,11 @@ const i18n = <?= json_encode([
   'click_slip'        => $t['click_slip'],
   'view_original'  => $t['view_original'],
   'img_not_found'  => $t['img_not_found'],
-  'order_id_label' => $t['order_id_label'],
-  'created_label'  => $t['created_label'],
-  'updated_label'  => $t['updated_label'],
-  'items_label'    => $t['items_label'],
+  'order_id_label'    => $t['order_id_label'],
+  'created_label'     => $t['created_label'],
+  'updated_label'     => $t['updated_label'],
+  'items_label'       => $t['items_label'],
+  'modal_pickup_time' => $t['modal_pickup_time'],
 ], JSON_UNESCAPED_UNICODE) ?>;
 
 function esc(s) {
@@ -938,6 +941,7 @@ function openModal(btn) {
     ord.user_email ? [i18n.modal_email, esc(ord.user_email)] : null,
     [i18n.modal_delivery, esc(delLabel)],
     (ord.delivery === 'ship' && ord.address) ? [i18n.modal_address, `<span style="white-space:pre-wrap;">${esc(ord.address)}</span>`] : null,
+    (ord.delivery !== 'ship' && ord.pickup_time) ? [i18n.modal_pickup_time, `<strong>${esc(ord.pickup_time)}</strong><br><a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener" style="font-size:.78rem;color:#007BFF;text-decoration:none;">Google Maps ↗</a>`] : null,
   ].filter(Boolean).map(([lbl,val]) =>
     `<div class="info-label">${esc(lbl)}</div><div class="info-val">${val}</div>`
   ).join('');

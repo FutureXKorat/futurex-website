@@ -27,16 +27,23 @@ $texts = [
         'back_to_cart'   => 'Back to Cart',
         'place_order'    => 'Place Order',
         'delivery'       => 'Delivery Method',
-        'pickup'         => 'Pick up at warehouse',
-        'ship'           => 'Ship to address',
-        'address'        => 'Shipping Address',
-        'payment'        => 'Payment Method',
-        'pay_qr'         => 'PromptPay (QR)',
-        'empty_cart'     => 'Your cart is empty.',
-        'go_products'    => 'Go to Products',
-        'success'        => 'Order created. Proceed to payment.',
-        'missing'        => 'Please fill the required fields.',
-        'lang'           => 'ภาษาไทย',
+        'pickup'              => 'Pick up at store',
+        'ship'                => 'Ship to address',
+        'address'             => 'Shipping Address',
+        'payment'             => 'Payment Method',
+        'pay_qr'              => 'PromptPay (QR)',
+        'empty_cart'          => 'Your cart is empty.',
+        'go_products'         => 'Go to Products',
+        'success'             => 'Order created. Proceed to payment.',
+        'missing'             => 'Please fill the required fields.',
+        'missing_pickup_time' => 'Please select a pick-up date and time.',
+        'lang'                => 'ภาษาไทย',
+        'store_location'      => 'Store Location',
+        'view_map'            => 'View on Google Maps',
+        'pickup_appt'         => 'Pick-Up Appointment',
+        'pickup_date_label'   => 'Date',
+        'pickup_time_label'   => 'Time',
+        'pickup_time_ph'      => '— Select a time —',
     ],
     'th' => [
         'tabbar'         => 'ชำระเงิน - Future X',
@@ -51,16 +58,23 @@ $texts = [
         'back_to_cart'   => 'กลับไปตะกร้า',
         'place_order'    => 'สั่งซื้อ',
         'delivery'       => 'วิธีรับสินค้า',
-        'pickup'         => 'รับที่คลังสินค้า',
-        'ship'           => 'จัดส่งถึงที่อยู่',
-        'address'        => 'ที่อยู่สำหรับจัดส่ง',
-        'payment'        => 'ช่องทางชำระเงิน',
-        'pay_qr'         => 'พร้อมเพย์ (QR)',
-        'empty_cart'     => 'ตะกร้าสินค้าว่าง',
-        'go_products'    => 'ไปที่สินค้า',
-        'success'        => 'สร้างคำสั่งซื้อแล้ว โปรดดำเนินการชำระเงิน',
-        'missing'        => 'โปรดกรอกข้อมูลให้ครบ',
-        'lang'           => 'English',
+        'pickup'              => 'รับที่ร้าน',
+        'ship'                => 'จัดส่งถึงที่อยู่',
+        'address'             => 'ที่อยู่สำหรับจัดส่ง',
+        'payment'             => 'ช่องทางชำระเงิน',
+        'pay_qr'              => 'พร้อมเพย์ (QR)',
+        'empty_cart'          => 'ตะกร้าสินค้าว่าง',
+        'go_products'         => 'ไปที่สินค้า',
+        'success'             => 'สร้างคำสั่งซื้อแล้ว โปรดดำเนินการชำระเงิน',
+        'missing'             => 'โปรดกรอกข้อมูลให้ครบ',
+        'missing_pickup_time' => 'โปรดเลือกวันและเวลานัดรับสินค้า',
+        'lang'                => 'English',
+        'store_location'      => 'ที่ตั้งร้าน',
+        'view_map'            => 'ดูบน Google Maps',
+        'pickup_appt'         => 'นัดรับสินค้า',
+        'pickup_date_label'   => 'วันที่',
+        'pickup_time_label'   => 'เวลา',
+        'pickup_time_ph'      => '— เลือกเวลา —',
     ],
 ];
 
@@ -95,8 +109,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shipping_fee = ($delivery === 'ship') ? $shipping_base : 0.00;
     $total = $subtotal + $shipping_fee;
 
-    // why: require address only when shipping
+    // Require address only when shipping
     if ($delivery === 'ship' && $address === '') $errors[] = $texts[$lang]['missing'];
+
+    // Capture and validate pickup appointment
+    $pickup_time = '';
+    if ($delivery === 'pickup') {
+        $pickup_date = trim($_POST['pickup_date'] ?? '');
+        $pickup_hour = trim($_POST['pickup_hour'] ?? '');
+        if ($pickup_date === '' || $pickup_hour === '') {
+            $errors[] = $texts[$lang]['missing_pickup_time'];
+        } else {
+            try {
+                $dt = new DateTime($pickup_date);
+                $pickup_time = $dt->format('j M Y') . ', ' . $pickup_hour;
+            } catch (Exception $e) {
+                $pickup_time = $pickup_date . ' ' . $pickup_hour;
+            }
+        }
+    }
 
     if (!$errors) {
         $order_id = 'FX'.date('YmdHis').rand(100,999);
@@ -106,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'user_id'        => (int)$_SESSION['user_id'],
             'delivery'       => $delivery,
             'address'        => ($delivery === 'ship') ? $address : '',
+            'pickup_time'    => $pickup_time,
             'payment_method' => $method,
             'items'          => $items,
             'amounts'        => ['subtotal'=>$subtotal, 'shipping'=>$shipping_fee, 'total'=>$total],
@@ -208,6 +240,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .summary-row { display:flex; justify-content:space-between; padding:6px 0; }
         .summary-row.total { border-top:1px solid rgba(0,0,0,.1); margin-top:6px; padding-top:10px; font-weight:700; font-size:1.15rem; }
 
+        /* Pickup info box */
+        .pickup-box {
+            background: rgba(233,242,255,0.7);
+            border: 1.5px solid rgba(0,123,255,0.18);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-top: 12px;
+        }
+        .pickup-box .store-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .pickup-box .store-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #111;
+            margin-bottom: 2px;
+        }
+        .pickup-box .map-link {
+            font-size: 0.82rem;
+            color: #007BFF;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .pickup-box .map-link:hover { text-decoration: underline; }
+        .pickup-appt-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pickup-appt-row .appt-field { flex: 1; min-width: 130px; }
+        .pickup-appt-row label { font-size: 0.82rem; font-weight: 500; color: #555; margin-bottom: 4px; }
+
         .lang-switch {
             position: fixed;
             top: 20px;
@@ -262,6 +331,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input class="form-check-input" type="radio" name="delivery" id="del_ship" value="ship">
                         <label class="form-check-label" for="del_ship"><?php echo htmlspecialchars($texts[$lang]['ship']); ?></label>
                     </div>
+                </div>
+
+                <!-- Pick-up: store location + appointment time -->
+                <div id="pickupWrap" class="mb-4">
+                  <div class="pickup-box">
+                    <div class="store-row">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#007BFF" stroke-width="1.8" flex-shrink="0" style="flex-shrink:0;">
+                        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <div>
+                        <div class="store-name">Future X Korat</div>
+                        <a class="map-link" href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener">
+                          <?= htmlspecialchars($texts[$lang]['view_map']) ?>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                      </div>
+                    </div>
+                    <div style="font-size:.82rem;font-weight:600;color:#333;margin-bottom:8px;">
+                      <?= htmlspecialchars($texts[$lang]['pickup_appt']) ?> *
+                    </div>
+                    <div class="pickup-appt-row">
+                      <div class="appt-field">
+                        <label for="pickup_date"><?= htmlspecialchars($texts[$lang]['pickup_date_label']) ?></label>
+                        <input type="date" id="pickup_date" name="pickup_date" class="form-control"
+                               min="<?= date('Y-m-d') ?>" style="border-radius:10px;">
+                      </div>
+                      <div class="appt-field">
+                        <label for="pickup_hour"><?= htmlspecialchars($texts[$lang]['pickup_time_label']) ?></label>
+                        <select id="pickup_hour" name="pickup_hour" class="form-control" style="border-radius:10px;">
+                          <option value=""><?= htmlspecialchars($texts[$lang]['pickup_time_ph']) ?></option>
+                          <option value="9:00 AM">9:00 AM</option>
+                          <option value="10:00 AM">10:00 AM</option>
+                          <option value="11:00 AM">11:00 AM</option>
+                          <option value="12:00 PM">12:00 PM (Noon)</option>
+                          <option value="1:00 PM">1:00 PM</option>
+                          <option value="2:00 PM">2:00 PM</option>
+                          <option value="3:00 PM">3:00 PM</option>
+                          <option value="4:00 PM">4:00 PM</option>
+                          <option value="5:00 PM">5:00 PM</option>
+                          <option value="6:00 PM">6:00 PM</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div id="addressWrap" class="mb-4" style="display:none;">
@@ -369,40 +482,52 @@ document.addEventListener('DOMContentLoaded', function () {
     new bootstrap.Toast(toastEl).show();
   });
 
-  // toggle address by delivery
-  const pickup = document.getElementById('del_pickup');
-  const ship   = document.getElementById('del_ship');
-  const wrap   = document.getElementById('addressWrap');
-  const addr   = document.getElementById('address');
-    
+  // toggle address / pickup sections by delivery
+  const pickup      = document.getElementById('del_pickup');
+  const ship        = document.getElementById('del_ship');
+  const pickupWrap  = document.getElementById('pickupWrap');
+  const pickupDate  = document.getElementById('pickup_date');
+  const pickupHour  = document.getElementById('pickup_hour');
+  const wrap        = document.getElementById('addressWrap');
+  const addr        = document.getElementById('address');
+
   const shippingValEl = document.getElementById('shippingVal');
   const totalValEl    = document.getElementById('totalVal');
   const subtotalNum   = <?php echo json_encode($subtotal); ?>;
   const shipFeeNum    = <?php echo json_encode($shipping_base); ?>;
-  
+
   function fmt(n){
     return Number(n).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
   }
-  
+
   function refreshTotals() {
     const fee = ship.checked ? shipFeeNum : 0;
     if (shippingValEl) shippingValEl.textContent = fmt(fee) + ' ฿';
     if (totalValEl)    totalValEl.textContent    = fmt(subtotalNum + fee) + ' ฿';
   }
 
-  function refreshAddress() {
-    const isShip = ship.checked;
+  function refreshDelivery() {
+    const isShip   = ship.checked;
+    const isPickup = pickup.checked;
+
+    // Address section
     wrap.style.display = isShip ? '' : 'none';
-    addr.required = isShip; // why: only required for shipping
+    addr.required = isShip;
     if (!isShip) addr.value = '';
+
+    // Pickup appointment section
+    if (pickupWrap) pickupWrap.style.display = isPickup ? '' : 'none';
+    if (pickupDate) pickupDate.required = isPickup;
+    if (pickupHour) pickupHour.required = isPickup;
+
     refreshTotals();
   }
-  pickup.addEventListener('change', refreshAddress);
-  ship.addEventListener('change', refreshAddress);
-  refreshAddress();
+  pickup.addEventListener('change', refreshDelivery);
+  ship.addEventListener('change', refreshDelivery);
+  refreshDelivery();
 
   // disable button on submit
   const form = document.getElementById('checkoutForm');

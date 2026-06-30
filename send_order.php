@@ -81,15 +81,16 @@ function send_order_mail(string $orderId): array {
     if (!is_array($record)) return ['ok' => false, 'error' => 'json_invalid'];
 
     // Extract fields
-    $items     = $record['items']      ?? [];
-    $amounts   = $record['amounts']    ?? [];
-    $totalTHB  = (float)($amounts['total'] ?? 0);
-    $delivery  = (string)($record['delivery']   ?? '');
-    $address   = (string)($record['address']    ?? '');
-    $userEmail = (string)($record['user_email'] ?? '');
-    $userName  = (string)($record['username']   ?? '');
-    $slipWeb   = (string)($record['slip']       ?? '');
-    $createdAt = (string)($record['created_at'] ?? '');
+    $items      = $record['items']       ?? [];
+    $amounts    = $record['amounts']     ?? [];
+    $totalTHB   = (float)($amounts['total'] ?? 0);
+    $delivery   = (string)($record['delivery']    ?? '');
+    $address    = (string)($record['address']     ?? '');
+    $pickupTime = (string)($record['pickup_time'] ?? '');
+    $userEmail  = (string)($record['user_email']  ?? '');
+    $userName   = (string)($record['username']    ?? '');
+    $slipWeb    = (string)($record['slip']        ?? '');
+    $createdAt  = (string)($record['created_at']  ?? '');
 
     // Build items table rows
     $rows = '';
@@ -129,6 +130,7 @@ function send_order_mail(string $orderId): array {
     . '</table>'
     . '<p style="margin:12px 0 6px 0;"><strong>Delivery:</strong> '.htmlspecialchars($delivery).'</p>'
     . (($delivery === 'ship' && $address) ? '<p style="margin:0 0 6px 0;"><strong>Address:</strong><br>'.$addrHtml.'</p>' : '')
+    . (($delivery !== 'ship' && $pickupTime) ? '<p style="margin:0 0 6px 0;"><strong>Pick-Up Appointment:</strong> '.htmlspecialchars($pickupTime).'</p>' : '')
     . '<p style="margin:0 0 6px 0;"><strong>Username:</strong> '.htmlspecialchars($userName).'</p>'
     . ($userEmail ? '<p style="margin:0 0 6px 0;"><strong>User Email:</strong> '.htmlspecialchars($userEmail).'</p>' : '')
     . '<p style="margin:0 0 6px 0;"><strong>Slip:</strong> <a href="'.$slipUrl.'" target="_blank" rel="noopener">View slip</a></p>'

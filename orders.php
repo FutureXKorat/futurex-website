@@ -59,6 +59,8 @@ $texts = [
         'btn_delete'     => 'Delete',
         'confirm_delete' => 'Delete this order? This cannot be undone.',
         'rejection_reason_label' => 'Reason:',
+        'pickup_appt'    => 'Pick-Up Appointment',
+        'view_map'       => 'View store on Google Maps',
     ],
     'th' => [
         'title'        => 'คำสั่งซื้อของฉัน — Future X',
@@ -97,6 +99,8 @@ $texts = [
         'btn_delete'     => 'ลบ',
         'confirm_delete' => 'ลบคำสั่งซื้อนี้? ไม่สามารถกู้คืนได้',
         'rejection_reason_label' => 'เหตุผล:',
+        'pickup_appt'    => 'นัดรับสินค้า',
+        'view_map'       => 'ดูที่ตั้งร้านบน Google Maps',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
@@ -454,6 +458,19 @@ function ordFmtDate(string $iso): string {
       <!-- Status note -->
       <div class="status-note <?= $noteClass ?>"><?= htmlspecialchars($noteText) ?></div>
 
+      <?php if (($ord['delivery'] ?? '') !== 'ship' && !empty($ord['pickup_time'])): ?>
+      <!-- Pickup appointment info -->
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(233,242,255,0.7);border:1.5px solid rgba(0,123,255,0.15);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:.84rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#007BFF" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div>
+          <span style="color:#555;font-weight:500;"><?= htmlspecialchars($t['pickup_appt']) ?>:</span>
+          <strong style="color:#111;margin-left:4px;"><?= htmlspecialchars((string)$ord['pickup_time']) ?></strong>
+          &nbsp;·&nbsp;
+          <a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener" style="color:#007BFF;font-size:.78rem;text-decoration:none;"><?= htmlspecialchars($t['view_map']) ?> ↗</a>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <!-- Items list (first 3 items, hint if more) -->
       <ul class="items-list">
         <?php
@@ -563,6 +580,8 @@ const i18n = <?= json_encode([
   'img_error'      => $t['img_error'],
   'placed_on'              => $t['placed_on'],
   'rejection_reason_label' => $t['rejection_reason_label'],
+  'pickup_appt'            => $t['pickup_appt'],
+  'view_map'               => $t['view_map'],
 ], JSON_UNESCAPED_UNICODE) ?>;
 
 // Map stored English reason keys → current language for JS modal display
@@ -636,6 +655,17 @@ function openModal(btn) {
     <div class="info-row">
       <span class="info-row-label">${esc(i18n.modal_address)}</span>
       <span class="info-row-val" style="white-space:pre-wrap;">${esc(ord.address)}</span>
+    </div>`;
+  }
+  if (ord.delivery !== 'ship' && ord.pickup_time) {
+    infoHtml += `
+    <div class="info-row">
+      <span class="info-row-label">${esc(i18n.pickup_appt)}</span>
+      <span class="info-row-val">
+        <strong>${esc(ord.pickup_time)}</strong><br>
+        <a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener"
+           style="font-size:.78rem;color:#007BFF;text-decoration:none;">${esc(i18n.view_map)} ↗</a>
+      </span>
     </div>`;
   }
 

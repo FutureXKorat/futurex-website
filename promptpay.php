@@ -11,43 +11,48 @@ if (empty($_SESSION['pending_checkout'])) {
 }
 
 $order = $_SESSION['pending_checkout'];
-$order_id   = $order['order_id'];
-$totalTHB   = (float)($order['amounts']['total'] ?? 0);
-$delivery   = $order['delivery'] ?? 'pickup';
-$address    = $order['address'] ?? '';
-$items      = $order['items'] ?? [];
+$order_id    = $order['order_id'];
+$totalTHB    = (float)($order['amounts']['total'] ?? 0);
+$delivery    = $order['delivery'] ?? 'pickup';
+$address     = $order['address'] ?? '';
+$pickup_time = $order['pickup_time'] ?? '';
+$items       = $order['items'] ?? [];
 
 $slipPathWeb = ''; // will hold Cloudinary URL after successful upload
 
 // i18n (minimal)
 $texts = [
   'en' => [
-    'title' => 'Pay via PromptPay',
-    'scan'  => 'Scan & Pay',
-    'ppid'  => 'PromptPay ID',
-    'amt'   => 'Amount',
-    'addr'  => 'Shipping address',
-    'upload'=> 'Upload payment slip',
-    'submit'=> 'I have paid',
-    'note'  => 'We will review your payment and confirm your order.',
-    'order' => 'Order',
-    'back'  => 'Back to Checkout',
+    'title'      => 'Pay via PromptPay',
+    'scan'       => 'Scan & Pay',
+    'ppid'       => 'PromptPay ID',
+    'amt'        => 'Amount',
+    'addr'       => 'Shipping address',
+    'pickup_appt'=> 'Pick-Up Appointment',
+    'view_map'   => 'View store on Google Maps',
+    'upload'     => 'Upload payment slip',
+    'submit'     => 'I have paid',
+    'note'       => 'We will review your payment and confirm your order.',
+    'order'      => 'Order',
+    'back'       => 'Back to Checkout',
     'err_nofile' => 'Please upload your payment slip before confirming payment.',
     'err_type'   => 'Unsupported file type. Please upload JPG, PNG, WEBP, GIF, HEIC, or HEIF.',
     'err_size'   => 'File is too large. Max size is 5 MB.',
     'err_move'   => 'Could not save the file. Please try again.',
   ],
   'th' => [
-    'title' => 'ชำระเงินด้วยพร้อมเพย์',
-    'scan'  => 'สแกนเพื่อชำระเงิน',
-    'ppid'  => 'พร้อมเพย์',
-    'amt'   => 'ยอดชำระ',
-    'addr'  => 'ที่อยู่จัดส่ง',
-    'upload'=> 'อัปโหลดสลิปโอนเงิน',
-    'submit'=> 'ชำระเงินแล้ว',
-    'note'  => 'เราจะตรวจสอบการชำระเงินและยืนยันคำสั่งซื้อ',
-    'order' => 'คำสั่งซื้อ',
-    'back'  => 'กลับไปหน้าชำระเงิน',
+    'title'      => 'ชำระเงินด้วยพร้อมเพย์',
+    'scan'       => 'สแกนเพื่อชำระเงิน',
+    'ppid'       => 'พร้อมเพย์',
+    'amt'        => 'ยอดชำระ',
+    'addr'       => 'ที่อยู่จัดส่ง',
+    'pickup_appt'=> 'นัดรับสินค้า',
+    'view_map'   => 'ดูที่ตั้งร้านบน Google Maps',
+    'upload'     => 'อัปโหลดสลิปโอนเงิน',
+    'submit'     => 'ชำระเงินแล้ว',
+    'note'       => 'เราจะตรวจสอบการชำระเงินและยืนยันคำสั่งซื้อ',
+    'order'      => 'คำสั่งซื้อ',
+    'back'       => 'กลับไปหน้าชำระเงิน',
     'err_nofile' => 'กรุณาอัปโหลดสลิปการโอนเงินก่อนยืนยันการชำระเงิน',
     'err_type'   => 'ประเภทไฟล์ไม่รองรับ โปรดอัปโหลด JPG, PNG, WEBP, GIF, HEIC หรือ HEIF',
     'err_size'   => 'ไฟล์มีขนาดใหญ่เกินไป ขนาดสูงสุด 5 MB',
@@ -105,17 +110,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If valid, persist and redirect; otherwise stay and show errors
     if (!$errors) {
         $record = [
-            'order_id'   => $order_id,
-            'user_id'    => (int)($_SESSION['user_id'] ?? 0),
-            'username'  => (string)($_SESSION['username']),
-            'user_email' => (string)($_SESSION['user_email'] ?? $_SESSION['email'] ?? ''),
-            'delivery'   => $delivery,
-            'address'    => $address,
-            'items'      => $items,
-            'amounts'    => $order['amounts'],
-            'status'     => 'awaiting_review', // admin will set to 'paid' or 'rejected'
-            'slip'       => $slipPathWeb,
-            'created_at' => date('c'),
+            'order_id'    => $order_id,
+            'user_id'     => (int)($_SESSION['user_id'] ?? 0),
+            'username'    => (string)($_SESSION['username']),
+            'user_email'  => (string)($_SESSION['user_email'] ?? $_SESSION['email'] ?? ''),
+            'delivery'    => $delivery,
+            'address'     => $address,
+            'pickup_time' => $pickup_time,
+            'items'       => $items,
+            'amounts'     => $order['amounts'],
+            'status'      => 'awaiting_review',
+            'slip'        => $slipPathWeb,
+            'created_at'  => date('c'),
         ];
         $orderJson  = json_encode($record, JSON_UNESCAPED_UNICODE);
         $createdDt  = date('Y-m-d H:i:s');
@@ -371,6 +377,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="mt-3">
         <div class="muted mb-1"><?php echo htmlspecialchars($t['addr']); ?></div>
         <div class="border rounded p-2 bg-light"><?php echo nl2br(htmlspecialchars($address)); ?></div>
+      </div>
+      <?php endif; ?>
+      <?php if ($delivery === 'pickup'): ?>
+      <div class="mt-3" style="background:rgba(233,242,255,0.7);border:1.5px solid rgba(0,123,255,0.18);border-radius:14px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007BFF" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div>
+            <div style="font-weight:600;font-size:.88rem;">Future X Korat</div>
+            <a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener"
+               style="font-size:.78rem;color:#007BFF;text-decoration:none;">
+              <?php echo htmlspecialchars($t['view_map']); ?> ↗
+            </a>
+          </div>
+        </div>
+        <?php if ($pickup_time): ?>
+        <div style="font-size:.82rem;color:#555;font-weight:500;margin-bottom:4px;"><?php echo htmlspecialchars($t['pickup_appt']); ?></div>
+        <div style="font-weight:700;font-size:.95rem;color:#111;"><?php echo htmlspecialchars($pickup_time); ?></div>
+        <?php endif; ?>
       </div>
       <?php endif; ?>
     </div>
