@@ -72,9 +72,11 @@ if (! $conn->set_charset($charset)) {
 $conn->query("CREATE TABLE IF NOT EXISTS `sessions` (
   `id`          VARCHAR(128)  NOT NULL,
   `data`        MEDIUMTEXT    NOT NULL,
-  `last_access` INT UNSIGNED  NOT NULL,
+  `last_access` INT UNSIGNED  NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+// Add last_access if the table pre-existed without it
+$conn->query("ALTER TABLE `sessions` ADD COLUMN IF NOT EXISTS `last_access` INT UNSIGNED NOT NULL DEFAULT 0");
 
 class MySQLSessionHandler implements SessionHandlerInterface {
     private mysqli $conn;
