@@ -261,8 +261,9 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
             color: #fff;
             border: none;
             font-size: 1.8rem;
-            font-weight: 300;
-            line-height: 1;
+            font-weight: 400;
+            line-height: 46px;
+            padding: 0;
             cursor: pointer;
             display: flex;
             align-items: center;
