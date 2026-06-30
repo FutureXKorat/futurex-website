@@ -289,59 +289,51 @@ function old($key) {
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
 
-		/* ===== Country code dropdown (outside stays white) ===== */
-		.phone-input { position: relative; }
-
-		/* Left button should look like a white input */
-		.cc-btn {
-			display: block;              /* full block */
-    		width: 100%;                 /* take all width of its cell */
-    		text-align: left;
+		/* ─── Phone input ─────────────────────────────────────── */
+		.cc-dropdown-wrap { position: relative; }
+		.phone-wrap {
+			display: flex; align-items: center;
+			background: #fff; border: 1.5px solid #dee2e6;
+			border-radius: 12px; overflow: visible;
+			transition: border-color .2s, box-shadow .2s;
+		}
+		.phone-wrap:focus-within {
+			border-color: #86b7fe;
+			box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+		}
+		.phone-cc {
+			display: flex; align-items: center; gap: 5px;
+			padding: 12px 10px 12px 14px;
+			cursor: pointer; white-space: nowrap;
+			font-weight: 600; font-size: .95rem; color: #212529;
 			border-radius: 12px 0 0 12px;
-			font-weight: 600;
-			padding: 12px 16px;
-			background-color: #fff;      /* stay white outside */
-			border-color: #ced4da;       /* match Bootstrap input border */
-			color: #212529;
+			user-select: none; flex-shrink: 0;
+			transition: background .15s;
 		}
-
-		.cc-btn:hover {
-    		background-color: #f1f1f1;
-    		border-color: #80bdff;
+		.phone-cc:hover { background: rgba(0,123,255,.06); }
+		.cc-chevron { transition: transform .2s; flex-shrink: 0; }
+		.cc-chevron.open { transform: rotate(180deg); }
+		.phone-divider { width: 1px; height: 20px; background: #dee2e6; flex-shrink: 0; }
+		.phone-num-input {
+			flex: 1; border: none; outline: none;
+			padding: 12px 14px; font-size: 1rem;
+			font-family: 'Inter', sans-serif;
+			background: transparent; border-radius: 0 12px 12px 0;
+			color: #212529; min-width: 0;
 		}
-		.cc-btn:focus {
-			box-shadow: 0 0 0 0.25rem rgba(0,123,255,0.25);
-			border-color: #80bdff;
+		.phone-num-input::placeholder { color: #adb5bd; }
+		.cc-dropdown {
+			display: none; position: absolute; top: calc(100% + 6px); left: 0;
+			z-index: 1060; background: #fff; border-radius: 12px;
+			box-shadow: 0 8px 24px rgba(0,0,0,.14); overflow: hidden; min-width: 190px;
 		}
-
-		/* Make the input connect seamlessly with the left button */
-		.phone-input .form-control {
-			border-top-left-radius: 0;
-			border-bottom-left-radius: 0;
+		.cc-dropdown.open { display: block; }
+		.cc-opt {
+			display: flex; align-items: center; gap: 10px;
+			padding: 11px 16px; font-size: .95rem; font-weight: 500; cursor: pointer;
+			transition: background .15s, color .15s;
 		}
-		/* Remove double border between button and input */
-		.cc-btn { border-right-width: 0; }
-		.phone-input .form-control:focus { position: relative; z-index: 2; }
-
-		/* The opened menu can stay white (modern shadow + rounded) */
-		.phone-input .dropdown-menu {
-			border-radius: 12px;
-			background-color: #fff;      /* white menu */
-			box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-			overflow: hidden;
-			margin-top: 8px;             /* space from button */
-			z-index: 1055;
-		}
-		.phone-input .dropdown-item {
-			padding: 10px 16px;
-			font-size: 1rem;
-			font-weight: 500;
-			transition: background 0.2s, color 0.2s;
-		}
-		.phone-input .dropdown-item:hover {
-			background-color: #007BFF;
-			color: #fff;
-		}
+		.cc-opt:hover { background: #007BFF; color: #fff; }
 		.pw-wrap { position: relative; }
 		.pw-wrap .form-control { padding-right: 2.75rem; }
 		.pwd-eye {
@@ -431,28 +423,27 @@ function old($key) {
 				   placeholder="<?php echo $texts[$lang]['email']; ?>" required>
 		</div>
 
-		<!-- Phone with country code (outside remains white) -->
-		<div class="mb-3">
-			<div class="input-group phone-input">
-				<div class="dropdown">
-					<button class="btn btn-outline-secondary dropdown-toggle cc-btn" type="button" id="ccDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-						<span id="selectedCC"><?php
-							$posted_cc = $_POST['cc'] ?? '+66';
-							$label = $posted_cc === '+60' ? '🇲🇾 +60' : ($posted_cc === '+856' ? '🇱🇦 +856' : '🇹🇭 +66');
-							echo $label;
-						?></span>
-					</button>
-					<ul class="dropdown-menu" aria-labelledby="ccDropdown">
-						<li><a class="dropdown-item cc-option" href="#" data-cc="+66">🇹🇭 +66</a></li>
-						<li><a class="dropdown-item cc-option" href="#" data-cc="+60">🇲🇾 +60</a></li>
-						<li><a class="dropdown-item cc-option" href="#" data-cc="+856">🇱🇦 +856</a></li>
-					</ul>
+		<!-- Phone with country code -->
+		<div class="mb-3 cc-dropdown-wrap">
+			<?php
+				$posted_cc = $_POST['cc'] ?? '+66';
+				$ccDisplayLabel = $posted_cc === '+60' ? '🇲🇾 +60' : ($posted_cc === '+856' ? '🇱🇦 +856' : '🇹🇭 +66');
+			?>
+			<div class="phone-wrap">
+				<div class="phone-cc" id="ccToggle">
+					<span id="selectedCC"><?php echo $ccDisplayLabel; ?></span>
+					<svg class="cc-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 				</div>
-
-				<input type="hidden" name="cc" id="ccInput" value="<?php echo htmlspecialchars($_POST['cc'] ?? '+66'); ?>">
-				<input type="tel" name="phoneno" class="form-control"
+				<div class="phone-divider"></div>
+				<input type="tel" name="phoneno" class="phone-num-input"
 					value="<?php echo old('phoneno'); ?>"
 					placeholder="<?php echo $texts[$lang]['phoneno']; ?>" required>
+			</div>
+			<input type="hidden" name="cc" id="ccInput" value="<?php echo htmlspecialchars($posted_cc); ?>">
+			<div class="cc-dropdown" id="ccDropdown">
+				<div class="cc-opt" data-cc="+66" data-label="🇹🇭 +66">🇹🇭 &nbsp;+66 &nbsp; Thailand</div>
+				<div class="cc-opt" data-cc="+60" data-label="🇲🇾 +60">🇲🇾 &nbsp;+60 &nbsp; Malaysia</div>
+				<div class="cc-opt" data-cc="+856" data-label="🇱🇦 +856">🇱🇦 &nbsp;+856 &nbsp; Laos</div>
 			</div>
 		</div>
 
@@ -559,20 +550,36 @@ function checkMatch() {
 if (pwInput) pwInput.addEventListener('input', checkReqs);
 if (cfInput) cfInput.addEventListener('input', checkMatch);
 
-// Country code selection logic (custom dropdown)
-document.querySelectorAll(".cc-option").forEach(function(el){
-	el.addEventListener("click", function(e){
-		e.preventDefault();
-		var label = this.innerText;
-		var code  = this.dataset.cc;
-		document.getElementById("selectedCC").innerText = label;
-		document.getElementById("ccInput").value = code;
+// Country code custom dropdown
+(function() {
+	var toggle   = document.getElementById('ccToggle');
+	var dropdown = document.getElementById('ccDropdown');
+	var hidden   = document.getElementById('ccInput');
+	var display  = document.getElementById('selectedCC');
+	if (!toggle || !dropdown) return;
+	var chevron  = toggle.querySelector('.cc-chevron');
 
-		// close dropdown after select
-		var dd = bootstrap.Dropdown.getOrCreateInstance(document.getElementById('ccDropdown'));
-		dd.hide();
+	toggle.addEventListener('click', function(e) {
+		e.stopPropagation();
+		var open = dropdown.classList.toggle('open');
+		if (chevron) chevron.classList.toggle('open', open);
 	});
-});
+
+	dropdown.querySelectorAll('.cc-opt').forEach(function(opt) {
+		opt.addEventListener('click', function(e) {
+			e.stopPropagation();
+			display.textContent = this.dataset.label;
+			hidden.value = this.dataset.cc;
+			dropdown.classList.remove('open');
+			if (chevron) chevron.classList.remove('open');
+		});
+	});
+
+	document.addEventListener('click', function() {
+		dropdown.classList.remove('open');
+		if (chevron) chevron.classList.remove('open');
+	});
+})();
 </script>
 </body>
 </html>

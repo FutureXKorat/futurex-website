@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.1',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Redesigned the phone number input on the registration and admin users pages — replaced the clunky dropdown button with a clean unified field: flag + code on the left, a subtle divider, and the number input on the right.', 'th' => 'ออกแบบช่องกรอกเบอร์โทรศัพท์ใหม่ในหน้าสมัครสมาชิกและหน้าแอดมิน — เปลี่ยนปุ่มเมนูรหัสประเทศแบบเก่าเป็นช่องกรอกแบบรวมที่สวยงาม: ธงและรหัสทางซ้าย เส้นคั่น และช่องกรอกเบอร์ทางขวา'],
+        ],
+    ],
+    [
         'version' => 'V21.0A',
         'date'    => '2026-06-30',
         'changes' => [
