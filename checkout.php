@@ -44,6 +44,7 @@ $texts = [
         'pickup_date_label'   => 'Date',
         'pickup_time_label'   => 'Time',
         'pickup_time_ph'      => '— Select a time —',
+        'past_time'           => 'That pick-up time has already passed. Please choose a later time.',
     ],
     'th' => [
         'tabbar'         => 'ชำระเงิน - Future X',
@@ -75,8 +76,15 @@ $texts = [
         'pickup_date_label'   => 'วันที่',
         'pickup_time_label'   => 'เวลา',
         'pickup_time_ph'      => '— เลือกเวลา —',
+        'past_time'           => 'เวลานัดรับนั้นผ่านมาแล้ว โปรดเลือกเวลาที่ยังไม่ผ่าน',
     ],
 ];
+
+// Bangkok timezone (store is in Thailand)
+$bangkokTz        = new DateTimeZone('Asia/Bangkok');
+$bangkokNow       = new DateTime('now', $bangkokTz);
+$todayBangkok     = $bangkokNow->format('Y-m-d');
+$currentHourBkk   = (int)$bangkokNow->format('G'); // 0-23
 
 // cart
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) { $_SESSION['cart'] = []; }
@@ -120,6 +128,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pickup_date === '' || $pickup_hour === '') {
             $errors[] = $texts[$lang]['missing_pickup_time'];
         } else {
+            // Reject past times when today is selected
+            $slotToHour = [
+                '10:00 AM' => 10, '11:00 AM' => 11, '12:00 PM' => 12,
+                '1:00 PM'  => 13, '2:00 PM'  => 14, '3:00 PM'  => 15,
+                '4:00 PM'  => 16, '5:00 PM'  => 17,
+            ];
+            if ($pickup_date === $todayBangkok) {
+                $slotHour = $slotToHour[$pickup_hour] ?? null;
+                if ($slotHour !== null && $slotHour <= $currentHourBkk) {
+                    $errors[] = $texts[$lang]['past_time'];
+                }
+            }
             try {
                 $dt = new DateTime($pickup_date);
                 $pickup_time = $dt->format('j M Y') . ', ' . $pickup_hour;
@@ -355,27 +375,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <div class="appt-field">
                         <label for="pickup_date"><?= htmlspecialchars($texts[$lang]['pickup_date_label']) ?></label>
                         <input type="date" id="pickup_date" name="pickup_date" class="form-control"
-                               min="<?= date('Y-m-d') ?>" style="border-radius:10px;">
+                               min="<?= $todayBangkok ?>" style="border-radius:10px;">
                       </div>
                       <div class="appt-field">
                         <label for="pickup_hour"><?= htmlspecialchars($texts[$lang]['pickup_time_label']) ?></label>
                         <?php
-                        // value = English AM/PM (stored in DB); label changes by language
+                        // value = English AM/PM (stored in DB); label changes by language; hour = 24h for JS filtering
                         $timeSlots = [
-                            '10:00 AM' => ['en' => '10:00 AM', 'th' => '10:00 น.'],
-                            '11:00 AM' => ['en' => '11:00 AM', 'th' => '11:00 น.'],
-                            '12:00 PM' => ['en' => '12:00 PM', 'th' => '12:00 น.'],
-                            '1:00 PM'  => ['en' => '1:00 PM',  'th' => '13:00 น.'],
-                            '2:00 PM'  => ['en' => '2:00 PM',  'th' => '14:00 น.'],
-                            '3:00 PM'  => ['en' => '3:00 PM',  'th' => '15:00 น.'],
-                            '4:00 PM'  => ['en' => '4:00 PM',  'th' => '16:00 น.'],
-                            '5:00 PM'  => ['en' => '5:00 PM',  'th' => '17:00 น.'],
+                            '10:00 AM' => ['en' => '10:00 AM', 'th' => '10:00 น.', 'hour' => 10],
+                            '11:00 AM' => ['en' => '11:00 AM', 'th' => '11:00 น.', 'hour' => 11],
+                            '12:00 PM' => ['en' => '12:00 PM', 'th' => '12:00 น.', 'hour' => 12],
+                            '1:00 PM'  => ['en' => '1:00 PM',  'th' => '13:00 น.', 'hour' => 13],
+                            '2:00 PM'  => ['en' => '2:00 PM',  'th' => '14:00 น.', 'hour' => 14],
+                            '3:00 PM'  => ['en' => '3:00 PM',  'th' => '15:00 น.', 'hour' => 15],
+                            '4:00 PM'  => ['en' => '4:00 PM',  'th' => '16:00 น.', 'hour' => 16],
+                            '5:00 PM'  => ['en' => '5:00 PM',  'th' => '17:00 น.', 'hour' => 17],
                         ];
                         ?>
                         <select id="pickup_hour" name="pickup_hour" class="form-control" style="border-radius:10px;">
                           <option value=""><?= htmlspecialchars($texts[$lang]['pickup_time_ph']) ?></option>
-                          <?php foreach ($timeSlots as $val => $labels): ?>
-                          <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($labels[$lang] ?? $labels['en']) ?></option>
+                          <?php foreach ($timeSlots as $val => $slot): ?>
+                          <option value="<?= htmlspecialchars($val) ?>" data-hour="<?= $slot['hour'] ?>"><?= htmlspecialchars($slot[$lang] ?? $slot['en']) ?></option>
                           <?php endforeach; ?>
                         </select>
                       </div>
@@ -534,6 +554,34 @@ document.addEventListener('DOMContentLoaded', function () {
   pickup.addEventListener('change', refreshDelivery);
   ship.addEventListener('change', refreshDelivery);
   refreshDelivery();
+
+  // Disable past time slots when today is selected
+  function filterTimeSlots() {
+    if (!pickupDate || !pickupHour) return;
+    const selectedDate = pickupDate.value; // 'YYYY-MM-DD'
+    const now = new Date();
+    // Build today string in local (Thailand) timezone
+    const todayStr = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+    const currentHour = now.getHours(); // 0-23
+
+    const isToday = (selectedDate === todayStr);
+    let selectionWasDisabled = false;
+
+    Array.from(pickupHour.options).forEach(function(opt) {
+      if (!opt.value) return; // skip placeholder
+      const slotHour = parseInt(opt.dataset.hour, 10);
+      const isPast = isToday && slotHour <= currentHour;
+      opt.disabled = isPast;
+      if (isPast && opt.selected) selectionWasDisabled = true;
+    });
+
+    if (selectionWasDisabled) pickupHour.value = '';
+  }
+
+  if (pickupDate) pickupDate.addEventListener('change', filterTimeSlots);
+  filterTimeSlots(); // run once on page load in case date is pre-filled
 
   // disable button on submit
   const form = document.getElementById('checkoutForm');

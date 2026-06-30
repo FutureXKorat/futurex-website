@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V19.2',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Checkout no longer allows selecting a pick-up time that has already passed when today\'s date is chosen.', 'th' => 'หน้าชำระเงินไม่อนุญาตให้เลือกเวลานัดรับที่ผ่านไปแล้วเมื่อเลือกวันที่เป็นวันนี้'],
+        ],
+    ],
+    [
         'version' => 'V19.1',
         'date'    => '2026-06-30',
         'changes' => [
