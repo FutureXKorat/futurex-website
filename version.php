@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V18',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Admin Products page: add, edit, and delete products including name, SKU, price, PV, units, and image.', 'th' => 'หน้าจัดการสินค้าสำหรับแอดมิน: เพิ่ม แก้ไข และลบสินค้า รวมถึงชื่อ, SKU, ราคา, PV, หน่วย และรูปภาพ'],
+        ],
+    ],
+    [
         'version' => 'V17',
         'date'    => '2026-06-30',
         'changes' => [

@@ -40,6 +40,14 @@ if ($_sRes) {
     $_sRes->free();
 }
 
+// Count total products
+$productCount = 0;
+$_pRes = $conn->query("SELECT COUNT(*) AS cnt FROM products");
+if ($_pRes) {
+    $productCount = (int)(($_pRes->fetch_assoc())['cnt'] ?? 0);
+    $_pRes->free();
+}
+
 $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future X';
 ?>
 <!DOCTYPE html>
@@ -124,6 +132,13 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
       <?php else: ?>
         <div class="card-badge blue"><?= $lang === 'th' ? 'สต็อกพร้อม' : 'All stocked up' ?></div>
       <?php endif; ?>
+    </a>
+
+    <a href="products.php" class="admin-card">
+      <div class="card-icon">🛍️</div>
+      <div class="card-name"><?= $lang === 'th' ? 'สินค้า' : 'Products' ?></div>
+      <div class="card-desc"><?= $lang === 'th' ? 'เพิ่ม แก้ไข หรือลบสินค้า' : 'Add, edit, or delete products' ?></div>
+      <div class="card-badge blue"><?= $productCount ?> <?= $lang === 'th' ? 'สินค้าทั้งหมด' : 'total products' ?></div>
     </a>
   </div>
 </div>

@@ -51,3 +51,7 @@ function uploadSlipToCloudinary(string $tmpFilePath, string $publicId): ?string 
 function uploadProfilePicToCloudinary(string $tmpFilePath, string $publicId): ?string {
     return _cloudinaryUpload($tmpFilePath, $publicId, 'futurex/profile_pics');
 }
+
+function uploadProductImageToCloudinary(string $tmpFilePath, string $publicId): ?string {
+    return _cloudinaryUpload($tmpFilePath, $publicId, 'futurex/products');
+}
