@@ -161,6 +161,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $allowed   = ['approved', 'rejected', 'awaiting_review'];
     $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
     if ($oid !== '' && $newStatus !== '') {
+        // Cut stock when approving — guard: only deduct if order wasn't already approved
+        if ($newStatus === 'approved') {
+            $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
+            $chk->bind_param('s', $oid);
+            $chk->execute();
+            $chkRow = $chk->get_result()->fetch_assoc();
+            $chk->close();
+            if ($chkRow && $chkRow['status'] !== 'approved') {
+                $orderData = json_decode((string)$chkRow['data'], true);
+                foreach ((array)($orderData['items'] ?? []) as $item) {
+                    $iName = (string)($item['name'] ?? '');
+                    $iQty  = max(1, (int)($item['qty'] ?? 1));
+                    if ($iName !== '') {
+                        $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
+                        $upd->bind_param('is', $iQty, $iName);
+                        $upd->execute();
+                        $upd->close();
+                    }
+                }
+            }
+        }
         $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ?");
         $stmt->bind_param('ss', $newStatus, $oid);
         $stmt->execute();

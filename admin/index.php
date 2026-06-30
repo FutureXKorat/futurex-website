@@ -21,17 +21,23 @@ if ($_userEmail === '' || $_userEmail !== $ADMIN_EMAIL) {
 }
 
 // Count orders for the stat card
-$ordersDir = dirname(__DIR__) . '/storage/orders';
 $totalOrders = 0;
 $pendingOrders = 0;
-if (is_dir($ordersDir)) {
-    foreach (glob($ordersDir . '/*.json') ?: [] as $f) {
-        $rec = json_decode(@file_get_contents($f), true);
-        if (is_array($rec) && isset($rec['order_id'])) {
-            $totalOrders++;
-            if (($rec['status'] ?? 'awaiting_review') === 'awaiting_review') $pendingOrders++;
-        }
+$_oRes = $conn->query("SELECT status FROM `orders`");
+if ($_oRes) {
+    while ($_oRow = $_oRes->fetch_assoc()) {
+        $totalOrders++;
+        if ($_oRow['status'] === 'awaiting_review') $pendingOrders++;
     }
+    $_oRes->free();
+}
+
+// Count low-stock products (active, stock <= 5)
+$lowStockCount = 0;
+$_sRes = $conn->query("SELECT COUNT(*) AS cnt FROM products WHERE active=1 AND stock <= 5");
+if ($_sRes) {
+    $lowStockCount = (int)(($_sRes->fetch_assoc())['cnt'] ?? 0);
+    $_sRes->free();
 }
 
 $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future X';
@@ -105,6 +111,17 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
         <div class="card-badge"><?= $pendingOrders ?> <?= $lang === 'th' ? 'รอตรวจสอบ' : 'pending' ?></div>
       <?php else: ?>
         <div class="card-badge blue"><?= $totalOrders ?> <?= $lang === 'th' ? 'คำสั่งซื้อทั้งหมด' : 'total orders' ?></div>
+      <?php endif; ?>
+    </a>
+
+    <a href="stock.php" class="admin-card">
+      <div class="card-icon">📦</div>
+      <div class="card-name"><?= $lang === 'th' ? 'จัดการสต็อก' : 'Stock Management' ?></div>
+      <div class="card-desc"><?= $lang === 'th' ? 'เพิ่ม/ลดสต็อก และเปิด-ปิดสินค้า' : 'Add or remove stock, enable or disable products' ?></div>
+      <?php if ($lowStockCount > 0): ?>
+        <div class="card-badge"><?= $lowStockCount ?> <?= $lang === 'th' ? 'สินค้าใกล้หมด' : 'low stock' ?></div>
+      <?php else: ?>
+        <div class="card-badge blue"><?= $lang === 'th' ? 'สต็อกพร้อม' : 'All stocked up' ?></div>
       <?php endif; ?>
     </a>
   </div>
