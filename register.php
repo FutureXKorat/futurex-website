@@ -347,6 +347,39 @@ function old($key) {
 		}
 		.pwd-eye:focus { outline: none; }
 		.pwd-eye:hover { color: #374151; }
+
+		/* Password requirements checklist */
+		.pw-reqs {
+			list-style: none;
+			margin: 7px 0 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+		}
+		.pw-req {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.79rem;
+			color: #9ca3af;
+			transition: color .2s;
+		}
+		.pw-req.met { color: #15803d; }
+		.pw-req-dot {
+			width: 17px; height: 17px;
+			border-radius: 50%;
+			border: 2px solid #d1d5db;
+			display: inline-flex; align-items: center; justify-content: center;
+			flex-shrink: 0;
+			transition: background .2s, border-color .2s;
+		}
+		.pw-req.met .pw-req-dot {
+			background: #16a34a;
+			border-color: #16a34a;
+		}
+		.pw-req-dot svg { display: none; }
+		.pw-req.met .pw-req-dot svg { display: block; }
 	</style>
 </head>
 <body>
@@ -418,16 +451,40 @@ function old($key) {
 			</div>
 		</div>
 
-		<div class="mb-3 pw-wrap">
-			<input type="password" name="password" class="form-control"
-				   placeholder="<?php echo $texts[$lang]['password']; ?>" required>
-			<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+		<div class="mb-3">
+			<div class="pw-wrap">
+				<input type="password" name="password" id="pwInput" class="form-control"
+					   placeholder="<?php echo $texts[$lang]['password']; ?>" required>
+				<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+			</div>
+			<ul class="pw-reqs">
+				<li class="pw-req" id="req-min">
+					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					<span><?php echo $lang === 'en' ? 'At least 6 characters' : 'อย่างน้อย 6 ตัวอักษร'; ?></span>
+				</li>
+				<li class="pw-req" id="req-max">
+					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					<span><?php echo $lang === 'en' ? 'No more than 12 characters' : 'ไม่เกิน 12 ตัวอักษร'; ?></span>
+				</li>
+				<li class="pw-req" id="req-num">
+					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					<span><?php echo $lang === 'en' ? 'At least one number' : 'มีตัวเลขอย่างน้อย 1 ตัว'; ?></span>
+				</li>
+			</ul>
 		</div>
 
-		<div class="mb-3 pw-wrap">
-			<input type="password" name="confirm_password" class="form-control"
-				   placeholder="<?php echo $texts[$lang]['confirm']; ?>" required>
-			<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+		<div class="mb-3">
+			<div class="pw-wrap">
+				<input type="password" name="confirm_password" id="cfInput" class="form-control"
+					   placeholder="<?php echo $texts[$lang]['confirm']; ?>" required>
+				<button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+			</div>
+			<ul class="pw-reqs">
+				<li class="pw-req" id="req-match">
+					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					<span><?php echo $lang === 'en' ? 'Passwords match' : 'รหัสผ่านตรงกัน'; ?></span>
+				</li>
+			</ul>
 		</div>
 
 		<button type="submit" class="btn btn-modern btn-primary" id="registerBtn">
@@ -464,6 +521,28 @@ document.querySelectorAll('.pwd-eye').forEach(function(btn) {
     btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
     btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
 });
+
+// Password requirements live check
+const pwInput = document.getElementById('pwInput');
+const cfInput = document.getElementById('cfInput');
+
+function checkReqs() {
+	const v = pwInput.value;
+	const set = (id, met) => {
+		const el = document.getElementById(id);
+		if (el) el.classList.toggle('met', met);
+	};
+	set('req-min', v.length >= 6);
+	set('req-max', v.length > 0 && v.length <= 12);
+	set('req-num', /[0-9]/.test(v));
+	checkMatch();
+}
+function checkMatch() {
+	const el = document.getElementById('req-match');
+	if (el) el.classList.toggle('met', cfInput.value.length > 0 && cfInput.value === pwInput.value);
+}
+if (pwInput) pwInput.addEventListener('input', checkReqs);
+if (cfInput) cfInput.addEventListener('input', checkMatch);
 
 // Country code selection logic (custom dropdown)
 document.querySelectorAll(".cc-option").forEach(function(el){
