@@ -27,6 +27,20 @@ if (isset($_SESSION['user_id'])) {
 }
 ?>
 <style>
+/* Fixed navbar — reliable on all mobile browsers */
+.top-banner {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    z-index: 1000 !important;
+}
+/* Push page content below the fixed navbar */
+body {
+    padding-top: 60px !important;
+}
 .nav-logo-link { padding: 4px 8px !important; display: inline-flex !important; align-items: center !important; border-radius: 4px; transition: background 0.3s, transform 0.15s ease !important; }
 .nav-logo-link:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
 .nav-logo-img { height: 36px; width: auto; display: block; }
