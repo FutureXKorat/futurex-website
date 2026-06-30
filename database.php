@@ -6,16 +6,7 @@ declare(strict_types=1);
  * Loads credentials from /htdocs/secure-config/futurex_db.php
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Auto-logout when "remember me" session has passed midnight
-if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
-    $_SESSION = [];
-    session_destroy();
-}
-
+// --- DB must come first so the session handler can use it ---
 $cfgPath = __DIR__ . '/secure-config/futurex_db.php';
 
 if (file_exists($cfgPath)) {
@@ -73,6 +64,69 @@ if (! $conn->set_charset($charset)) {
     // Fallback for hosts that ignore set_charset
     $conn->query("SET NAMES utf8mb4");
     $conn->query("SET CHARACTER SET utf8mb4");
+}
+
+// --- MySQL-backed sessions so users stay logged in across Railway redeploys ---
+// Sessions are stored in the DB, not in the container filesystem, so a new deploy
+// doesn't wipe them. The 12 AM expiry below still works exactly as before.
+$conn->query("CREATE TABLE IF NOT EXISTS `sessions` (
+  `id`          VARCHAR(128)  NOT NULL,
+  `data`        MEDIUMTEXT    NOT NULL,
+  `last_access` INT UNSIGNED  NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+class MySQLSessionHandler implements SessionHandlerInterface {
+    private mysqli $conn;
+    public function __construct(mysqli $conn) { $this->conn = $conn; }
+    public function open(string $savePath, string $sessionName): bool { return true; }
+    public function close(): bool { return true; }
+    public function read(string $id): string|false {
+        $stmt = $this->conn->prepare("SELECT `data` FROM `sessions` WHERE `id` = ?");
+        $stmt->bind_param('s', $id);
+        $stmt->execute();
+        $stmt->bind_result($data);
+        $result = $stmt->fetch() ? $data : '';
+        $stmt->close();
+        return $result;
+    }
+    public function write(string $id, string $data): bool {
+        $t = time();
+        $stmt = $this->conn->prepare("REPLACE INTO `sessions` (`id`, `data`, `last_access`) VALUES (?, ?, ?)");
+        $stmt->bind_param('ssi', $id, $data, $t);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok;
+    }
+    public function destroy(string $id): bool {
+        $stmt = $this->conn->prepare("DELETE FROM `sessions` WHERE `id` = ?");
+        $stmt->bind_param('s', $id);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok;
+    }
+    public function gc(int $maxlifetime): int|false {
+        // Keep sessions alive for 25 hours so overnight logins survive until midnight
+        $oldest = time() - 90000;
+        $stmt = $this->conn->prepare("DELETE FROM `sessions` WHERE `last_access` < ?");
+        $stmt->bind_param('i', $oldest);
+        $stmt->execute();
+        $n = $stmt->affected_rows;
+        $stmt->close();
+        return $n;
+    }
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    $__sessionHandler = new MySQLSessionHandler($conn);
+    session_set_save_handler($__sessionHandler, true);
+    session_start();
+}
+
+// Auto-logout when "remember me" session has passed midnight
+if (isset($_SESSION['user_id'], $_SESSION['session_expires']) && time() >= $_SESSION['session_expires']) {
+    $_SESSION = [];
+    session_destroy();
 }
 
 // Ensure orders table exists (fast no-op once created)
