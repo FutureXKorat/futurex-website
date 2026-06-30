@@ -80,7 +80,13 @@ $texts = [
         'order_id_label' => 'Order ID',
         'created_label'  => 'Placed',
         'updated_label'  => 'Updated',
-        'search_ph'      => 'Search by ID or customer…',
+        'search_ph'           => 'Search by ID or customer…',
+        'bulk_approve'        => 'Approve Selected',
+        'bulk_reject'         => 'Reject Selected',
+        'bulk_selected'       => 'selected',
+        'bulk_clear'          => 'Clear selection',
+        'confirm_bulk_approve'=> 'Approve {n} order(s)?',
+        'confirm_bulk_reject' => 'Reject {n} order(s)?',
     ],
     'th' => [
         'title'          => 'บันทึกคำสั่งซื้อ — Future X Admin',
@@ -136,7 +142,13 @@ $texts = [
         'order_id_label' => 'เลขที่',
         'created_label'  => 'สั่งเมื่อ',
         'updated_label'  => 'อัปเดต',
-        'search_ph'      => 'ค้นหาด้วยเลขที่หรือลูกค้า…',
+        'search_ph'           => 'ค้นหาด้วยเลขที่หรือลูกค้า…',
+        'bulk_approve'        => 'อนุมัติที่เลือก',
+        'bulk_reject'         => 'ปฏิเสธที่เลือก',
+        'bulk_selected'       => 'รายการที่เลือก',
+        'bulk_clear'          => 'ยกเลิกการเลือก',
+        'confirm_bulk_approve'=> 'อนุมัติ {n} คำสั่งซื้อ?',
+        'confirm_bulk_reject' => 'ปฏิเสธ {n} คำสั่งซื้อ?',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
@@ -192,10 +204,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// Read all orders from MySQL (newest first)
+// Handle POST: bulk status update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_update') {
+    $allowed   = ['approved', 'rejected'];
+    $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
+    $rawIds    = is_array($_POST['order_ids'] ?? null) ? $_POST['order_ids'] : [];
+    if ($newStatus !== '' && !empty($rawIds)) {
+        foreach ($rawIds as $rawId) {
+            $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$rawId);
+            if ($oid === '') continue;
+            if ($newStatus === 'approved') {
+                $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
+                $chk->bind_param('s', $oid);
+                $chk->execute();
+                $chkRow = $chk->get_result()->fetch_assoc();
+                $chk->close();
+                if ($chkRow && $chkRow['status'] !== 'approved') {
+                    $orderData = json_decode((string)$chkRow['data'], true);
+                    foreach ((array)($orderData['items'] ?? []) as $item) {
+                        $iName = (string)($item['name'] ?? '');
+                        $iQty  = max(1, (int)($item['qty'] ?? 1));
+                        if ($iName !== '') {
+                            $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
+                            $upd->bind_param('is', $iQty, $iName);
+                            $upd->execute();
+                            $upd->close();
+                        }
+                    }
+                }
+            }
+            // Only update if still awaiting_review (prevents re-processing)
+            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
+            $stmt->bind_param('ss', $newStatus, $oid);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+    $qs = $lang !== 'en' ? '?lang=' . urlencode($lang) : '';
+    header('Location: orders.php' . $qs);
+    exit;
+}
+
+// Read all orders — pending first, then approved/rejected (newest first within each group)
 $orders = [];
 $result = $conn->query(
-    "SELECT data, status, created_at, updated_at FROM `orders` ORDER BY created_at DESC"
+    "SELECT data, status, created_at, updated_at FROM `orders`
+     ORDER BY CASE status WHEN 'awaiting_review' THEN 0 ELSE 1 END ASC, created_at DESC"
 );
 if ($result) {
     while ($row = $result->fetch_assoc()) {
@@ -428,6 +482,28 @@ function statusClass(string $status): string {
 
     .order-row.hidden { display: none; }
 
+    /* Checkbox column */
+    .cb-col { width: 42px; text-align: center !important; padding-left: 8px !important; }
+    .order-cb { width: 16px; height: 16px; cursor: pointer; accent-color: #007BFF; vertical-align: middle; }
+    .order-cb:disabled { opacity: 0.28; cursor: not-allowed; }
+
+    /* Bulk action bar */
+    .bulk-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      background: rgba(0,123,255,0.07);
+      border: 1.5px solid rgba(0,123,255,0.2);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      animation: fadeSlide .18s ease;
+    }
+    @keyframes fadeSlide { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .bulk-count { font-weight: 600; color: #0056b3; flex: 1; min-width: 60px; }
+
     @media (max-width: 576px) {
       body { padding: 52px 12px 40px; }
       .page-title { font-size: 1.35rem; }
@@ -497,6 +573,14 @@ function statusClass(string $status): string {
       </div>
     </div>
 
+    <!-- Bulk action bar (shown when ≥1 checkbox is checked) -->
+    <div class="bulk-bar" id="bulkBar">
+      <span class="bulk-count" id="bulkCount">0 <?= htmlspecialchars($t['bulk_selected']) ?></span>
+      <button type="button" class="act-btn act-approve" onclick="submitBulk('approved')"><?= htmlspecialchars($t['bulk_approve']) ?></button>
+      <button type="button" class="act-btn act-reject"  onclick="submitBulk('rejected')"><?= htmlspecialchars($t['bulk_reject']) ?></button>
+      <button type="button" class="act-btn act-view"    id="bulkClear"><?= htmlspecialchars($t['bulk_clear']) ?></button>
+    </div>
+
     <?php if (empty($orders)): ?>
     <div class="empty-state">
       <div class="empty-icon">
@@ -514,6 +598,7 @@ function statusClass(string $status): string {
       <table class="order-table">
         <thead>
           <tr>
+            <th class="cb-col"><input type="checkbox" id="selectAll" class="order-cb" title="<?= $lang === 'th' ? 'เลือกทั้งหมด' : 'Select all pending' ?>"></th>
             <th><?= htmlspecialchars($t['col_id']) ?></th>
             <th><?= htmlspecialchars($t['col_customer']) ?></th>
             <th><?= htmlspecialchars($t['col_items']) ?></th>
@@ -538,6 +623,10 @@ function statusClass(string $status): string {
             $searchIdx = strtolower($oid . ' ' . $uname . ' ' . $email);
           ?>
           <tr class="order-row" data-status="<?= htmlspecialchars($status) ?>" data-search="<?= htmlspecialchars($searchIdx) ?>">
+            <td class="cb-col">
+              <input type="checkbox" class="order-cb" value="<?= htmlspecialchars($oid) ?>"
+                     <?= $status !== 'awaiting_review' ? 'disabled' : '' ?>>
+            </td>
             <td><span class="oid"><?= htmlspecialchars($oid) ?></span></td>
             <td>
               <div class="fw-500"><?= htmlspecialchars($uname) ?></div>
@@ -561,7 +650,7 @@ function statusClass(string $status): string {
                   <?= htmlspecialchars($t['btn_view']) ?>
                 </button>
 
-                <?php if ($status !== 'approved'): ?>
+                <?php if ($status === 'awaiting_review'): ?>
                   <form method="post" style="display:contents;">
                     <input type="hidden" name="action"   value="update_status">
                     <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
@@ -570,9 +659,6 @@ function statusClass(string $status): string {
                       <?= htmlspecialchars($t['btn_approve']) ?>
                     </button>
                   </form>
-                <?php endif; ?>
-
-                <?php if ($status !== 'rejected'): ?>
                   <form method="post" style="display:contents;">
                     <input type="hidden" name="action"   value="update_status">
                     <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
@@ -781,16 +867,14 @@ function openModal(btn) {
 
   let footer = `<button class="btn btn-secondary ms-auto" data-bs-dismiss="modal">${esc(i18n.modal_close)}</button>`;
   const oidSafe = esc(ord.order_id || '');
-  if (status !== 'approved') {
+  if (status === 'awaiting_review') {
     footer = `<form method="post">
       <input type="hidden" name="action"   value="update_status">
       <input type="hidden" name="order_id" value="${oidSafe}">
       <input type="hidden" name="status"   value="approved">
       <button type="submit" class="act-btn act-approve" style="padding:9px 20px;font-size:.9rem;">${esc(i18n.btn_approve)}</button>
-    </form>` + footer;
-  }
-  if (status !== 'rejected') {
-    footer = `<form method="post">
+    </form>
+    <form method="post">
       <input type="hidden" name="action"   value="update_status">
       <input type="hidden" name="order_id" value="${oidSafe}">
       <input type="hidden" name="status"   value="rejected">
@@ -814,6 +898,7 @@ function applyFilters() {
     const matchSearch = _searchTerm === '' || (row.dataset.search || '').includes(_searchTerm);
     row.classList.toggle('hidden', !(matchFilter && matchSearch));
   });
+  updateBulkBar();
 }
 
 document.querySelectorAll('.ftab').forEach(btn => {
@@ -833,6 +918,65 @@ if (searchInput) {
   });
 }
 
+// Bulk selection
+const selectAll = document.getElementById('selectAll');
+
+function getVisibleCheckable() {
+  return Array.from(document.querySelectorAll('.order-cb:not(#selectAll):not(:disabled)'))
+    .filter(cb => !cb.closest('.order-row').classList.contains('hidden'));
+}
+
+function updateBulkBar() {
+  const checked = document.querySelectorAll('.order-cb:not(#selectAll):checked');
+  const bar     = document.getElementById('bulkBar');
+  const countEl = document.getElementById('bulkCount');
+  if (bar) bar.style.display = checked.length > 0 ? 'flex' : 'none';
+  if (countEl) countEl.textContent = checked.length + ' <?= htmlspecialchars($t['bulk_selected']) ?>';
+  // Sync select-all indeterminate state
+  const vis = getVisibleCheckable();
+  if (selectAll) {
+    const checkedVis = vis.filter(cb => cb.checked);
+    selectAll.checked       = vis.length > 0 && checkedVis.length === vis.length;
+    selectAll.indeterminate = checkedVis.length > 0 && checkedVis.length < vis.length;
+  }
+}
+
+if (selectAll) {
+  selectAll.addEventListener('change', function() {
+    getVisibleCheckable().forEach(cb => { cb.checked = this.checked; });
+    updateBulkBar();
+  });
+}
+document.querySelectorAll('.order-cb:not(#selectAll)').forEach(cb => {
+  cb.addEventListener('change', updateBulkBar);
+});
+
+function submitBulk(status) {
+  const checked = Array.from(document.querySelectorAll('.order-cb:not(#selectAll):checked'));
+  if (checked.length === 0) return;
+  const tpl = status === 'approved'
+    ? <?= json_encode($t['confirm_bulk_approve']) ?>
+    : <?= json_encode($t['confirm_bulk_reject']) ?>;
+  if (!confirm(tpl.replace('{n}', checked.length))) return;
+  const form      = document.getElementById('bulkForm');
+  const statusInp = document.getElementById('bulkStatus');
+  const container = document.getElementById('bulkIds');
+  statusInp.value  = status;
+  container.innerHTML = '';
+  checked.forEach(cb => {
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'order_ids[]'; inp.value = cb.value;
+    container.appendChild(inp);
+  });
+  form.submit();
+}
+
+document.getElementById('bulkClear')?.addEventListener('click', function() {
+  document.querySelectorAll('.order-cb:not(#selectAll)').forEach(cb => { cb.checked = false; });
+  if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+  updateBulkBar();
+});
+
 function confirmDeleteOrder(oid) {
   var input = prompt('Type "delete-order" to permanently delete this order:');
   if (input === null) return;
@@ -849,5 +993,12 @@ function confirmDeleteOrder(oid) {
   form.submit();
 }
 </script>
+
+<!-- Hidden form used by bulk JS to POST selected order IDs -->
+<form id="bulkForm" method="post" style="display:none;">
+  <input type="hidden" name="action" value="bulk_update">
+  <input type="hidden" name="status" id="bulkStatus" value="">
+  <div id="bulkIds"></div>
+</form>
 </body>
 </html>
