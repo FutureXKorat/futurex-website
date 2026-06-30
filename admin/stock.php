@@ -223,6 +223,9 @@ $t = [
     }
     .custom-input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25,135,84,0.15); }
     .custom-input::placeholder { color: #aaa; }
+    .custom-input::-webkit-outer-spin-button,
+    .custom-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .custom-input[type=number] { -moz-appearance: textfield; }
 
     /* Separate the quick form and custom form visually */
     .ctrl-group { display: flex; flex-direction: column; gap: 0; }
