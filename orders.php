@@ -58,6 +58,7 @@ $texts = [
         'lang'           => 'ภาษาไทย',
         'btn_delete'     => 'Delete',
         'confirm_delete' => 'Delete this order? This cannot be undone.',
+        'rejection_reason_label' => 'Reason:',
     ],
     'th' => [
         'title'        => 'คำสั่งซื้อของฉัน — Future X',
@@ -95,9 +96,18 @@ $texts = [
         'lang'           => 'English',
         'btn_delete'     => 'ลบ',
         'confirm_delete' => 'ลบคำสั่งซื้อนี้? ไม่สามารถกู้คืนได้',
+        'rejection_reason_label' => 'เหตุผล:',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
+
+// Map stored English reason keys → translated display text
+$rejectionReasonMap = [
+    'Slip is Incorrect'    => ['en' => 'Slip is Incorrect',    'th' => 'สลิปไม่ถูกต้อง'],
+    'Payment Not Received' => ['en' => 'Payment Not Received', 'th' => 'ยังไม่ได้รับเงิน'],
+    'Address is Incorrect' => ['en' => 'Address is Incorrect', 'th' => 'ที่อยู่ไม่ถูกต้อง'],
+    'No More Stock'        => ['en' => 'No More Stock',        'th' => 'สินค้าหมดแล้ว'],
+];
 
 // Read only this user's orders from MySQL (newest first)
 $orders = [];
@@ -158,7 +168,7 @@ function ordFmtDate(string $iso): string {
       z-index: 1000;
     }
 
-    .page-wrap { max-width: 780px; margin: 80px auto 0; padding: 0 0 8px; }
+    .page-wrap { max-width: 780px; margin: 50px auto 0; padding: 0 0 8px; }
 
     /* ── Page Heading ── */
     .page-heading {
@@ -414,6 +424,11 @@ function ordFmtDate(string $iso): string {
     $noteText = match($status) {
       'approved' => $t['note_approved'], 'rejected' => $t['note_rejected'], default => $t['note_pending']
     };
+    if ($status === 'rejected' && !empty($ord['rejection_reason'])) {
+      $rawReason = (string)$ord['rejection_reason'];
+      $reason = $rejectionReasonMap[$rawReason][$lang] ?? $rawReason;
+      $noteText .= ' ' . $t['rejection_reason_label'] . ' ' . $reason;
+    }
 
     $dataJson = htmlspecialchars(
       json_encode($ord, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG),
@@ -546,7 +561,16 @@ const i18n = <?= json_encode([
   'note_rejected'  => $t['note_rejected'],
   'click_slip'     => $t['click_slip'],
   'img_error'      => $t['img_error'],
-  'placed_on'      => $t['placed_on'],
+  'placed_on'              => $t['placed_on'],
+  'rejection_reason_label' => $t['rejection_reason_label'],
+], JSON_UNESCAPED_UNICODE) ?>;
+
+// Map stored English reason keys → current language for JS modal display
+const REASON_MAP = <?= json_encode([
+  'Slip is Incorrect'    => $rejectionReasonMap['Slip is Incorrect'][$lang]    ?? 'Slip is Incorrect',
+  'Payment Not Received' => $rejectionReasonMap['Payment Not Received'][$lang] ?? 'Payment Not Received',
+  'Address is Incorrect' => $rejectionReasonMap['Address is Incorrect'][$lang] ?? 'Address is Incorrect',
+  'No More Stock'        => $rejectionReasonMap['No More Stock'][$lang]        ?? 'No More Stock',
 ], JSON_UNESCAPED_UNICODE) ?>;
 
 function esc(s) {
@@ -628,11 +652,17 @@ function openModal(btn) {
     slipHtml = `<div class="slip-placeholder">${esc(i18n.modal_no_slip)}</div>`;
   }
 
+  let noteDisplay = st.note;
+  if (status === 'rejected' && ord.rejection_reason) {
+    const translatedReason = REASON_MAP[ord.rejection_reason] || ord.rejection_reason;
+    noteDisplay += ' ' + i18n.rejection_reason_label + ' ' + esc(translatedReason);
+  }
+
   document.getElementById('modalBody').innerHTML = `
     <!-- Status bar -->
     <div class="modal-status-bar ${st.cls}">
       <span class="dot"></span>
-      <span><strong>${esc(st.label)}</strong> — ${esc(st.note)}</span>
+      <span><strong>${esc(st.label)}</strong> — ${noteDisplay}</span>
     </div>
 
     <!-- Items table -->

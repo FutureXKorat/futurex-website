@@ -87,6 +87,18 @@ $texts = [
         'bulk_clear'          => 'Clear selection',
         'confirm_bulk_approve'=> 'Approve {n} order(s)?',
         'confirm_bulk_reject' => 'Reject {n} order(s)?',
+        'reject_modal_title'  => 'Select Rejection Reason',
+        'reject_reason_label' => 'Please select a reason for rejection:',
+        'reason_slip'         => 'Slip is Incorrect',
+        'reason_payment'      => 'Payment Not Received',
+        'reason_address'      => 'Address is Incorrect',
+        'reason_stock'        => 'No More Stock',
+        'reason_other'        => 'Others',
+        'other_placeholder'   => 'Please specify...',
+        'btn_confirm_reject'  => 'Confirm Rejection',
+        'btn_cancel'          => 'Cancel',
+        'btn_revert_pending'  => 'Revert to Pending Review',
+        'confirm_revert'      => 'Reset this order back to Pending Review?',
     ],
     'th' => [
         'title'          => 'บันทึกคำสั่งซื้อ — Future X Admin',
@@ -149,6 +161,18 @@ $texts = [
         'bulk_clear'          => 'ยกเลิกการเลือก',
         'confirm_bulk_approve'=> 'อนุมัติ {n} คำสั่งซื้อ?',
         'confirm_bulk_reject' => 'ปฏิเสธ {n} คำสั่งซื้อ?',
+        'reject_modal_title'  => 'เลือกเหตุผลการปฏิเสธ',
+        'reject_reason_label' => 'กรุณาเลือกเหตุผลการปฏิเสธ:',
+        'reason_slip'         => 'สลิปไม่ถูกต้อง',
+        'reason_payment'      => 'ยังไม่ได้รับเงิน',
+        'reason_address'      => 'ที่อยู่ไม่ถูกต้อง',
+        'reason_stock'        => 'สินค้าหมดแล้ว',
+        'reason_other'        => 'อื่น ๆ',
+        'other_placeholder'   => 'โปรดระบุ...',
+        'btn_confirm_reject'  => 'ยืนยันการปฏิเสธ',
+        'btn_cancel'          => 'ยกเลิก',
+        'btn_revert_pending'  => 'คืนสถานะเป็นรอตรวจสอบ',
+        'confirm_revert'      => 'คืนสถานะคำสั่งซื้อนี้เป็นรอตรวจสอบ?',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
@@ -173,29 +197,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $allowed   = ['approved', 'rejected', 'awaiting_review'];
     $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
     if ($oid !== '' && $newStatus !== '') {
-        // Cut stock when approving — guard: only deduct if order wasn't already approved
-        if ($newStatus === 'approved') {
-            $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
-            $chk->bind_param('s', $oid);
-            $chk->execute();
-            $chkRow = $chk->get_result()->fetch_assoc();
-            $chk->close();
-            if ($chkRow && $chkRow['status'] !== 'approved') {
-                $orderData = json_decode((string)$chkRow['data'], true);
-                foreach ((array)($orderData['items'] ?? []) as $item) {
-                    $iName = (string)($item['name'] ?? '');
-                    $iQty  = max(1, (int)($item['qty'] ?? 1));
-                    if ($iName !== '') {
-                        $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
-                        $upd->bind_param('is', $iQty, $iName);
-                        $upd->execute();
-                        $upd->close();
-                    }
+        // Fetch current order to know prev status and current data JSON
+        $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
+        $chk->bind_param('s', $oid);
+        $chk->execute();
+        $chkRow = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        $prevStatus = (string)($chkRow['status'] ?? '');
+        $orderData  = json_decode((string)($chkRow['data'] ?? '{}'), true) ?: [];
+
+        // Deduct stock when approving (only if not already approved)
+        if ($newStatus === 'approved' && $prevStatus !== 'approved') {
+            foreach ((array)($orderData['items'] ?? []) as $item) {
+                $iName = (string)($item['name'] ?? '');
+                $iQty  = max(1, (int)($item['qty'] ?? 1));
+                if ($iName !== '') {
+                    $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
+                    $upd->bind_param('is', $iQty, $iName);
+                    $upd->execute();
+                    $upd->close();
                 }
             }
         }
-        $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ?");
-        $stmt->bind_param('ss', $newStatus, $oid);
+        // Restore stock when reverting an approved order back to pending
+        if ($newStatus === 'awaiting_review' && $prevStatus === 'approved') {
+            foreach ((array)($orderData['items'] ?? []) as $item) {
+                $iName = (string)($item['name'] ?? '');
+                $iQty  = max(1, (int)($item['qty'] ?? 1));
+                if ($iName !== '') {
+                    $upd = $conn->prepare("UPDATE products SET stock = stock + ? WHERE name = ?");
+                    $upd->bind_param('is', $iQty, $iName);
+                    $upd->execute();
+                    $upd->close();
+                }
+            }
+        }
+
+        // Update data JSON when rejecting (store reason) or clearing it on revert/approve
+        $dataChanged = false;
+        if ($newStatus === 'rejected') {
+            $rejReason = mb_substr(trim((string)($_POST['rejection_reason'] ?? '')), 0, 500);
+            $orderData['rejection_reason'] = $rejReason;
+            $dataChanged = true;
+        } elseif (isset($orderData['rejection_reason'])) {
+            unset($orderData['rejection_reason']);
+            $dataChanged = true;
+        }
+
+        if ($dataChanged) {
+            $newData = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW() WHERE order_id = ?");
+            $stmt->bind_param('sss', $newStatus, $newData, $oid);
+        } else {
+            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ?");
+            $stmt->bind_param('ss', $newStatus, $oid);
+        }
         $stmt->execute();
         $stmt->close();
     }
@@ -319,7 +375,7 @@ function statusClass(string $status): string {
     }
     @supports (height: 100dvh) { body { min-height: 100dvh; } }
 
-    .page-wrap { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+    .page-wrap { max-width: 1300px; margin: 0 auto; padding: 0 20px 20px; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -416,6 +472,8 @@ function statusClass(string $status): string {
     .act-reject:hover  { box-shadow: 0 3px 10px rgba(220,53,69,0.4); transform: translateY(-1px); }
     .act-delete  { background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid rgba(220,53,69,0.3); }
     .act-delete:hover  { background: rgba(220,53,69,0.2); transform: translateY(-1px); }
+    .act-revert  { background: rgba(108,117,125,0.12); color: #495057; border: 1px solid rgba(108,117,125,0.3); }
+    .act-revert:hover  { background: rgba(108,117,125,0.22); transform: translateY(-1px); }
 
     .oid {
       font-family: 'Courier New', monospace; font-size: 0.75rem;
@@ -659,13 +717,18 @@ function statusClass(string $status): string {
                       <?= htmlspecialchars($t['btn_approve']) ?>
                     </button>
                   </form>
+                  <button type="button" class="act-btn act-reject"
+                          onclick="openRejectModal('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
+                    <?= htmlspecialchars($t['btn_reject']) ?>
+                  </button>
+                <?php else: ?>
                   <form method="post" style="display:contents;">
                     <input type="hidden" name="action"   value="update_status">
                     <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
-                    <input type="hidden" name="status"   value="rejected">
-                    <button type="submit" class="act-btn act-reject"
-                            onclick="return confirm(<?= json_encode($t['confirm_reject']) ?>)">
-                      <?= htmlspecialchars($t['btn_reject']) ?>
+                    <input type="hidden" name="status"   value="awaiting_review">
+                    <button type="submit" class="act-btn act-revert"
+                            onclick="return confirm(<?= json_encode($t['confirm_revert']) ?>)">
+                      <?= htmlspecialchars($t['btn_revert_pending']) ?>
                     </button>
                   </form>
                 <?php endif; ?>
@@ -704,6 +767,49 @@ function statusClass(string $status): string {
   </div>
 </div>
 
+<!-- Modal: Rejection Reason -->
+<div class="modal fade" id="rejectReasonModal" tabindex="-1" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><?= htmlspecialchars($t['reject_modal_title']) ?></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:22px 24px;">
+        <form id="rejectReasonForm" method="post">
+          <input type="hidden" name="action"           value="update_status">
+          <input type="hidden" name="status"           value="rejected">
+          <input type="hidden" name="order_id"          id="rejectOrderId"    value="">
+          <input type="hidden" name="rejection_reason"  id="rejectReasonFinal" value="">
+          <label class="form-label" style="font-size:.9rem;font-weight:500;margin-bottom:10px;display:block;">
+            <?= htmlspecialchars($t['reject_reason_label']) ?>
+          </label>
+          <select id="rejectReasonSelect" class="form-select">
+            <option value="Slip is Incorrect"><?= htmlspecialchars($t['reason_slip']) ?></option>
+            <option value="Payment Not Received"><?= htmlspecialchars($t['reason_payment']) ?></option>
+            <option value="Address is Incorrect"><?= htmlspecialchars($t['reason_address']) ?></option>
+            <option value="No More Stock"><?= htmlspecialchars($t['reason_stock']) ?></option>
+            <option value="__other__"><?= htmlspecialchars($t['reason_other']) ?></option>
+          </select>
+          <div id="otherReasonWrap" style="display:none;margin-top:12px;">
+            <input type="text" id="otherReasonText" class="form-control"
+                   placeholder="<?= htmlspecialchars($t['other_placeholder']) ?>" maxlength="500">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <?= htmlspecialchars($t['btn_cancel']) ?>
+        </button>
+        <button type="button" class="act-btn act-reject" style="padding:9px 20px;font-size:.9rem;"
+                onclick="submitRejectReason()">
+          <?= htmlspecialchars($t['btn_confirm_reject']) ?>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const MAIN_SITE_URL = <?= json_encode($mainSiteUrl) ?>;
@@ -730,8 +836,10 @@ const i18n = <?= json_encode([
   'st_pending'     => $t['st_pending'],
   'st_approved'    => $t['st_approved'],
   'st_rejected'    => $t['st_rejected'],
-  'confirm_reject' => $t['confirm_reject'],
-  'click_slip'     => $t['click_slip'],
+  'confirm_reject'    => $t['confirm_reject'],
+  'btn_revert_pending'=> $t['btn_revert_pending'],
+  'confirm_revert'    => $t['confirm_revert'],
+  'click_slip'        => $t['click_slip'],
   'view_original'  => $t['view_original'],
   'img_not_found'  => $t['img_not_found'],
   'order_id_label' => $t['order_id_label'],
@@ -874,12 +982,15 @@ function openModal(btn) {
       <input type="hidden" name="status"   value="approved">
       <button type="submit" class="act-btn act-approve" style="padding:9px 20px;font-size:.9rem;">${esc(i18n.btn_approve)}</button>
     </form>
-    <form method="post">
+    <button type="button" class="act-btn act-reject" style="padding:9px 20px;font-size:.9rem;"
+            onclick="openRejectModal('${oidSafe}')">${esc(i18n.btn_reject)}</button>` + footer;
+  } else {
+    footer = `<form method="post">
       <input type="hidden" name="action"   value="update_status">
       <input type="hidden" name="order_id" value="${oidSafe}">
-      <input type="hidden" name="status"   value="rejected">
-      <button type="submit" class="act-btn act-reject" style="padding:9px 20px;font-size:.9rem;"
-              onclick="return confirm(${JSON.stringify(i18n.confirm_reject)})">${esc(i18n.btn_reject)}</button>
+      <input type="hidden" name="status"   value="awaiting_review">
+      <button type="submit" class="act-btn act-revert" style="padding:9px 20px;font-size:.9rem;"
+              onclick="return confirm(${JSON.stringify(i18n.confirm_revert)})">${esc(i18n.btn_revert_pending)}</button>
     </form>` + footer;
   }
   document.getElementById('modalFooter').innerHTML = footer;
@@ -976,6 +1087,55 @@ document.getElementById('bulkClear')?.addEventListener('click', function() {
   if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
   updateBulkBar();
 });
+
+// ── Rejection Reason Modal ──────────────────────────────────────
+let _pendingRejectOid = null;
+let _rejectModalBs    = null;
+
+function openRejectModal(oid) {
+  _pendingRejectOid = oid;
+  const orderModalEl = document.getElementById('orderModal');
+  if (orderModalEl.classList.contains('show')) {
+    // Close order detail modal first; hidden event will open reject modal
+    bootstrap.Modal.getInstance(orderModalEl)?.hide();
+  } else {
+    _openRejectModalNow();
+  }
+}
+
+document.getElementById('orderModal').addEventListener('hidden.bs.modal', function() {
+  if (_pendingRejectOid !== null) _openRejectModalNow();
+});
+
+function _openRejectModalNow() {
+  const oid = _pendingRejectOid;
+  _pendingRejectOid = null;
+  document.getElementById('rejectOrderId').value    = oid;
+  document.getElementById('rejectReasonSelect').selectedIndex = 0;
+  document.getElementById('otherReasonWrap').style.display   = 'none';
+  document.getElementById('otherReasonText').value           = '';
+  document.getElementById('rejectReasonFinal').value         = '';
+  if (!_rejectModalBs) _rejectModalBs = new bootstrap.Modal(document.getElementById('rejectReasonModal'));
+  _rejectModalBs.show();
+}
+
+document.getElementById('rejectReasonSelect').addEventListener('change', function() {
+  document.getElementById('otherReasonWrap').style.display = this.value === '__other__' ? 'block' : 'none';
+});
+
+function submitRejectReason() {
+  const select = document.getElementById('rejectReasonSelect');
+  let reason = select.value;
+  if (reason === '__other__') {
+    reason = document.getElementById('otherReasonText').value.trim();
+    if (reason === '') {
+      document.getElementById('otherReasonText').focus();
+      return;
+    }
+  }
+  document.getElementById('rejectReasonFinal').value = reason;
+  document.getElementById('rejectReasonForm').submit();
+}
 
 function confirmDeleteOrder(oid) {
   var input = prompt('Type "delete-order" to permanently delete this order:');
