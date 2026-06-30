@@ -57,6 +57,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!preg_match('/\d/', $password)) {
         $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีอย่างน้อย 1 ตัวเลข' : 'Password must contain at least one number.';
     }
+    if (!preg_match('/[a-zA-Z]/', $password)) {
+        $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีตัวอักษรอย่างน้อย 1 ตัว' : 'Password must contain at least one letter.';
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว' : 'Password must contain at least one capital letter.';
+    }
     if ($password !== $confirm_password) {
         $errors[] = ($lang === 'th') ? 'รหัสผ่านไม่ตรงกัน' : 'Passwords do not match.';
     }
