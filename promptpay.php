@@ -68,8 +68,12 @@ $errors = [];           // <-- collect errors for display
 // handle submit (save order to MySQL + slip to Cloudinary)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Must have a file
-    if (empty($_FILES['slip']['name']) || !is_uploaded_file($_FILES['slip']['tmp_name'])) {
+    // Note: is_uploaded_file() is unreliable on FrankenPHP; check error code instead
+    $slipErr = $_FILES['slip']['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($slipErr === UPLOAD_ERR_NO_FILE || empty($_FILES['slip']['tmp_name']) || !file_exists($_FILES['slip']['tmp_name'])) {
         $errors[] = $t['err_nofile'];
+    } elseif ($slipErr !== UPLOAD_ERR_OK) {
+        $errors[] = $t['err_size'];
     } else {
         $okType = ['image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'];
         $size   = (int)$_FILES['slip']['size'];
