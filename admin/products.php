@@ -38,9 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $up     = uploadProductImageToCloudinary($_FILES['img']['tmp_name'], $pubId);
             if ($up) $imgUrl = $up;
         }
+        $custom_id = (int)($_POST['custom_id'] ?? 0);
         if ($sku !== '' && $name !== '') {
-            $s = $conn->prepare("INSERT INTO products (sku, name, price, pv, unit_en, unit_th, img, stock, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, NOW(), NOW())");
-            $s->bind_param('ssddsss', $sku, $name, $price, $pv, $unit_en, $unit_th, $imgUrl);
+            if ($custom_id > 0) {
+                $s = $conn->prepare("INSERT INTO products (id, sku, name, price, pv, unit_en, unit_th, img, stock, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, NOW(), NOW())");
+                $s->bind_param('issddsss', $custom_id, $sku, $name, $price, $pv, $unit_en, $unit_th, $imgUrl);
+            } else {
+                $s = $conn->prepare("INSERT INTO products (sku, name, price, pv, unit_en, unit_th, img, stock, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, NOW(), NOW())");
+                $s->bind_param('ssddsss', $sku, $name, $price, $pv, $unit_en, $unit_th, $imgUrl);
+            }
             $s->execute(); $s->close();
         }
 
@@ -113,6 +119,7 @@ $t = [
     'modal_add'    => $isth ? 'เพิ่มสินค้าใหม่' : 'Add New Product',
     'modal_edit'   => $isth ? 'แก้ไขสินค้า' : 'Edit Product',
     'modal_del'    => $isth ? 'ลบสินค้า' : 'Delete Product',
+    'lbl_id'       => $isth ? 'ID (ไม่ระบุ = อัตโนมัติ)' : 'ID (leave empty = auto)',
     'lbl_sku'      => 'SKU',
     'lbl_name'     => $isth ? 'ชื่อสินค้า' : 'Product Name',
     'lbl_price'    => $isth ? 'ราคา (฿)' : 'Price (฿)',
@@ -382,6 +389,11 @@ $t = [
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold"><?= htmlspecialchars($t['lbl_id']) ?></label>
+            <input type="number" name="custom_id" min="1" step="1" class="form-control"
+                   placeholder="<?= $isth ? 'เว้นว่าง = MySQL กำหนดให้' : 'Leave empty — MySQL will assign' ?>">
+          </div>
           <div class="mb-3">
             <label class="form-label fw-semibold"><?= htmlspecialchars($t['lbl_sku']) ?></label>
             <input type="text" name="sku" class="form-control" required>
