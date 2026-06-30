@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V18.2',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Admin can now manually set a product ID when adding a new product.', 'th' => 'แอดมินสามารถกำหนด ID สินค้าเองได้เมื่อเพิ่มสินค้าใหม่'],
+        ],
+    ],
+    [
         'version' => 'V18.1',
         'date'    => '2026-06-30',
         'changes' => [
