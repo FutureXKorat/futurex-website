@@ -44,8 +44,8 @@ if (isset($_SESSION['user_id'])) {
     $_navStmt->close();
     if ($_navRow) {
         $_navUserName = htmlspecialchars($_navRow['name'] ?? '');
-        if (!empty($_navRow['profile_picture']) && file_exists('uploads/profile_pics/' . $_navRow['profile_picture'])) {
-            $_navPic = 'uploads/profile_pics/' . htmlspecialchars($_navRow['profile_picture']);
+        if (!empty($_navRow['profile_picture']) && str_starts_with($_navRow['profile_picture'], 'https://')) {
+            $_navPic = htmlspecialchars($_navRow['profile_picture']);
         }
         // Check if this user is the admin
         $_navMailCfg  = is_file(dirname(__DIR__) . '/secure-config/futurex_mail.php') ? require dirname(__DIR__) . '/secure-config/futurex_mail.php' : [];

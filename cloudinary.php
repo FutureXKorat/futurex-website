@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Upload a slip image to Cloudinary.
- * Reads credentials from env vars: CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET
- * or from the combined CLOUDINARY_URL = cloudinary://api_key:api_secret@cloud_name
+ * Shared Cloudinary upload helper.
+ * Reads credentials from CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET
+ * or the combined CLOUDINARY_URL = cloudinary://api_key:api_secret@cloud_name
  * Returns the secure_url on success, null on failure.
  */
-function uploadSlipToCloudinary(string $tmpFilePath, string $publicId): ?string {
+function _cloudinaryUpload(string $tmpFilePath, string $publicId, string $folder): ?string {
     $cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: '';
     $apiKey    = getenv('CLOUDINARY_API_KEY') ?: '';
     $apiSecret = getenv('CLOUDINARY_API_SECRET') ?: '';
@@ -21,9 +21,7 @@ function uploadSlipToCloudinary(string $tmpFilePath, string $publicId): ?string 
 
     if (!$cloudName || !$apiKey || !$apiSecret) return null;
 
-    $folder    = 'futurex/slips';
     $timestamp = time();
-    // Signature: params sorted A-Z, concatenated key=value&..., then api_secret appended
     $sigStr    = "folder={$folder}&public_id={$publicId}&timestamp={$timestamp}{$apiSecret}";
     $signature = sha1($sigStr);
 
@@ -45,4 +43,12 @@ function uploadSlipToCloudinary(string $tmpFilePath, string $publicId): ?string 
 
     $data = json_decode((string)$res, true);
     return is_array($data) ? ($data['secure_url'] ?? null) : null;
+}
+
+function uploadSlipToCloudinary(string $tmpFilePath, string $publicId): ?string {
+    return _cloudinaryUpload($tmpFilePath, $publicId, 'futurex/slips');
+}
+
+function uploadProfilePicToCloudinary(string $tmpFilePath, string $publicId): ?string {
+    return _cloudinaryUpload($tmpFilePath, $publicId, 'futurex/profile_pics');
 }

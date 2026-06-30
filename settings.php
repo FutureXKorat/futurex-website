@@ -15,8 +15,7 @@ $pwErrors     = [];
 $emailErrors  = [];
 $deleteErrors = [];
 
-$uploadDir = 'uploads/profile_pics/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+require_once __DIR__ . '/cloudinary.php';
 
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
@@ -26,23 +25,25 @@ $stmt->close();
 
 // ── AJAX: upload cropped profile picture ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
-    $data        = str_replace('data:image/png;base64,', '', $_POST['cropped_image']);
-    $data        = base64_decode($data);
-    $newFileName = 'user_' . $userId . '_' . time() . '.png';
-    file_put_contents($uploadDir . $newFileName, $data);
-    if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']))
-        unlink($uploadDir . $user['profile_picture']);
+    $imgData = base64_decode(str_replace('data:image/png;base64,', '', $_POST['cropped_image']));
+    $tmpFile = tempnam(sys_get_temp_dir(), 'pfp_') . '.png';
+    file_put_contents($tmpFile, $imgData);
+    $cloudUrl = uploadProfilePicToCloudinary($tmpFile, 'user_' . $userId . '_' . time());
+    @unlink($tmpFile);
+    if ($cloudUrl === null) {
+        echo json_encode(["success" => false, "error" => "Upload to Cloudinary failed"]);
+        exit();
+    }
     $stmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE id = ?");
-    $stmt->bind_param("si", $newFileName, $userId);
+    $stmt->bind_param("si", $cloudUrl, $userId);
     $stmt->execute();
-    echo json_encode(["success" => true, "filename" => $newFileName]);
+    echo json_encode(["success" => true, "url" => $cloudUrl]);
     exit();
 }
 
 // ── Delete profile picture ────────────────────────────────────────────────
 if (isset($_POST['delete_profile_picture'])) {
-    if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
-        unlink($uploadDir . $user['profile_picture']);
+    if (!empty($user['profile_picture'])) {
         $stmt = $conn->prepare("UPDATE users SET profile_picture = NULL WHERE id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -226,9 +227,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     } elseif (!password_verify($delPassword, $user['password'])) {
         $deleteErrors[] = ($lang === 'en') ? 'Incorrect password.' : 'รหัสผ่านไม่ถูกต้อง';
     } else {
-        if (!empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture'])) {
-            unlink($uploadDir . $user['profile_picture']);
-        }
         $del = $conn->prepare("DELETE FROM users WHERE id = ?");
         $del->bind_param("i", $userId);
         $del->execute();
@@ -262,7 +260,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unlink_google'])) {
 }
 
 $googleLinked = !empty($user['google_id']);
-$hasPic = !empty($user['profile_picture']) && file_exists($uploadDir . $user['profile_picture']);
+$profilePicUrl = (!empty($user['profile_picture']) && str_starts_with($user['profile_picture'], 'https://'))
+    ? $user['profile_picture'] : '';
+$hasPic = $profilePicUrl !== '';
 $otpPending      = !empty($_SESSION['pw_change'])     && time() <= $_SESSION['pw_change']['expires'];
 $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['email_change']['expires'];
 ?>
@@ -572,7 +572,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
 
       <div class="centered">
         <img id="currentProfilePic"
-             src="<?php echo $hasPic ? $uploadDir . htmlspecialchars($user['profile_picture']) : 'avatar.png'; ?>"
+             src="<?php echo $hasPic ? htmlspecialchars($profilePicUrl) : 'avatar.png'; ?>"
              class="profile-pic" alt="Profile picture">
       </div>
 
@@ -962,7 +962,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       .then(r => r.json())
       .then(d => {
         if (d.success) {
-          const newSrc = '<?= $uploadDir ?>' + d.filename + '?t=' + Date.now();
+          const newSrc = d.url;
           document.getElementById('currentProfilePic').src = newSrc;
           const navPic = document.getElementById('profileIcon');
           if (navPic) navPic.src = newSrc;
