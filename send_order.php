@@ -89,6 +89,7 @@ function send_order_mail(string $orderId): array {
     $pickupTime = (string)($record['pickup_time'] ?? '');
     $userEmail  = (string)($record['user_email']  ?? '');
     $userName   = (string)($record['username']    ?? '');
+    $phone      = (string)($record['phone']       ?? '');
     $slipWeb    = (string)($record['slip']        ?? '');
     $createdAt  = (string)($record['created_at']  ?? '');
 
@@ -133,6 +134,7 @@ function send_order_mail(string $orderId): array {
     . (($delivery !== 'ship' && $pickupTime) ? '<p style="margin:0 0 6px 0;"><strong>Pick-Up Appointment:</strong> '.htmlspecialchars($pickupTime).'</p>' : '')
     . '<p style="margin:0 0 6px 0;"><strong>Username:</strong> '.htmlspecialchars($userName).'</p>'
     . ($userEmail ? '<p style="margin:0 0 6px 0;"><strong>User Email:</strong> '.htmlspecialchars($userEmail).'</p>' : '')
+    . ($phone ? '<p style="margin:0 0 6px 0;"><strong>Phone:</strong> '.htmlspecialchars($phone).'</p>' : '')
     . '<p style="margin:0 0 6px 0;"><strong>Slip:</strong> <a href="'.$slipUrl.'" target="_blank" rel="noopener">View slip</a></p>'
     . '<p style="margin:0;color:#555;">Created at: '.htmlspecialchars($createdAt).'</p>'
     . '</div>';

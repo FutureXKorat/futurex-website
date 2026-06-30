@@ -46,6 +46,7 @@ $texts = [
         'modal_address'  => 'Address',
         'modal_customer' => 'Customer',
         'modal_email'    => 'Email',
+        'modal_phone'    => 'Phone',
         'modal_status'   => 'Status',
         'modal_close'    => 'Close',
         'del_pickup'     => 'Pick Up',
@@ -121,6 +122,7 @@ $texts = [
         'modal_address'  => 'ที่อยู่',
         'modal_customer' => 'ลูกค้า',
         'modal_email'    => 'อีเมล',
+        'modal_phone'    => 'เบอร์โทร',
         'modal_status'   => 'สถานะ',
         'modal_close'    => 'ปิด',
         'del_pickup'     => 'รับเอง',
@@ -663,7 +665,8 @@ function statusClass(string $status): string {
             $deliv   = ($ord['delivery'] ?? '') === 'ship' ? $t['del_ship'] : $t['del_pickup'];
             $dateStr = fmtDate((string)($ord['created_at'] ?? ''));
             $dataJson = htmlspecialchars(json_encode($ord, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG), ENT_QUOTES, 'UTF-8');
-            $searchIdx = strtolower($oid . ' ' . $uname . ' ' . $email);
+            $phone_idx = $ord['phone'] ?? '';
+            $searchIdx = strtolower($oid . ' ' . $uname . ' ' . $email . ' ' . $phone_idx);
           ?>
           <tr class="order-row" data-status="<?= htmlspecialchars($status) ?>" data-search="<?= htmlspecialchars($searchIdx) ?>">
             <td class="cb-col">
@@ -812,6 +815,7 @@ const i18n = <?= json_encode([
   'modal_address'  => $t['modal_address'],
   'modal_customer' => $t['modal_customer'],
   'modal_email'    => $t['modal_email'],
+  'modal_phone'    => $t['modal_phone'],
   'modal_status'   => $t['modal_status'],
   'modal_close'    => $t['modal_close'],
   'btn_approve'    => $t['btn_approve'],
@@ -922,6 +926,7 @@ function openModal(btn) {
     [i18n.modal_status,   statusBadge(status)],
     [i18n.modal_customer, esc(ord.username || '—')],
     ord.user_email ? [i18n.modal_email, esc(ord.user_email)] : null,
+    ord.phone ? [i18n.modal_phone, `<a href="tel:${esc(ord.phone)}" style="color:#007BFF;">${esc(ord.phone)}</a>`] : null,
     [i18n.modal_delivery, esc(delLabel)],
     (ord.delivery === 'ship' && ord.address) ? [i18n.modal_address, `<span style="white-space:pre-wrap;">${esc(ord.address)}</span>`] : null,
     (ord.delivery !== 'ship' && ord.pickup_time) ? [i18n.modal_pickup_time, `<strong>${esc(ord.pickup_time)}</strong><br><a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener" style="font-size:.78rem;color:#007BFF;text-decoration:none;">Google Maps ↗</a>`] : null,

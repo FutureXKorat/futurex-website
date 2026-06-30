@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.0',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Phone number field added to checkout — collected from customers and saved with each order.', 'th' => 'เพิ่มช่องเบอร์โทรศัพท์ในหน้าชำระเงิน — รวบรวมจากลูกค้าและบันทึกพร้อมกับแต่ละคำสั่งซื้อ'],
+            ['type' => 'new', 'en' => 'Admin order notification emails now include the customer\'s phone number.', 'th' => 'อีเมลแจ้งเตือนคำสั่งซื้อสำหรับแอดมินแสดงเบอร์โทรศัพท์ของลูกค้าแล้ว'],
+            ['type' => 'new', 'en' => 'Admin order detail modal now shows the customer\'s phone number as a clickable call link; phone is also searchable in the order search box.', 'th' => 'หน้าต่างรายละเอียดคำสั่งซื้อในแผงแอดมินแสดงเบอร์โทรของลูกค้าเป็นลิงก์โทรออก และค้นหาด้วยเบอร์โทรได้ในช่องค้นหา'],
+        ],
+    ],
+    [
         'version' => 'V20.2',
         'date'    => '2026-06-30',
         'changes' => [

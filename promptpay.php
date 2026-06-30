@@ -126,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'user_id'     => (int)($_SESSION['user_id'] ?? 0),
             'username'    => (string)($_SESSION['username']),
             'user_email'  => (string)($_SESSION['user_email'] ?? $_SESSION['email'] ?? ''),
+            'phone'       => (string)($order['phone'] ?? ''),
             'delivery'    => $delivery,
             'address'     => $address,
             'pickup_time' => $pickup_time,
