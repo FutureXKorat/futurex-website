@@ -2,24 +2,7 @@
 declare(strict_types=1);
 include '../database.php'; // gives $conn, $lang, session
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: https://futurexthailand.com/index.php'); exit;
-}
-
-// Admin check
-$_mailCfgPath = dirname(__DIR__) . '/secure-config/futurex_mail.php';
-$_mailCfg = is_file($_mailCfgPath) ? require $_mailCfgPath : [];
-$ADMIN_EMAIL = strtolower(trim((string)($_mailCfg['ADMIN_EMAIL'] ?? getenv('ADMIN_EMAIL') ?: 'futurexkorat@gmail.com')));
-
-$_stmt = $conn->prepare("SELECT email FROM users WHERE id = ? LIMIT 1");
-$_stmt->bind_param('i', $_SESSION['user_id']);
-$_stmt->execute();
-$_row = $_stmt->get_result()->fetch_assoc();
-$_stmt->close();
-$_userEmail = strtolower(trim((string)($_row['email'] ?? '')));
-if ($_userEmail === '' || $_userEmail !== $ADMIN_EMAIL) {
-    header('Location: https://futurexthailand.com/home.php'); exit;
-}
+include 'auth.php';
 
 // Main site URL (used to build slip image URLs)
 $mainSiteUrl = 'https://futurexthailand.com';

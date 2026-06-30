@@ -2,23 +2,7 @@
 declare(strict_types=1);
 include '../database.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: https://futurexthailand.com/index.php'); exit;
-}
-
-// Admin check
-$_mailCfgPath = dirname(__DIR__) . '/secure-config/futurex_mail.php';
-$_mailCfg     = is_file($_mailCfgPath) ? require $_mailCfgPath : [];
-$ADMIN_EMAIL  = strtolower(trim((string)($_mailCfg['ADMIN_EMAIL'] ?? getenv('ADMIN_EMAIL') ?: 'futurexkorat@gmail.com')));
-$_stmt = $conn->prepare("SELECT email FROM users WHERE id = ? LIMIT 1");
-$_stmt->bind_param('i', $_SESSION['user_id']);
-$_stmt->execute();
-$_row = $_stmt->get_result()->fetch_assoc();
-$_stmt->close();
-$_userEmail = strtolower(trim((string)($_row['email'] ?? '')));
-if ($_userEmail === '' || $_userEmail !== $ADMIN_EMAIL) {
-    header('Location: https://futurexthailand.com/home.php'); exit;
-}
+include 'auth.php';
 
 // Count orders for the stat card
 $totalOrders = 0;
@@ -140,6 +124,14 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
       <div class="card-desc"><?= $lang === 'th' ? 'เพิ่ม แก้ไข หรือลบสินค้า' : 'Add, edit, or delete products' ?></div>
       <div class="card-badge blue"><?= $productCount ?> <?= $lang === 'th' ? 'สินค้าทั้งหมด' : 'total products' ?></div>
     </a>
+
+    <?php if ($isSuperAdmin): ?>
+    <a href="users.php" class="admin-card">
+      <div class="card-icon">👥</div>
+      <div class="card-name"><?= $lang === 'th' ? 'ผู้ใช้แอดมิน' : 'Admin Users' ?></div>
+      <div class="card-desc"><?= $lang === 'th' ? 'เพิ่มหรือลบบัญชีแอดมินพนักงาน' : 'Add or remove employee admin accounts' ?></div>
+    </a>
+    <?php endif; ?>
   </div>
 </div>
 

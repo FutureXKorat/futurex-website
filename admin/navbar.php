@@ -4,14 +4,30 @@
  * Requires: session started, $conn (mysqli), $lang (from ../database.php).
  */
 $_anT = [
-    'en' => ['orders' => 'Orders', 'stock' => 'Stock', 'products' => 'Products', 'main_page' => 'Main Page', 'settings' => 'Settings', 'logout' => 'Log Out'],
-    'th' => ['orders' => 'คำสั่งซื้อ', 'stock' => 'สต็อก', 'products' => 'สินค้า', 'main_page' => 'เว็บหลัก', 'settings' => 'การตั้งค่า', 'logout' => 'ออกจากระบบ'],
+    'en' => ['orders' => 'Orders', 'stock' => 'Stock', 'products' => 'Products', 'users' => 'Users', 'main_page' => 'Main Page', 'settings' => 'Settings', 'logout' => 'Log Out'],
+    'th' => ['orders' => 'คำสั่งซื้อ', 'stock' => 'สต็อก', 'products' => 'สินค้า', 'users' => 'ผู้ใช้แอดมิน', 'main_page' => 'เว็บหลัก', 'settings' => 'การตั้งค่า', 'logout' => 'ออกจากระบบ'],
 ];
 $_anL = $_anT[$lang] ?? $_anT['en'];
 
 $_navPic = '/avatar.png';
 $_adminDisplayName = null;
-if (isset($_SESSION['user_id'])) {
+
+if (isset($_SESSION['admin_id'])) {
+    // Employee-admin: profile from admins table
+    $_s = $conn->prepare("SELECT name, profile_picture FROM admins WHERE id = ? LIMIT 1");
+    $_s->bind_param('i', $_SESSION['admin_id']);
+    $_s->execute();
+    $_r = $_s->get_result()->fetch_assoc();
+    $_s->close();
+    if ($_r) {
+        $_adminDisplayName = htmlspecialchars((string)($_r['name'] ?? ''));
+        $picFile = (string)($_r['profile_picture'] ?? '');
+        if ($picFile !== '' && str_starts_with($picFile, 'https://')) {
+            $_navPic = htmlspecialchars($picFile);
+        }
+    }
+} elseif (isset($_SESSION['user_id'])) {
+    // Super-admin: profile from users table
     $_s = $conn->prepare("SELECT name, profile_picture FROM users WHERE id = ? LIMIT 1");
     $_s->bind_param('i', $_SESSION['user_id']);
     $_s->execute();
@@ -22,9 +38,9 @@ if (isset($_SESSION['user_id'])) {
         $picFile = (string)($_r['profile_picture'] ?? '');
         if ($picFile !== '') {
             if (str_starts_with($picFile, 'https://')) {
-                $_navPic = htmlspecialchars($picFile); // Cloudinary URL
+                $_navPic = htmlspecialchars($picFile);
             } elseif (file_exists(dirname(__DIR__) . '/uploads/profile_pics/' . $picFile)) {
-                $_navPic = '/uploads/profile_pics/' . htmlspecialchars($picFile); // legacy local file
+                $_navPic = '/uploads/profile_pics/' . htmlspecialchars($picFile);
             }
         }
     }
@@ -59,6 +75,9 @@ body {
       <a href="orders.php"><?= htmlspecialchars($_anL['orders']) ?></a>
       <a href="stock.php"><?= htmlspecialchars($_anL['stock']) ?></a>
       <a href="products.php"><?= htmlspecialchars($_anL['products']) ?></a>
+      <?php if (!empty($isSuperAdmin)): ?>
+        <a href="users.php"><?= htmlspecialchars($_anL['users']) ?></a>
+      <?php endif; ?>
     </div>
   </div>
   <div class="right-actions">

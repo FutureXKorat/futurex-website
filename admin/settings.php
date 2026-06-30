@@ -3,6 +3,13 @@ include_once '../database.php';
 include_once '../send_otp.php';
 
 
+include 'auth.php';
+
+// Settings page queries the users table — not applicable for employee-admins
+if ($isEmployeeAdmin && !$isSuperAdmin) {
+    header('Location: /admin/index.php'); exit;
+}
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: /index.php');
     exit();
