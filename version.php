@@ -30,6 +30,7 @@ $versions = [
         'date'    => '2026-06-30',
         'changes' => [
             ['type' => 'fix', 'en' => 'Checkout no longer allows selecting a pick-up time that has already passed when today\'s date is chosen.', 'th' => 'หน้าชำระเงินไม่อนุญาตให้เลือกเวลานัดรับที่ผ่านไปแล้วเมื่อเลือกวันที่เป็นวันนี้'],
+            ['type' => 'fix', 'en' => 'If all pick-up time slots for today have passed, today is automatically disabled in the date picker.', 'th' => 'หากเวลานัดรับทุกช่องของวันนี้ผ่านไปแล้ว วันนี้จะถูกปิดการใช้งานในตัวเลือกวันที่โดยอัตโนมัติ'],
         ],
     ],
     [

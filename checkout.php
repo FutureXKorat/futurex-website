@@ -85,6 +85,11 @@ $bangkokTz        = new DateTimeZone('Asia/Bangkok');
 $bangkokNow       = new DateTime('now', $bangkokTz);
 $todayBangkok     = $bangkokNow->format('Y-m-d');
 $currentHourBkk   = (int)$bangkokNow->format('G'); // 0-23
+// If the last slot (5 PM = hour 17) has passed, today has no available slots — min jumps to tomorrow
+$lastSlotHour     = 17;
+$minPickupDate    = ($currentHourBkk >= $lastSlotHour)
+    ? (clone $bangkokNow)->modify('+1 day')->format('Y-m-d')
+    : $todayBangkok;
 
 // cart
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) { $_SESSION['cart'] = []; }
@@ -375,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <div class="appt-field">
                         <label for="pickup_date"><?= htmlspecialchars($texts[$lang]['pickup_date_label']) ?></label>
                         <input type="date" id="pickup_date" name="pickup_date" class="form-control"
-                               min="<?= $todayBangkok ?>" style="border-radius:10px;">
+                               min="<?= $minPickupDate ?>" style="border-radius:10px;">
                       </div>
                       <div class="appt-field">
                         <label for="pickup_hour"><?= htmlspecialchars($texts[$lang]['pickup_time_label']) ?></label>
@@ -555,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function () {
   ship.addEventListener('change', refreshDelivery);
   refreshDelivery();
 
-  // Disable past time slots when today is selected
+  // Disable past time slots when today is selected; if ALL slots are gone, disable the day itself
   function filterTimeSlots() {
     if (!pickupDate || !pickupHour) return;
     const selectedDate = pickupDate.value; // 'YYYY-MM-DD'
@@ -578,6 +583,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (selectionWasDisabled) pickupHour.value = '';
+
+    // If every slot is now disabled (all past), advance the min date to tomorrow
+    const allPast = Array.from(pickupHour.options).every(function(opt) {
+      return !opt.value || opt.disabled;
+    });
+    if (allPast) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.getFullYear() + '-' +
+        String(tomorrow.getMonth() + 1).padStart(2, '0') + '-' +
+        String(tomorrow.getDate()).padStart(2, '0');
+      pickupDate.min = tomorrowStr;
+      if (pickupDate.value === todayStr) pickupDate.value = '';
+    }
   }
 
   if (pickupDate) pickupDate.addEventListener('change', filterTimeSlots);
