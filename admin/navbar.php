@@ -20,8 +20,12 @@ if (isset($_SESSION['user_id'])) {
     if ($_r) {
         $_adminDisplayName = htmlspecialchars((string)($_r['name'] ?? ''));
         $picFile = (string)($_r['profile_picture'] ?? '');
-        if ($picFile !== '' && file_exists(dirname(__DIR__) . '/uploads/profile_pics/' . $picFile)) {
-            $_navPic = '/uploads/profile_pics/' . htmlspecialchars($picFile);
+        if ($picFile !== '') {
+            if (str_starts_with($picFile, 'https://')) {
+                $_navPic = htmlspecialchars($picFile); // Cloudinary URL
+            } elseif (file_exists(dirname(__DIR__) . '/uploads/profile_pics/' . $picFile)) {
+                $_navPic = '/uploads/profile_pics/' . htmlspecialchars($picFile); // legacy local file
+            }
         }
     }
 }
