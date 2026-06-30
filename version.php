@@ -76,6 +76,7 @@ $tagColors = [
 <html lang="<?php echo $lang; ?>">
 <head>
     <title><?php echo $t['title']; ?></title>
+    <link rel="icon" type="image/png" href="logo_transparent_onlyblack.png">
     <link rel="icon" href="favicon.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
