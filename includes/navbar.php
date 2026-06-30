@@ -55,6 +55,13 @@ if (isset($_SESSION['user_id'])) {
 }
 ?>
 <style>
+/* Force full-width on all screen sizes — overrides any page-level head styles */
+.top-banner {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    left: 0 !important;
+    right: 0 !important;
+}
 .nav-logo-link { padding: 4px 8px !important; display: inline-flex !important; align-items: center !important; border-radius: 4px; transition: background 0.3s, transform 0.15s ease !important; }
 .nav-logo-link:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
 .nav-logo-img { height: 36px; width: auto; display: block; }
