@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.4',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Language button on the Version Log page now works — a duplicate click listener was cancelling the menu open immediately after it opened.', 'th' => 'ปุ่มเปลี่ยนภาษาในหน้าประวัติการอัปเดตใช้งานได้แล้ว — ลบ event listener ซ้ำซ้อนที่ทำให้เมนูปิดทันทีหลังจากเปิด'],
+        ],
+    ],
+    [
         'version' => 'V21.3C',
         'date'    => '2026-06-30',
         'changes' => [
@@ -370,21 +377,5 @@ $tagColors = [
     </div>
 </div>
 
-<script>
-(function () {
-    var lIcon = document.getElementById('langIcon');
-    var lMenu = document.getElementById('langMenu');
-    if (lIcon && lMenu) {
-        lIcon.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var open = lMenu.style.display === 'block';
-            lMenu.style.display = open ? 'none' : 'block';
-            lIcon.setAttribute('aria-expanded', open ? 'false' : 'true');
-        });
-        document.addEventListener('click', function () { lMenu.style.display = 'none'; });
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') lMenu.style.display = 'none'; });
-    }
-})();
-</script>
 </body>
 </html>
