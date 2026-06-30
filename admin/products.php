@@ -279,7 +279,7 @@ $t = [
 
 <?php include 'navbar.php'; ?>
 
-<div class="page-wrap" style="margin-top: 36px;">
+<div class="page-wrap" style="margin-top: 36px; padding-bottom: 30px;">
 
   <div class="page-header">
     <div>
