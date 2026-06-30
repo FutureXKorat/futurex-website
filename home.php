@@ -580,7 +580,7 @@ $texts = [
 </div>
 
 <div class="footer-min">
-    <span class="small-muted">V20.1</span>
+    <span class="small-muted">V20.1A</span>
 </div>
 
 <!-- Bootstrap JS -->

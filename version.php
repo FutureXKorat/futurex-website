@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V20.1A',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed crash on Admin Users page caused by attempting to add a primary key that already existed on the admins table.', 'th' => 'แก้ไขข้อผิดพลาดในหน้า Admin Users ที่เกิดจากการพยายามเพิ่ม primary key ซ้ำในตาราง admins'],
+        ],
+    ],
+    [
         'version' => 'V20.1',
         'date'    => '2026-06-30',
         'changes' => [

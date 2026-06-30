@@ -8,10 +8,12 @@ if (!$isSuperAdmin) {
     header('Location: /admin/index.php'); exit;
 }
 
-// One-time migration: ensure admins.id has AUTO_INCREMENT
-// (MySQL silently no-ops if the column already has it)
-$conn->query("ALTER TABLE admins ADD PRIMARY KEY (id)"); // no-op if PK already exists
-$conn->query("ALTER TABLE admins MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT");
+// One-time migration: add AUTO_INCREMENT to admins.id if not already set
+$_col = $conn->query("SHOW COLUMNS FROM admins LIKE 'id'");
+$_colRow = $_col ? $_col->fetch_assoc() : null;
+if ($_colRow && strpos((string)($_colRow['Extra'] ?? ''), 'auto_increment') === false) {
+    $conn->query("ALTER TABLE admins MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT");
+}
 
 $success = '';
 $errors  = [];
