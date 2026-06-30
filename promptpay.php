@@ -37,7 +37,7 @@ $texts = [
     'back'       => 'Back to Checkout',
     'err_nofile' => 'Please upload your payment slip before confirming payment.',
     'err_type'   => 'Unsupported file type. Please upload JPG, PNG, WEBP, GIF, HEIC, or HEIF.',
-    'err_size'   => 'File is too large. Max size is 5 MB.',
+    'err_size'   => 'File is too large. Max size is 10 MB.',
     'err_move'   => 'Could not save the file. Please try again.',
   ],
   'th' => [
@@ -55,7 +55,7 @@ $texts = [
     'back'       => 'กลับไปหน้าชำระเงิน',
     'err_nofile' => 'กรุณาอัปโหลดสลิปการโอนเงินก่อนยืนยันการชำระเงิน',
     'err_type'   => 'ประเภทไฟล์ไม่รองรับ โปรดอัปโหลด JPG, PNG, WEBP, GIF, HEIC หรือ HEIF',
-    'err_size'   => 'ไฟล์มีขนาดใหญ่เกินไป ขนาดสูงสุด 5 MB',
+    'err_size'   => 'ไฟล์มีขนาดใหญ่เกินไป ขนาดสูงสุด 10 MB',
     'err_move'   => 'ไม่สามารถบันทึกไฟล์ได้ โปรดลองอีกครั้ง',
   ],
 ];
@@ -68,45 +68,53 @@ $errors = [];           // <-- collect errors for display
 // handle submit (save order to MySQL + slip to Cloudinary)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Must have a file
-    // Note: is_uploaded_file() is unreliable on FrankenPHP; check error code instead
-    $slipErr = $_FILES['slip']['error'] ?? UPLOAD_ERR_NO_FILE;
-    if ($slipErr === UPLOAD_ERR_NO_FILE || empty($_FILES['slip']['tmp_name']) || !file_exists($_FILES['slip']['tmp_name'])) {
-        $errors[] = $t['err_nofile'];
-    } elseif ($slipErr !== UPLOAD_ERR_OK) {
+    // When post_max_size is exceeded PHP silently empties $_FILES entirely.
+    // When upload_max_filesize is exceeded tmp_name is empty but error code is set.
+    if (empty($_FILES) || !isset($_FILES['slip'])) {
         $errors[] = $t['err_size'];
     } else {
-        $okType = ['image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'];
-        $size   = (int)$_FILES['slip']['size'];
-
-        // MIME sniff
-        $mime = '';
-        if (function_exists('finfo_open')) {
-            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
-            if ($finfo) {
-                $buf  = @file_get_contents($_FILES['slip']['tmp_name']);
-                $mime = $buf !== false ? finfo_buffer($finfo, $buf) : '';
-                @finfo_close($finfo);
-            }
-        }
-        if (!$mime) {
-            $mime = $_FILES['slip']['type'] ?: 'application/octet-stream';
-        }
-
-        if (!in_array($mime, $okType, true)) {
-            $errors[] = $t['err_type'];
-        }
-        if ($size > 5*1024*1024) {
+        $slipErr = (int)($_FILES['slip']['error'] ?? UPLOAD_ERR_NO_FILE);
+        $tmpName  = (string)($_FILES['slip']['tmp_name'] ?? '');
+        if ($slipErr === UPLOAD_ERR_NO_FILE) {
+            $errors[] = $t['err_nofile'];
+        } elseif ($slipErr === UPLOAD_ERR_INI_SIZE || $slipErr === UPLOAD_ERR_FORM_SIZE) {
             $errors[] = $t['err_size'];
-        }
+        } elseif ($slipErr !== UPLOAD_ERR_OK || $tmpName === '' || !file_exists($tmpName)) {
+            $errors[] = $t['err_move'];
+        } else {
+            $okType = ['image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'];
+            $size   = (int)$_FILES['slip']['size'];
 
-        // Upload to Cloudinary when no validation errors
-        if (!$errors) {
-            $slipPublicId = $order_id . '_' . time();
-            $cloudUrl = uploadSlipToCloudinary($_FILES['slip']['tmp_name'], $slipPublicId);
-            if ($cloudUrl !== null) {
-                $slipPathWeb = $cloudUrl;
-            } else {
-                $errors[] = $t['err_move'];
+            // MIME sniff
+            $mime = '';
+            if (function_exists('finfo_open')) {
+                $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo) {
+                    $buf  = @file_get_contents($tmpName);
+                    $mime = $buf !== false ? finfo_buffer($finfo, $buf) : '';
+                    @finfo_close($finfo);
+                }
+            }
+            if (!$mime) {
+                $mime = $_FILES['slip']['type'] ?: 'application/octet-stream';
+            }
+
+            if (!in_array($mime, $okType, true)) {
+                $errors[] = $t['err_type'];
+            }
+            if ($size > 10*1024*1024) {
+                $errors[] = $t['err_size'];
+            }
+
+            // Upload to Cloudinary when no validation errors
+            if (!$errors) {
+                $slipPublicId = $order_id . '_' . time();
+                $cloudUrl = uploadSlipToCloudinary($tmpName, $slipPublicId);
+                if ($cloudUrl !== null) {
+                    $slipPathWeb = $cloudUrl;
+                } else {
+                    $errors[] = $t['err_move'];
+                }
             }
         }
     }
@@ -451,7 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     var allowed = [
       'image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'
     ];
-    var maxSize = 5 * 1024 * 1024;
+    var maxSize = 10 * 1024 * 1024;
 
     function setDisabled(state) {
       if (submitBtn) submitBtn.disabled = state;

@@ -13,6 +13,7 @@ $_navT = [
         'orders'  => 'Orders',
         'about'   => 'About Us',
         'source'  => 'Sources',
+        'version' => 'Updates',
         'profile' => 'Settings',
         'out'     => 'Log Out',
         'login'   => 'Please log in to access your profile.',
@@ -24,6 +25,7 @@ $_navT = [
         'orders'  => 'รายการที่สั่ง',
         'about'   => 'เกี่ยวกับพวกเรา',
         'source'  => 'แหล่งที่มา',
+        'version' => 'อัปเดต',
         'profile' => 'การตั้งค่า',
         'out'     => 'ออกจากระบบ',
         'login'   => 'กรุณาเข้าสู่ระบบเพื่อแก้ไขโปรไฟล์ของคุณ',
@@ -97,6 +99,7 @@ body {
       <?php endif; ?>
       <a href="about.php"><?php echo $_navL['about']; ?></a>
       <a href="source.php"><?php echo $_navL['source']; ?></a>
+      <a href="version.php"><?php echo $_navL['version']; ?></a>
     </div>
   </div>
 
