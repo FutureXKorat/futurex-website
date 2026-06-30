@@ -58,7 +58,9 @@ $hasUnseen = !empty($_SESSION['cart']) && (empty($_SESSION['cart_seen']) || $_SE
 
 		// Optional: small helper for image fallback
 		function product_img($path) {
-			return (is_string($path) && file_exists($path)) ? $path : 'assets/products/placeholder.jpg';
+			if (!is_string($path) || $path === '') return 'assets/products/placeholder.jpg';
+			if (str_starts_with($path, 'http')) return $path; // Cloudinary URL — use directly
+			return file_exists($path) ? $path : 'assets/products/placeholder.jpg';
 		}
 
 $products = [];

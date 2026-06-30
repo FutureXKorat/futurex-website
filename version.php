@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V19.1',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Product images uploaded via the admin panel now display correctly on the customer products page.', 'th' => 'รูปภาพสินค้าที่อัปโหลดผ่านหน้าแอดมินแสดงผลได้ถูกต้องในหน้าสินค้าของลูกค้า'],
+        ],
+    ],
+    [
         'version' => 'V19',
         'date'    => '2026-06-30',
         'changes' => [
