@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V19.3',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'View Slip link in order notification emails now opens correctly instead of producing a broken double URL.', 'th' => 'ลิงก์ดูสลิปในอีเมลแจ้งเตือนคำสั่งซื้อตอนนี้เปิดได้ถูกต้องแล้ว ไม่เกิด URL ซ้ำซ้อนอีกต่อไป'],
+        ],
+    ],
+    [
         'version' => 'V19.2',
         'date'    => '2026-06-30',
         'changes' => [

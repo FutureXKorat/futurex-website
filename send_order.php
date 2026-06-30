@@ -108,7 +108,7 @@ function send_order_mail(string $orderId): array {
     }
 
     $addrHtml = nl2br(htmlspecialchars($address));
-    $slipUrl  = htmlspecialchars('https://www.futurexthailand.com/' . $slipWeb);
+    $slipUrl  = htmlspecialchars($slipWeb); // already a full Cloudinary https:// URL
     $subject  = 'New PromptPay order #'.$orderId.' awaiting review'.($userName ? " ({$userName})" : '');
 
     $bodyHtml =
