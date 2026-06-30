@@ -314,6 +314,17 @@ $texts = [
                 <li><?php echo ($lang === 'en') ? 'A business that’s easy to start and truly achievable.' : 'ธุรกิจเริ่มต้นง่ายทำได้จริง'; ?></li>
             </ul>
 
+            <div class="divider"></div>
+
+            <h2><?php echo ($lang === 'en') ? 'Contact Us' : 'ติดต่อเรา'; ?></h2>
+            <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Phone' : 'โทรศัพท์'; ?></strong></p>
+            <p class="mb-1">Khai: <a href="tel:+66619699249">+66 61-969-9249</a></p>
+            <p class="mb-2">Seven: <a href="tel:+66933292113">+66 93-329-2113</a></p>
+            <p class="mb-1"><strong>Email</strong></p>
+            <p class="mb-0"><a href="mailto:futurexkorat@gmail.com">futurexkorat@gmail.com</a></p>
+
+            <div class="divider"></div>
+
             <div class="footer-min">
                 <?php echo ($lang === 'en') ? 'Thank you for your interest in Future X.' : 'ขอบคุณที่ท่านเลื่อก Future X'; ?>
             </div>

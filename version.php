@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V18.1',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Added Contact Us section to the About Us page with phone numbers and email.', 'th' => 'เพิ่มส่วน "ติดต่อเรา" ในหน้าเกี่ยวกับเรา พร้อมหมายเลขโทรศัพท์และอีเมล'],
+        ],
+    ],
+    [
         'version' => 'V18',
         'date'    => '2026-06-30',
         'changes' => [
