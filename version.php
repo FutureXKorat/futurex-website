@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.3',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Settings page: the Change Password form now shows a live password requirements checklist — same animated dot list as on the registration and admin users pages.', 'th' => 'หน้าการตั้งค่า: แบบฟอร์มเปลี่ยนรหัสผ่านแสดงรายการข้อกำหนดรหัสผ่านแบบเรียลไทม์ — รายการจุดเหมือนกับในหน้าสมัครสมาชิกและหน้าแอดมิน'],
+            ['type' => 'improve', 'en' => 'Password rules on the settings page now match registration: 6–12 characters, at least one number, one letter, and one capital letter.', 'th' => 'ข้อกำหนดรหัสผ่านในหน้าการตั้งค่าตอนนี้ตรงกับหน้าสมัคร: 6–12 ตัวอักษร มีตัวเลข ตัวอักษร และตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว'],
+        ],
+    ],
+    [
         'version' => 'V21.2',
         'date'    => '2026-06-30',
         'changes' => [
