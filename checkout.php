@@ -359,18 +359,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </div>
                       <div class="appt-field">
                         <label for="pickup_hour"><?= htmlspecialchars($texts[$lang]['pickup_time_label']) ?></label>
+                        <?php
+                        // value = English AM/PM (stored in DB); label changes by language
+                        $timeSlots = [
+                            '10:00 AM' => ['en' => '10:00 AM', 'th' => '10 น.'],
+                            '11:00 AM' => ['en' => '11:00 AM', 'th' => '11 น.'],
+                            '12:00 PM' => ['en' => '12:00 PM', 'th' => '12 น.'],
+                            '1:00 PM'  => ['en' => '1:00 PM',  'th' => '13 น.'],
+                            '2:00 PM'  => ['en' => '2:00 PM',  'th' => '14 น.'],
+                            '3:00 PM'  => ['en' => '3:00 PM',  'th' => '15 น.'],
+                            '4:00 PM'  => ['en' => '4:00 PM',  'th' => '16 น.'],
+                            '5:00 PM'  => ['en' => '5:00 PM',  'th' => '17 น.'],
+                        ];
+                        ?>
                         <select id="pickup_hour" name="pickup_hour" class="form-control" style="border-radius:10px;">
                           <option value=""><?= htmlspecialchars($texts[$lang]['pickup_time_ph']) ?></option>
-                          <option value="9:00 AM">9:00 AM</option>
-                          <option value="10:00 AM">10:00 AM</option>
-                          <option value="11:00 AM">11:00 AM</option>
-                          <option value="12:00 PM">12:00 PM (Noon)</option>
-                          <option value="1:00 PM">1:00 PM</option>
-                          <option value="2:00 PM">2:00 PM</option>
-                          <option value="3:00 PM">3:00 PM</option>
-                          <option value="4:00 PM">4:00 PM</option>
-                          <option value="5:00 PM">5:00 PM</option>
-                          <option value="6:00 PM">6:00 PM</option>
+                          <?php foreach ($timeSlots as $val => $labels): ?>
+                          <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($labels[$lang] ?? $labels['en']) ?></option>
+                          <?php endforeach; ?>
                         </select>
                       </div>
                     </div>

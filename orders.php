@@ -113,6 +113,17 @@ $rejectionReasonMap = [
     'No More Stock'        => ['en' => 'No More Stock',        'th' => 'สินค้าหมดแล้ว'],
 ];
 
+// Translate English AM/PM time portion of pickup_time string into Thai น. format
+$pickupHourMap = [
+    '10:00 AM' => '10 น.', '11:00 AM' => '11 น.', '12:00 PM' => '12 น.',
+    '1:00 PM'  => '13 น.', '2:00 PM'  => '14 น.', '3:00 PM'  => '15 น.',
+    '4:00 PM'  => '16 น.', '5:00 PM'  => '17 น.',
+];
+function translatePickupTime(string $t, string $lang, array $map): string {
+    if ($lang !== 'th' || $t === '') return $t;
+    return str_replace(array_keys($map), array_values($map), $t);
+}
+
 // Read only this user's orders from MySQL (newest first)
 $orders = [];
 $stmt = $conn->prepare(
@@ -434,6 +445,10 @@ function ordFmtDate(string $iso): string {
       $noteText .= ' ' . $t['rejection_reason_label'] . ' ' . $reason;
     }
 
+    // Inject translated pickup time so the JS modal shows the correct language format
+    if (!empty($ord['pickup_time'])) {
+      $ord['pickup_time_display'] = translatePickupTime((string)$ord['pickup_time'], $lang, $pickupHourMap);
+    }
     $dataJson = htmlspecialchars(
       json_encode($ord, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG),
       ENT_QUOTES, 'UTF-8'
@@ -460,11 +475,12 @@ function ordFmtDate(string $iso): string {
 
       <?php if (($ord['delivery'] ?? '') !== 'ship' && !empty($ord['pickup_time'])): ?>
       <!-- Pickup appointment info -->
+      <?php $pickupDisplay = translatePickupTime((string)$ord['pickup_time'], $lang, $pickupHourMap); ?>
       <div style="display:flex;align-items:center;gap:10px;background:rgba(233,242,255,0.7);border:1.5px solid rgba(0,123,255,0.15);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:.84rem;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#007BFF" stroke-width="2" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <div>
           <span style="color:#555;font-weight:500;"><?= htmlspecialchars($t['pickup_appt']) ?>:</span>
-          <strong style="color:#111;margin-left:4px;"><?= htmlspecialchars((string)$ord['pickup_time']) ?></strong>
+          <strong style="color:#111;margin-left:4px;"><?= htmlspecialchars($pickupDisplay) ?></strong>
           &nbsp;·&nbsp;
           <a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener" style="color:#007BFF;font-size:.78rem;text-decoration:none;"><?= htmlspecialchars($t['view_map']) ?> ↗</a>
         </div>
@@ -658,11 +674,12 @@ function openModal(btn) {
     </div>`;
   }
   if (ord.delivery !== 'ship' && ord.pickup_time) {
+    const pickupDisplay = ord.pickup_time_display || ord.pickup_time;
     infoHtml += `
     <div class="info-row">
       <span class="info-row-label">${esc(i18n.pickup_appt)}</span>
       <span class="info-row-val">
-        <strong>${esc(ord.pickup_time)}</strong><br>
+        <strong>${esc(pickupDisplay)}</strong><br>
         <a href="https://maps.app.goo.gl/q2r3e8apCCvh5XAs6" target="_blank" rel="noopener"
            style="font-size:.78rem;color:#007BFF;text-decoration:none;">${esc(i18n.view_map)} ↗</a>
       </span>
