@@ -303,8 +303,8 @@ function statusClass(string $status): string {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><?= htmlspecialchars($t['title']) ?></title>
   <link rel="icon" type="image/png" href="/logo_transparent_onlyblack.png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
