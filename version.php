@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.3A',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Password rule "At least one letter" updated to "At least one lowercase letter" — applies to registration, settings, admin users, and password reset pages.', 'th' => 'ข้อกำหนดรหัสผ่าน "มีตัวอักษรอย่างน้อย 1 ตัว" เปลี่ยนเป็น "มีตัวพิมพ์เล็กอย่างน้อย 1 ตัว" — ใช้กับหน้าสมัคร, การตั้งค่า, แอดมินผู้ใช้ และการรีเซ็ตรหัสผ่าน'],
+        ],
+    ],
+    [
         'version' => 'V21.3',
         'date'    => '2026-06-30',
         'changes' => [

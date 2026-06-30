@@ -66,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_step1'])) {
         $pwErrors[] = ($lang === 'en') ? 'New password must be 6–12 characters.' : 'รหัสผ่านใหม่ต้องมี 6–12 ตัวอักษร';
     } elseif (!preg_match('/[0-9]/', $newPw)) {
         $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one number.' : 'รหัสผ่านใหม่ต้องมีตัวเลขอย่างน้อยหนึ่งตัว';
-    } elseif (!preg_match('/[a-zA-Z]/', $newPw)) {
-        $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one letter.' : 'รหัสผ่านใหม่ต้องมีตัวอักษรอย่างน้อยหนึ่งตัว';
+    } elseif (!preg_match('/[a-z]/', $newPw)) {
+        $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one lowercase letter.' : 'รหัสผ่านใหม่ต้องมีตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว';
     } elseif (!preg_match('/[A-Z]/', $newPw)) {
         $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one capital letter.' : 'รหัสผ่านใหม่ต้องมีตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว';
     } elseif ($newPw !== $confirmPw) {
@@ -682,7 +682,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
             <li class="pw-req" id="sp-req-min"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least 6 characters' : 'อย่างน้อย 6 ตัวอักษร'; ?></span></li>
             <li class="pw-req" id="sp-req-max"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'No more than 12 characters' : 'ไม่เกิน 12 ตัวอักษร'; ?></span></li>
             <li class="pw-req" id="sp-req-num"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one number' : 'มีตัวเลขอย่างน้อย 1 ตัว'; ?></span></li>
-            <li class="pw-req" id="sp-req-letter"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one letter' : 'มีตัวอักษรอย่างน้อย 1 ตัว'; ?></span></li>
+            <li class="pw-req" id="sp-req-letter"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one lowercase letter' : 'มีตัวพิมพ์เล็กอย่างน้อย 1 ตัว'; ?></span></li>
             <li class="pw-req" id="sp-req-upper"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one capital letter' : 'มีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว'; ?></span></li>
           </ul>
           <div class="pw-wrap">
@@ -1110,7 +1110,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         set('sp-req-min',    v.length >= 6);
         set('sp-req-max',    v.length > 0 && v.length <= 12);
         set('sp-req-num',    /[0-9]/.test(v));
-        set('sp-req-letter', /[a-zA-Z]/.test(v));
+        set('sp-req-letter', /[a-z]/.test(v));
         set('sp-req-upper',  /[A-Z]/.test(v));
         checkMatch();
       }

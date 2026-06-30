@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
         if (!preg_match('/[0-9]/', $password)) {
             $errors[] = 'Password must contain at least one number.';
         }
-        if (!preg_match('/[a-zA-Z]/', $password)) {
-            $errors[] = 'Password must contain at least one letter.';
+        if (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'Password must contain at least one lowercase letter.';
         }
         if (!preg_match('/[A-Z]/', $password)) {
             $errors[] = 'Password must contain at least one capital letter.';
@@ -401,7 +401,7 @@ $ccLabel = $f['cc'] === '+60' ? '🇲🇾 +60' : ($f['cc'] === '+856' ? '🇱�
             </li>
             <li class="pw-req" id="req-letter">
               <span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span>At least one letter</span>
+              <span>At least one lowercase letter</span>
             </li>
             <li class="pw-req" id="req-upper">
               <span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -461,7 +461,7 @@ function checkReqs() {
     set('req-min',    v.length >= 6);
     set('req-max',    v.length > 0 && v.length <= 12);
     set('req-num',    /[0-9]/.test(v));
-    set('req-letter', /[a-zA-Z]/.test(v));
+    set('req-letter', /[a-z]/.test(v));
     set('req-upper',  /[A-Z]/.test(v));
     checkMatch();
 }

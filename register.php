@@ -104,8 +104,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	if (!preg_match('/[0-9]/', $password)) {
 		$errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีเลขอย่างน้อย 1 ตัว' : 'Password must contain at least one number.';
 	}
-	if (!preg_match('/[a-zA-Z]/', $password)) {
-		$errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีตัวอักษรอย่างน้อย 1 ตัว' : 'Password must contain at least one letter.';
+	if (!preg_match('/[a-z]/', $password)) {
+		$errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว' : 'Password must contain at least one lowercase letter.';
 	}
 	if (!preg_match('/[A-Z]/', $password)) {
 		$errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว' : 'Password must contain at least one capital letter.';
@@ -468,7 +468,7 @@ function old($key) {
 				</li>
 				<li class="pw-req" id="req-letter">
 					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-					<span><?php echo $lang === 'en' ? 'At least one letter' : 'มีตัวอักษรอย่างน้อย 1 ตัว'; ?></span>
+					<span><?php echo $lang === 'en' ? 'At least one lowercase letter' : 'มีตัวพิมพ์เล็กอย่างน้อย 1 ตัว'; ?></span>
 				</li>
 				<li class="pw-req" id="req-upper">
 					<span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -539,7 +539,7 @@ function checkReqs() {
 	set('req-min', v.length >= 6);
 	set('req-max', v.length > 0 && v.length <= 12);
 	set('req-num', /[0-9]/.test(v));
-	set('req-letter', /[a-zA-Z]/.test(v));
+	set('req-letter', /[a-z]/.test(v));
 	set('req-upper', /[A-Z]/.test(v));
 	checkMatch();
 }
