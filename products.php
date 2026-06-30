@@ -53,8 +53,6 @@ function qty_in_cart($name, $price) {
     return $sum;
 }
 
-// Precompute remaining per product 
-
 // Red dot if there are items and cart not seen yet
 $hasUnseen = !empty($_SESSION['cart']) && (empty($_SESSION['cart_seen']) || $_SESSION['cart_seen'] === false);
 
@@ -85,7 +83,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
             --brand-hover:#0056b3;
 	    	--brand-hover-deep:#000099;
             --gray-color: #ccc;
-            --ink: #111111;           /* darker text for white backgrounds */
+            --ink: #111111;
         }
 
         body {
@@ -107,7 +105,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         .top-banner.scrolled {
-            background-color: var(--brand-color); /* keep red when scrolled */
+            background-color: var(--brand-color);
             box-shadow: none;
         }
         .nav-links-container {
@@ -127,7 +125,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
             top: 0;
             left: 0;
             height: 3px;
-            background: #fff; /* white line for contrast on red */
+            background: #fff;
             border-radius: 2px;
             width: 0%;
             transition: width 0.2s linear;
@@ -143,13 +141,10 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
         }
         .top-banner.scrolled .nav-links a { color: #fff; }
         .nav-links a:hover { background-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
-        /* Language dropdown container */
         .lang-dropdown{
                 position: relative;
                 flex-shrink: 0;
         }
-
-        /* Round icon button (glassy like your theme) */
         .lang-btn-icon{
                 width: 42px;
                 height: 42px;
@@ -162,16 +157,14 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
                 cursor: pointer;
                 transition: transform .15s ease, background .2s ease, opacity .15s ease;
         }
-        .lang-btn-icon:hover{ 
-                background: rgba(255,255,255,0.28); 
-                transform: translateY(-1px); 
+        .lang-btn-icon:hover{
+                background: rgba(255,255,255,0.28);
+                transform: translateY(-1px);
         }
-        .lang-btn-icon:focus{ 
-                outline: 2px solid rgba(255,255,255,0.6); 
-                outline-offset: 2px; 
+        .lang-btn-icon:focus{
+                outline: 2px solid rgba(255,255,255,0.6);
+                outline-offset: 2px;
         }
-
-        /* Dropdown panel (same look as profile) */
         .lang-dropdown-content{
                 display: none;
                 position: absolute;
@@ -184,7 +177,6 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
                 overflow: hidden;
                 padding: 0;
         }
-
         .lang-dropdown-content a{
                 display:block;
                 color:#333;
@@ -193,8 +185,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
                 transition: background .2s ease;
                 white-space: nowrap;
         }
-        .lang-dropdown-content a:hover{ 
-                background:#f2f2f2; 
+        .lang-dropdown-content a:hover{
+                background:#f2f2f2;
         }
         .lang-dropdown-content a.active{
                 font-weight:700;
@@ -207,45 +199,28 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
         .content-section { padding:60px 20px; max-width:1100px; margin:0 auto; color:#1F2937; }
         hr.divider { border:none; border-top:2px solid #999; margin:1rem 0; }
 
-        /* 🔴 Headings now brand red */
         .content-section h2 { font-size:2.4rem; font-weight:700; margin-bottom:8px; text-align:center; color:var(--brand-color); }
         .content-section h4 { font-size:1.5rem; font-weight:500; margin-bottom:16px; text-align:center; color:#374151; }
 
         .product-card { padding:8px; }
-        .product-image { 
-            width:100%; 
-            aspect-ratio:1/1; 
-            border-radius:10px; 
-            border:2px solid #e5e7eb; 
-            user-select:none; 
-            object-fit: cover; 
+        .product-image {
+            width:100%;
+            aspect-ratio:1/1;
+            border-radius:10px;
+            border:2px solid #e5e7eb;
+            user-select:none;
+            object-fit: cover;
             background: #f8fafc;
         }
-        /* 🔴 Color sample swaps blue for brand red */
         .product-image.color { background: linear-gradient(135deg, #F59E0B, #10B981, var(--brand-color)); border:2px dashed rgba(255,255,255,.6); }
 
         .product-name { margin-top:8px; font-weight:700; text-align:center; }
 
         .product-meta { margin:6px 0 10px; font-size:.95rem; text-align:center; }
-        .product-meta strong { color: var(--brand-color); } /* 🔴 strong text now brand red */
-
-        .qty-row { display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:10px; }
-        .qty-row input[type="number"] { width:90px; text-align:center; border-radius:10px; border:1px solid #d1d5db; padding:6px 8px; font-weight:600; }
+        .product-meta strong { color: var(--brand-color); }
 
         .note { text-align:center; font-size:.85rem; color:#6b7280; min-height:1.2em; }
 
-        /* 🔴 Buy button now red gradient */
-        .btn-buy {
-            display:block; width:100%;
-            background: linear-gradient(135deg, var(--brand-color), var(--brand-hover));
-            color:#fff; padding:10px 16px; font-size:1rem; font-weight:600;
-            border:none; border-radius:14px; transition:transform .2s, filter .2s, box-shadow .2s;
-        }
-        .btn-buy:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, var(--brand-hover), var(--brand-hover-deep));
-            box-shadow: 0 6px 16px rgba(0,0,204,0.25);
-        }
 	.lang-btn{
   	    display:inline-block;
   	    padding:8px 12px;
@@ -268,7 +243,80 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
         @media (min-width:768px){ .col-product{ width:33.3333%; } }
         .row-products::after{ content:""; display:table; clear:both; }
 
-        .disabled { opacity:.6; pointer-events:none; }
+        /* ── Stepper control (Big C style) ── */
+        .stepper-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50px;
+            margin-top: 10px;
+        }
+
+        /* Zero state: single round + button */
+        .stepper-zero {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--brand-color);
+            color: #fff;
+            border: none;
+            font-size: 1.8rem;
+            font-weight: 300;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 3px 10px rgba(0,123,255,.4);
+        }
+        .stepper-zero:hover { transform: scale(1.1); box-shadow: 0 5px 16px rgba(0,123,255,.5); }
+        .stepper-zero:disabled { background: #9ca3af; box-shadow: none; cursor: not-allowed; }
+
+        /* Active pill */
+        .stepper-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #fff;
+            border: 2px solid var(--brand-color);
+            border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(0,123,255,.18);
+            overflow: hidden;
+        }
+        .stepper-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .12s;
+            flex-shrink: 0;
+            padding: 0;
+        }
+        .stepper-btn:hover { background: rgba(0,0,0,.06); }
+        .stepper-btn:disabled { opacity: .35; cursor: not-allowed; }
+        .stepper-inc { color: var(--brand-color); font-size: 1.5rem; font-weight: 700; }
+        .stepper-dec { color: var(--brand-color); font-size: 1.5rem; font-weight: 700; }
+        .stepper-dec.trash { color: #dc2626; }
+        .stepper-count {
+            min-width: 36px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #111;
+            padding: 0 2px;
+            user-select: none;
+        }
+
+        .out-of-stock-label {
+            font-size: .85rem;
+            color: #9ca3af;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
     </style>
 </head>
 <body>
@@ -307,16 +355,12 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
 							<div><strong><?php echo ($lang === 'en') ? 'Price:' : 'ราคา:'; ?></strong> <?php echo number_format($price, 2, '.', ','); ?> <?php echo htmlspecialchars($unit); ?> </div>
                             <div><strong>PV:</strong> <?php echo number_format($point); ?></div>
 						</div>
-						<div class="qty-row">
-							<label for="qty-<?php echo $i; ?>" class="me-1"><?php echo ($lang === 'en') ? 'Qty' : 'จำนวน'; ?></label>
-							<input id="qty-<?php echo $i; ?>" class="qty-input" type="number" min="1" step="1" value="1"
-								   max="<?php echo $left; ?>" inputmode="numeric" pattern="[0-9]*">
+						<div class="stepper-wrap"
+							 data-name="<?php echo htmlspecialchars($name); ?>"
+							 data-price="<?php echo htmlspecialchars($price); ?>"
+							 data-in-cart="<?php echo $inCart; ?>"
+							 data-stock="<?php echo $left; ?>">
 						</div>
-						<div class="note" data-note></div>
-						<button type="button" class="btn-buy buy-btn"
-								data-name="<?php echo htmlspecialchars($name); ?>"
-								data-price="<?php echo htmlspecialchars($price); ?>"
-								data-remaining="<?php echo $left; ?>"><?php echo ($lang === 'en') ? 'Buy' : 'ซื้อ'; ?></button>
 					</div>
 				</div>
 			<?php endforeach; ?>
@@ -326,82 +370,100 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
     <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+const cartDot = document.querySelector('.cart-dot');
 
-        const cartDot = document.querySelector('.cart-dot');
+const trashSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+  <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+</svg>`;
 
-        function syncRemaining(name, price, left) {
-            document.querySelectorAll('.product-card').forEach(card => {
-                const n = card.dataset.name, p = card.dataset.price;
-                if (n === name && String(p) === String(price)) {
-                    const btn = card.querySelector('.buy-btn');
-                    const qty = card.querySelector('.qty-input');
-                    const note = card.querySelector('[data-note]');
-                    if (btn) btn.dataset.remaining = left;
-                    if (qty) {
-                        qty.max = left;
-                        if (parseInt(qty.value || '1', 10) > left) qty.value = left > 0 ? left : 1;
-                    }
-                    if (left <= 0) {
-                        btn.classList.add('disabled');
-                        btn.textContent = 'Out of stock';
-                    } else {
-                        btn.classList.remove('disabled');
-                        btn.textContent = <?php echo json_encode(($lang === 'en') ? 'Buy' : 'ซื้อ'); ?>;
+function renderStepper(wrap) {
+    const inCart = parseInt(wrap.dataset.inCart || '0', 10);
+    const stock  = parseInt(wrap.dataset.stock  || '0', 10);
 
-                        if (note) note.textContent = '';
-                    }
-                }
-            });
+    if (inCart <= 0) {
+        if (stock <= 0) {
+            wrap.innerHTML = `<span class="out-of-stock-label"><?php echo ($lang === 'en') ? 'Out of Stock' : 'สินค้าหมด'; ?></span>`;
+        } else {
+            wrap.innerHTML = `<button class="stepper-zero" title="<?php echo ($lang === 'en') ? 'Add to cart' : 'เพิ่มลงตะกร้า'; ?>" aria-label="Add">+</button>`;
+            wrap.querySelector('.stepper-zero').addEventListener('click', () => stepperAdd(wrap));
         }
+    } else {
+        const isOne    = inCart === 1;
+        const decClass = isOne ? 'stepper-btn stepper-dec trash' : 'stepper-btn stepper-dec';
+        const decIcon  = isOne ? trashSVG : '−';
+        const decTitle = isOne ? '<?php echo ($lang === 'en') ? 'Remove' : 'ลบออก'; ?>' : '<?php echo ($lang === 'en') ? 'Decrease' : 'ลด'; ?>';
+        const incDis   = stock <= 0 ? 'disabled' : '';
+        wrap.innerHTML = `
+            <div class="stepper-pill">
+                <button class="${decClass}" title="${decTitle}" aria-label="${decTitle}">${decIcon}</button>
+                <span class="stepper-count">${inCart}</span>
+                <button class="stepper-btn stepper-inc" ${incDis} title="<?php echo ($lang === 'en') ? 'Increase' : 'เพิ่ม'; ?>" aria-label="Increase">+</button>
+            </div>`;
+        wrap.querySelector('.stepper-dec').addEventListener('click', () => stepperDec(wrap));
+        wrap.querySelector('.stepper-inc').addEventListener('click', () => stepperAdd(wrap));
+    }
+}
 
-        document.querySelectorAll('.buy-btn').forEach(btn => {
-            const card = btn.closest('.product-card');
-            const qtyInput = card.querySelector('.qty-input');
-            const note = card.querySelector('[data-note]');
+function syncSteppers(name, price, inCart, stock) {
+    document.querySelectorAll('.stepper-wrap').forEach(w => {
+        if (w.dataset.name === name && String(w.dataset.price) === String(price)) {
+            w.dataset.inCart = inCart;
+            w.dataset.stock  = stock;
+            renderStepper(w);
+        }
+    });
+    updateCartDot();
+}
 
-            // Disable if no remaining at load
-            if (parseInt(btn.dataset.remaining || '0', 10) <= 0) {
-                btn.classList.add('disabled');
-                btn.textContent = <?php echo json_encode(($lang === 'en') ? 'Out of Stock' : 'สินค้าหมด'); ?>;
-            }
+function updateCartDot() {
+    if (!cartDot) return;
+    let any = false;
+    document.querySelectorAll('.stepper-wrap').forEach(w => {
+        if (parseInt(w.dataset.inCart || '0', 10) > 0) any = true;
+    });
+    cartDot.classList.toggle('show', any);
+}
 
-            btn.addEventListener('click', async () => {
-                const name  = btn.dataset.name;
-                const price = btn.dataset.price;
-                let qty = parseInt(qtyInput && qtyInput.value ? qtyInput.value : '1', 10);
-                if (isNaN(qty) || qty < 1) qty = 1;
-
-                try {
-                    const resp = await fetch('add_to_cart.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: new URLSearchParams({ name, price, qty })
-                    });
-                    if (!resp.ok) { console.error('Add failed:', resp.status); return; }
-                    const data = await resp.json();
-                    if (!data.ok) return;
-
-                    // Turn on red dot
-                    if (cartDot) cartDot.classList.add('show');
-
-                    // Update remaining across all identical cards
-                    syncRemaining(name, price, parseInt(data.stockLeft, 10));
-
-                    // Button cue reflecting actual added (may be capped)
-                    const added = parseInt(data.added, 10);
-                    const original = btn.textContent;
-                    if (added > 0) {
-                        btn.disabled = true; btn.textContent = <?php echo json_encode(($lang === 'en') ? 'Added to Cart × ' : 'เพิ่มลงตะกร้า × '); ?> + added;
-                        setTimeout(() => { btn.disabled = false; btn.textContent = original; }, 1200);
-                        if (note) note.textContent = data.capped ? 'Capped to remaining stock.' : '';
-                    } else {
-                        // Nothing added, already max
-                    }
-                } catch (e) {
-                    console.error('Network error', e);
-                }
-            });
+async function stepperAdd(wrap) {
+    const name  = wrap.dataset.name;
+    const price = wrap.dataset.price;
+    try {
+        const resp = await fetch('add_to_cart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ name, price, qty: 1 })
         });
-    </script>
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!data.ok) return;
+        syncSteppers(name, price, data.itemQty, data.stockLeft);
+    } catch (e) { console.error(e); }
+}
+
+async function stepperDec(wrap) {
+    const name   = wrap.dataset.name;
+    const price  = wrap.dataset.price;
+    const inCart = parseInt(wrap.dataset.inCart || '0', 10);
+    const stock  = parseInt(wrap.dataset.stock  || '0', 10);
+    const newQty = inCart - 1;
+    try {
+        const resp = await fetch('cart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ name, price, qty: newQty, ajax: '1' })
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!data.ok) return;
+        const newInCart = data.removed ? 0 : (data.qty ?? newQty);
+        const baseStock = inCart + stock;
+        syncSteppers(name, price, newInCart, baseStock - newInCart);
+    } catch (e) { console.error(e); }
+}
+
+// Render all steppers on load
+document.querySelectorAll('.stepper-wrap').forEach(renderStepper);
+</script>
 </body>
 </html>

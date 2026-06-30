@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V19',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Products page now uses a quantity stepper directly on each product card — tap + to add, − to decrease, and the trash icon to remove. No more separate Add to Cart button.', 'th' => 'หน้าสินค้าตอนนี้มีปุ่มเพิ่ม/ลดจำนวนบนการ์ดสินค้าโดยตรง กด + เพื่อเพิ่ม กด − เพื่อลด และกดไอคอนถังขยะเพื่อลบออก ไม่มีปุ่ม "เพิ่มลงตะกร้า" อีกต่อไป'],
+        ],
+    ],
+    [
         'version' => 'V18.2',
         'date'    => '2026-06-30',
         'changes' => [
