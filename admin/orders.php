@@ -694,7 +694,7 @@ function statusClass(string $status): string {
                 <div style="font-size:.76rem;color:#888;"><?= htmlspecialchars($email) ?></div>
               <?php endif; ?>
             </td>
-            <td><?= $nitems ?> <?= htmlspecialchars($t['items_label']) ?></td>
+            <td><?= $nitems ?></td>
             <td class="fw-bold" style="white-space:nowrap;"><?= number_format($total, 2) ?> ฿</td>
             <td><?= htmlspecialchars($deliv) ?></td>
             <td>
