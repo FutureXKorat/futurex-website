@@ -115,9 +115,9 @@ $rejectionReasonMap = [
 
 // Translate English AM/PM time portion of pickup_time string into Thai น. format
 $pickupHourMap = [
-    '10:00 AM' => '10 น.', '11:00 AM' => '11 น.', '12:00 PM' => '12 น.',
-    '1:00 PM'  => '13 น.', '2:00 PM'  => '14 น.', '3:00 PM'  => '15 น.',
-    '4:00 PM'  => '16 น.', '5:00 PM'  => '17 น.',
+    '10:00 AM' => '10:00 น.', '11:00 AM' => '11:00 น.', '12:00 PM' => '12:00 น.',
+    '1:00 PM'  => '13:00 น.', '2:00 PM'  => '14:00 น.', '3:00 PM'  => '15:00 น.',
+    '4:00 PM'  => '16:00 น.', '5:00 PM'  => '17:00 น.',
 ];
 function translatePickupTime(string $t, string $lang, array $map): string {
     if ($lang !== 'th' || $t === '') return $t;

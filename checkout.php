@@ -362,14 +362,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php
                         // value = English AM/PM (stored in DB); label changes by language
                         $timeSlots = [
-                            '10:00 AM' => ['en' => '10:00 AM', 'th' => '10 น.'],
-                            '11:00 AM' => ['en' => '11:00 AM', 'th' => '11 น.'],
-                            '12:00 PM' => ['en' => '12:00 PM', 'th' => '12 น.'],
-                            '1:00 PM'  => ['en' => '1:00 PM',  'th' => '13 น.'],
-                            '2:00 PM'  => ['en' => '2:00 PM',  'th' => '14 น.'],
-                            '3:00 PM'  => ['en' => '3:00 PM',  'th' => '15 น.'],
-                            '4:00 PM'  => ['en' => '4:00 PM',  'th' => '16 น.'],
-                            '5:00 PM'  => ['en' => '5:00 PM',  'th' => '17 น.'],
+                            '10:00 AM' => ['en' => '10:00 AM', 'th' => '10:00 น.'],
+                            '11:00 AM' => ['en' => '11:00 AM', 'th' => '11:00 น.'],
+                            '12:00 PM' => ['en' => '12:00 PM', 'th' => '12:00 น.'],
+                            '1:00 PM'  => ['en' => '1:00 PM',  'th' => '13:00 น.'],
+                            '2:00 PM'  => ['en' => '2:00 PM',  'th' => '14:00 น.'],
+                            '3:00 PM'  => ['en' => '3:00 PM',  'th' => '15:00 น.'],
+                            '4:00 PM'  => ['en' => '4:00 PM',  'th' => '16:00 น.'],
+                            '5:00 PM'  => ['en' => '5:00 PM',  'th' => '17:00 น.'],
                         ];
                         ?>
                         <select id="pickup_hour" name="pickup_hour" class="form-control" style="border-radius:10px;">
