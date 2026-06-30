@@ -45,8 +45,6 @@ $texts = [
         'pickup_time_label'   => 'Time',
         'pickup_time_ph'      => '— Select a time —',
         'past_time'           => 'That pick-up time has already passed. Please choose a later time.',
-        'phone'               => 'Phone Number',
-        'phone_ph'            => 'e.g. 0812345678',
     ],
     'th' => [
         'tabbar'         => 'ชำระเงิน - Future X',
@@ -79,8 +77,6 @@ $texts = [
         'pickup_time_label'   => 'เวลา',
         'pickup_time_ph'      => '— เลือกเวลา —',
         'past_time'           => 'เวลานัดรับนั้นผ่านมาแล้ว โปรดเลือกเวลาที่ยังไม่ผ่าน',
-        'phone'               => 'เบอร์โทรศัพท์',
-        'phone_ph'            => 'เช่น 0812345678',
     ],
 ];
 
@@ -115,7 +111,6 @@ $total = $subtotal + $shipping_fee;
 
 $errors = [];
 $success = "";
-$phone = '';
 
 // submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -123,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $delivery = $_POST['delivery'] ?? 'pickup';
     $method   = 'qr'; // only PromptPay
-    $phone    = trim($_POST['phone'] ?? '');
     $address  = trim($_POST['address'] ?? '');
     $shipping_fee = ($delivery === 'ship') ? $shipping_base : 0.00;
     $total = $subtotal + $shipping_fee;
@@ -167,7 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'order_id'       => $order_id,
             'user_id'        => (int)$_SESSION['user_id'],
             'delivery'       => $delivery,
-            'phone'          => $phone,
             'address'        => ($delivery === 'ship') ? $address : '',
             'pickup_time'    => $pickup_time,
             'payment_method' => $method,
@@ -353,13 +346,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row g-3">
             <!-- Left: Delivery + Address + Payment -->
             <div class="col-12 col-lg-7">
-                <div class="mb-3">
-                    <label class="form-label section-title" for="phone"><?php echo htmlspecialchars($texts[$lang]['phone']); ?></label>
-                    <input type="tel" id="phone" name="phone" class="form-control"
-                           placeholder="<?php echo htmlspecialchars($texts[$lang]['phone_ph']); ?>"
-                           maxlength="20" value="<?php echo htmlspecialchars($phone ?? ''); ?>">
-                </div>
-
                 <div class="mb-3">
                     <div class="section-title"><?php echo htmlspecialchars($texts[$lang]['delivery']); ?></div>
                     <div class="form-check mb-2">

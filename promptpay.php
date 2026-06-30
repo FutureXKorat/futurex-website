@@ -121,12 +121,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // If valid, persist and redirect; otherwise stay and show errors
     if (!$errors) {
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $userPhone = '';
+        if ($userId > 0) {
+            $ps = $conn->prepare("SELECT phoneno FROM users WHERE id = ? LIMIT 1");
+            $ps->bind_param('i', $userId);
+            $ps->execute();
+            $ps->bind_result($userPhone);
+            $ps->fetch();
+            $ps->close();
+            $userPhone = (string)($userPhone ?? '');
+        }
+
         $record = [
             'order_id'    => $order_id,
-            'user_id'     => (int)($_SESSION['user_id'] ?? 0),
+            'user_id'     => $userId,
             'username'    => (string)($_SESSION['username']),
             'user_email'  => (string)($_SESSION['user_email'] ?? $_SESSION['email'] ?? ''),
-            'phone'       => (string)($order['phone'] ?? ''),
+            'phone'       => $userPhone,
             'delivery'    => $delivery,
             'address'     => $address,
             'pickup_time' => $pickup_time,
