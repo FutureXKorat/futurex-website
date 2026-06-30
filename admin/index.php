@@ -134,6 +134,9 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
     <?php endif; ?>
   </div>
 </div>
+<?php if ($isSuperAdmin): ?>
+<div style="height:30px;"></div>
+<?php endif; ?>
 
 </body>
 </html>

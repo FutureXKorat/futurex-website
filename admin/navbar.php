@@ -106,7 +106,9 @@ body {
         id="profileIcon"
       >
       <div id="dropdownMenu" class="profile-dropdown-content">
-        <a href="/home.php"><?= htmlspecialchars($_anL['main_page']) ?></a>
+        <?php if (!empty($isSuperAdmin)): ?>
+          <a href="/home.php" style="color:#007BFF;font-weight:600;"><?= htmlspecialchars($_anL['main_page']) ?></a>
+        <?php endif; ?>
         <a href="/admin/settings.php"><?= htmlspecialchars($_anL['settings']) ?></a>
         <a href="/logout.php"><?= htmlspecialchars($_anL['logout']) ?></a>
       </div>

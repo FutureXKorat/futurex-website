@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.2',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Navigation bar: "Updates" link now appears before "About Us" and "Sources".', 'th' => 'แถบนำทาง: ลิงก์ "อัปเดต" แสดงก่อน "เกี่ยวกับเรา" และ "แหล่งที่มา"'],
+            ['type' => 'improve', 'en' => 'Admin panel: "Main Page" in the profile menu is now highlighted in blue and hidden from employee-admin accounts.', 'th' => 'แผงแอดมิน: "เว็บหลัก" ในเมนูโปรไฟล์แสดงเป็นสีน้ำเงินและซ่อนจากบัญชีแอดมินพนักงาน'],
+            ['type' => 'improve', 'en' => 'Admin panel: bottom spacing on the dashboard and Admin Users page reduced to a tighter 30 px.', 'th' => 'แผงแอดมิน: ลดระยะห่างด้านล่างของหน้า Dashboard และ Admin Users เหลือ 30 px'],
+        ],
+    ],
+    [
         'version' => 'V21.1',
         'date'    => '2026-06-30',
         'changes' => [

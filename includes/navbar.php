@@ -97,9 +97,9 @@ body {
         <a href="products.php"><?php echo $_navL['product']; ?></a>
         <a href="orders.php"><?php echo $_navL['orders']; ?></a>
       <?php endif; ?>
+      <a href="version.php"><?php echo $_navL['version']; ?></a>
       <a href="about.php"><?php echo $_navL['about']; ?></a>
       <a href="source.php"><?php echo $_navL['source']; ?></a>
-      <a href="version.php"><?php echo $_navL['version']; ?></a>
     </div>
   </div>
 
