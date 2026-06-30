@@ -51,8 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST["password"];
     $confirm_password = $_POST["confirm_password"];
 
-    if (strlen($password) < 6) {
-        $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' : 'Password must be at least 6 characters.';
+    if (strlen($password) < 6 || strlen($password) > 12) {
+        $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมี 6–12 ตัวอักษร' : 'Password must be 6–12 characters.';
     }
     if (!preg_match('/\d/', $password)) {
         $errors[] = ($lang === 'th') ? 'รหัสผ่านต้องมีอย่างน้อย 1 ตัวเลข' : 'Password must contain at least one number.';
@@ -187,6 +187,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         .spinner-border { color: var(--brand-color); }
         :focus-visible { outline: 2px solid var(--brand-color); outline-offset: 2px; }
         ::selection { background: rgba(0,123,255,0.2); color: #111827; }
+
+        /* ── Password requirements checklist ── */
+        .pw-reqs { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+        .pw-req { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: #9ca3af; transition: color .2s; }
+        .pw-req.met { color: #15803d; }
+        .pw-req-dot {
+            width: 17px; height: 17px; border-radius: 50%; border: 2px solid #d1d5db;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: background .2s, border-color .2s;
+        }
+        .pw-req.met .pw-req-dot { background: #16a34a; border-color: #16a34a; }
+        .pw-req-dot svg { display: none; }
+        .pw-req.met .pw-req-dot svg { display: block; }
     </style>
 </head>
 <body>
@@ -207,11 +220,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
     <form method="post" id="resetForm">
         <div class="mb-3">
-            <input type="password" name="password" class="form-control" placeholder="<?php echo htmlspecialchars($texts[$lang]['Pass']); ?>" required>
-
+            <input type="password" name="password" id="rpNewPw" class="form-control" placeholder="<?php echo htmlspecialchars($texts[$lang]['Pass']); ?>" required>
+            <ul class="pw-reqs">
+                <li class="pw-req" id="rp-req-min"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least 6 characters' : 'อย่างน้อย 6 ตัวอักษร'; ?></span></li>
+                <li class="pw-req" id="rp-req-max"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'No more than 12 characters' : 'ไม่เกิน 12 ตัวอักษร'; ?></span></li>
+                <li class="pw-req" id="rp-req-num"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one number' : 'มีตัวเลขอย่างน้อย 1 ตัว'; ?></span></li>
+                <li class="pw-req" id="rp-req-lower"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one lowercase letter' : 'มีตัวพิมพ์เล็กอย่างน้อย 1 ตัว'; ?></span></li>
+                <li class="pw-req" id="rp-req-upper"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one capital letter' : 'มีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว'; ?></span></li>
+            </ul>
         </div>
         <div class="mb-3">
-            <input type="password" name="confirm_password" class="form-control" placeholder="<?php echo htmlspecialchars ($texts[$lang]['Con']); ?>" required>
+            <input type="password" name="confirm_password" id="rpCfPw" class="form-control" placeholder="<?php echo htmlspecialchars ($texts[$lang]['Con']); ?>" required>
+            <ul class="pw-reqs">
+                <li class="pw-req" id="rp-req-match"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'Passwords match' : 'รหัสผ่านตรงกัน'; ?></span></li>
+            </ul>
         </div>
         <button type="submit" class="btn btn-modern btn-primary" id="resetBtn"><?php echo htmlspecialchars ($texts[$lang]['h2t']); ?></button>
     </form>
@@ -221,9 +243,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 document.getElementById("resetForm").addEventListener("submit", function() {
     const btn = document.getElementById("resetBtn");
     btn.disabled = true;
-    // Keep spinner white inside red button
     btn.innerHTML = `<?php echo htmlspecialchars ($texts[$lang]['now']) ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>`;
 });
+
+(function() {
+    var newPw = document.getElementById('rpNewPw');
+    var cfPw  = document.getElementById('rpCfPw');
+    if (!newPw) return;
+    function set(id, met) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle('met', met);
+    }
+    function checkReqs() {
+        var v = newPw.value;
+        set('rp-req-min',   v.length >= 6);
+        set('rp-req-max',   v.length > 0 && v.length <= 12);
+        set('rp-req-num',   /[0-9]/.test(v));
+        set('rp-req-lower', /[a-z]/.test(v));
+        set('rp-req-upper', /[A-Z]/.test(v));
+        checkMatch();
+    }
+    function checkMatch() {
+        if (!cfPw) return;
+        set('rp-req-match', cfPw.value.length > 0 && cfPw.value === newPw.value);
+    }
+    newPw.addEventListener('input', checkReqs);
+    if (cfPw) cfPw.addEventListener('input', checkMatch);
+})();
 </script>
 </body>
 </html>

@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.3B',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Reset password page now shows the same live password requirements checklist as the other password forms.', 'th' => 'หน้ารีเซ็ตรหัสผ่านแสดงรายการข้อกำหนดรหัสผ่านแบบเรียลไทม์เหมือนกับแบบฟอร์มอื่นๆ แล้ว'],
+            ['type' => 'improve', 'en' => 'Reset password page now enforces the same 6–12 character limit as all other password forms.', 'th' => 'หน้ารีเซ็ตรหัสผ่านบังคับใช้จำกัด 6–12 ตัวอักษรเหมือนกับแบบฟอร์มอื่นๆ แล้ว'],
+        ],
+    ],
+    [
         'version' => 'V21.3A',
         'date'    => '2026-06-30',
         'changes' => [
