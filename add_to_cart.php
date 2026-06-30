@@ -1,6 +1,5 @@
 <?php
 // add_to_cart.php — adds item(s) to session cart with stock capping; returns JSON (no redirects)
-session_start();
 include 'database.php';
 header('Content-Type: application/json; charset=UTF-8');
 

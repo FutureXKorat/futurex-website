@@ -1,6 +1,5 @@
 <?php
-session_start();
-include 'database.php'; // defines $conn and $lang
+include 'database.php'; // defines $conn, $lang, and starts MySQL-backed session
 
 if (isset($_SESSION['user_id'])) {
     header('Location: home.php');

@@ -1,7 +1,6 @@
 <?php
 // update_cart.php — sets/removes qty in cart with stock capping; returns JSON (no redirects)
-session_start();
-include 'database.php'; // add near the top (after session_start)
+include 'database.php';
 header('Content-Type: application/json; charset=UTF-8');
 
 // Require login

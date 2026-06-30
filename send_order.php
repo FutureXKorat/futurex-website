@@ -2,9 +2,7 @@
 // file: send_order.php
 declare(strict_types=1);
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+include_once __DIR__ . '/database.php'; // registers MySQL session handler
 
 // ---------- Config ----------
 $cfgPath = __DIR__ . '/secure-config/futurex_mail.php';
@@ -177,8 +175,6 @@ if ($__direct) {
 
     $raw     = file_get_contents('php://input');
     $payload = json_decode($raw, true) ?: [];
-
-    if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
     $orderParam = (string)(
         $_POST['order']      ??

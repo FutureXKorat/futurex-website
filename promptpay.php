@@ -2,7 +2,6 @@
 // file: promptpay.php
 declare(strict_types=1);
 ini_set('display_errors', '1'); error_reporting(E_ALL);
-session_start();
 include 'database.php'; // for $conn, $lang
 require_once __DIR__ . '/cloudinary.php';
 
