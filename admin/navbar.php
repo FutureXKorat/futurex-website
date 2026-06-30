@@ -69,7 +69,7 @@ if (isset($_SESSION['user_id'])) {
       >
       <div id="dropdownMenu" class="profile-dropdown-content">
         <a href="/home.php"><?= htmlspecialchars($_anL['main_page']) ?></a>
-        <a href="/settings.php"><?= htmlspecialchars($_anL['settings']) ?></a>
+        <a href="/admin/settings.php"><?= htmlspecialchars($_anL['settings']) ?></a>
         <a href="/logout.php"><?= htmlspecialchars($_anL['logout']) ?></a>
       </div>
     </div>
