@@ -26,12 +26,26 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.0A',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Phone number is now pulled automatically from the user\'s account instead of being asked again at checkout.', 'th' => 'เบอร์โทรศัพท์ถูกดึงจากบัญชีผู้ใช้โดยอัตโนมัติ ไม่ต้องกรอกซ้ำในหน้าชำระเงิน'],
+        ],
+    ],
+    [
         'version' => 'V21.0',
         'date'    => '2026-06-30',
         'changes' => [
             ['type' => 'new', 'en' => 'Phone number field added to checkout — collected from customers and saved with each order.', 'th' => 'เพิ่มช่องเบอร์โทรศัพท์ในหน้าชำระเงิน — รวบรวมจากลูกค้าและบันทึกพร้อมกับแต่ละคำสั่งซื้อ'],
             ['type' => 'new', 'en' => 'Admin order notification emails now include the customer\'s phone number.', 'th' => 'อีเมลแจ้งเตือนคำสั่งซื้อสำหรับแอดมินแสดงเบอร์โทรศัพท์ของลูกค้าแล้ว'],
             ['type' => 'new', 'en' => 'Admin order detail modal now shows the customer\'s phone number as a clickable call link; phone is also searchable in the order search box.', 'th' => 'หน้าต่างรายละเอียดคำสั่งซื้อในแผงแอดมินแสดงเบอร์โทรของลูกค้าเป็นลิงก์โทรออก และค้นหาด้วยเบอร์โทรได้ในช่องค้นหา'],
+        ],
+    ],
+    [
+        'version' => 'V20.3',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Employee-admin accounts now require OTP verification when logging in, the same as regular users.', 'th' => 'บัญชีแอดมินพนักงานต้องยืนยัน OTP เมื่อเข้าสู่ระบบ เช่นเดียวกับผู้ใช้ทั่วไป'],
         ],
     ],
     [

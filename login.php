@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         } else {
             // Not found in users table — check if this is an employee-admin account
-            $astmt = $conn->prepare("SELECT id, password FROM admins WHERE username = ? LIMIT 1");
+            $astmt = $conn->prepare("SELECT id, password, email FROM admins WHERE username = ? LIMIT 1");
             if ($astmt) {
                 $astmt->bind_param('s', $username);
                 $astmt->execute();
@@ -124,8 +124,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     if (!password_verify($password, (string)$auser['password'])) {
                         $errors[] = $texts[$lang]['incorrect_pw'];
                     } else {
-                        $_SESSION['admin_id'] = (int)$auser['id'];
-                        header('Location: /admin/');
+                        // Generate OTP, save to admins table, send email, then verify
+                        $otp = (string)random_int(100000, 999999);
+                        $updOtp = $conn->prepare("UPDATE admins SET otp_code = ? WHERE id = ?");
+                        $updOtp->bind_param('si', $otp, $auser['id']);
+                        $updOtp->execute();
+                        $updOtp->close();
+                        include_once 'send_otp.php';
+                        sendOTPEmail((string)$auser['email'], $otp);
+                        header('Location: verify_otp.php?username=' . urlencode($username) . '&login=1&admin=1');
                         exit();
                     }
                 } else {

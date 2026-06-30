@@ -34,12 +34,13 @@ if (empty($username)) {
     die($texts[$lang]['no_account']);
 }
 
-// Decide which table to use: login flow vs registration flow
-$isLogin = isset($_GET['login']) && $_GET['login'] === '1';
-$table   = $isLogin ? 'users' : 'pending_users';
+// Decide which table to use: admin login, normal login, or registration
+$isAdminLogin = (isset($_GET['admin']) && $_GET['admin'] === '1') && (isset($_GET['login']) && $_GET['login'] === '1');
+$isLogin      = !$isAdminLogin && isset($_GET['login']) && $_GET['login'] === '1';
+$table        = $isAdminLogin ? 'admins' : ($isLogin ? 'users' : 'pending_users');
 
 // Columns we need from each table
-$cols = $isLogin
+$cols = ($isAdminLogin || $isLogin)
     ? 'id, username, otp_code'
     : 'id, name, surname, username, email, phoneno, password_hash, otp_code, expires_at';
 
@@ -57,7 +58,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row = $res->fetch_assoc();
 
         if ((string)$row['otp_code'] === (string)$otp_input) {
-            if ($isLogin) {
+            if ($isAdminLogin) {
+                // ----- ADMIN LOGIN OTP PATH -----
+                $upd = $conn->prepare("UPDATE admins SET otp_code = NULL WHERE id = ?");
+                $upd->bind_param("i", $row["id"]);
+                $upd->execute();
+                $upd->close();
+
+                $_SESSION['admin_id'] = (int)$row['id'];
+                header('Location: /admin/');
+                exit();
+            } elseif ($isLogin) {
                 // ----- LOGIN OTP PATH -----
                 $upd = $conn->prepare("UPDATE users SET otp_code = NULL, verified = 1 WHERE id = ?");
                 $upd->bind_param("i", $row["id"]);
@@ -234,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!-- Keep username & login flag when switching language -->
 <a class="lang-switch"
-   href="?username=<?php echo urlencode($username); ?>&login=<?php echo $isLogin ? '1' : ''; ?>&lang=<?php echo $lang === 'en' ? 'th' : 'en'; ?>">
+   href="?username=<?php echo urlencode($username); ?>&login=<?php echo ($isLogin || $isAdminLogin) ? '1' : ''; ?>&admin=<?php echo $isAdminLogin ? '1' : ''; ?>&lang=<?php echo $lang === 'en' ? 'th' : 'en'; ?>">
     <?php echo $texts[$lang]['lang']; ?>
 </a>
 
