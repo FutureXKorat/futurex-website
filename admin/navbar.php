@@ -4,8 +4,8 @@
  * Requires: session started, $conn (mysqli), $lang (from ../database.php).
  */
 $_anT = [
-    'en' => ['orders' => 'Orders', 'stock' => 'Stock', 'main_page' => 'Main Page', 'settings' => 'Settings', 'logout' => 'Log Out'],
-    'th' => ['orders' => 'คำสั่งซื้อ', 'stock' => 'สต็อก', 'main_page' => 'เว็บหลัก', 'settings' => 'การตั้งค่า', 'logout' => 'ออกจากระบบ'],
+    'en' => ['orders' => 'Orders', 'stock' => 'Stock', 'products' => 'Products', 'main_page' => 'Main Page', 'settings' => 'Settings', 'logout' => 'Log Out'],
+    'th' => ['orders' => 'คำสั่งซื้อ', 'stock' => 'สต็อก', 'products' => 'สินค้า', 'main_page' => 'เว็บหลัก', 'settings' => 'การตั้งค่า', 'logout' => 'ออกจากระบบ'],
 ];
 $_anL = $_anT[$lang] ?? $_anT['en'];
 
@@ -58,6 +58,7 @@ body {
       </a>
       <a href="orders.php"><?= htmlspecialchars($_anL['orders']) ?></a>
       <a href="stock.php"><?= htmlspecialchars($_anL['stock']) ?></a>
+      <a href="products.php"><?= htmlspecialchars($_anL['products']) ?></a>
     </div>
   </div>
   <div class="right-actions">
