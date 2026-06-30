@@ -320,7 +320,7 @@ $texts = [
             <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Phone' : 'โทรศัพท์'; ?></strong></p>
             <p class="mb-1">Khai: <a href="tel:+66619699249">+66 61-969-9249</a></p>
             <p class="mb-2">Seven: <a href="tel:+66933292113">+66 93-329-2113</a></p>
-            <p class="mb-1"><strong>Email</strong></p>
+            <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Email' : 'อีเมลล์'; ?></strong></p>
             <p class="mb-0"><a href="mailto:futurexkorat@gmail.com">futurexkorat@gmail.com</a></p>
 
             <div class="divider"></div>
