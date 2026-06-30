@@ -39,7 +39,6 @@ function _cloudinaryUpload(string $tmpFilePath, string $publicId, string $folder
         ],
     ]);
     $res = curl_exec($ch);
-    curl_close($ch);
 
     $data = json_decode((string)$res, true);
     return is_array($data) ? ($data['secure_url'] ?? null) : null;

@@ -314,7 +314,7 @@ $texts = [
             <div class="footer-min">
                 <?php echo ($lang === 'en') ? 'Future X Korat — All rights reserved.' : 'Future X Korat — สงวนลิขสิทธิ์' ?>
                 <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
-                <span class="small-muted">V15.4</span>
+                <span class="small-muted">V15.5</span>
             </div>
         </div>
     </div>
