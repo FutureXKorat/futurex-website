@@ -113,7 +113,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit();
             }
         } else {
-            $errors[] = $texts[$lang]['no_account_err'];
+            // Not found in users table — check if this is an employee-admin account
+            $astmt = $conn->prepare("SELECT id, password FROM admins WHERE username = ? LIMIT 1");
+            if ($astmt) {
+                $astmt->bind_param('s', $username);
+                $astmt->execute();
+                $ares = $astmt->get_result();
+                if ($ares && $ares->num_rows > 0) {
+                    $auser = $ares->fetch_assoc();
+                    if (!password_verify($password, (string)$auser['password'])) {
+                        $errors[] = $texts[$lang]['incorrect_pw'];
+                    } else {
+                        $_SESSION['admin_id'] = (int)$auser['id'];
+                        header('Location: /admin/');
+                        exit();
+                    }
+                } else {
+                    $errors[] = $texts[$lang]['no_account_err'];
+                }
+                $astmt->close();
+            } else {
+                $errors[] = $texts[$lang]['no_account_err'];
+            }
         }
         $stmt->close();
     } else {

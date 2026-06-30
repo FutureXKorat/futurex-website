@@ -38,5 +38,5 @@ if (!$isEmployeeAdmin && isset($_SESSION['user_id'])) {
 }
 
 if (!$isSuperAdmin && !$isEmployeeAdmin) {
-    header('Location: /admin/login.php'); exit;
+    header('Location: /login.php'); exit;
 }
