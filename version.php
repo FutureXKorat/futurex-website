@@ -26,6 +26,23 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V20.1',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'fix',     'en' => 'Employee-admin accounts can now log in through the normal login page — no separate admin login page needed.', 'th' => 'บัญชีแอดมินพนักงานสามารถเข้าสู่ระบบผ่านหน้าเข้าสู่ระบบปกติได้แล้ว ไม่จำเป็นต้องใช้หน้าเข้าสู่ระบบแยกต่างหาก'],
+            ['type' => 'fix',     'en' => 'Fixed error when creating admin accounts caused by missing AUTO_INCREMENT on the admins table.', 'th' => 'แก้ไขข้อผิดพลาดขณะสร้างบัญชีแอดมิน เนื่องจาก AUTO_INCREMENT ขาดหายในตาราง admins'],
+            ['type' => 'improve', 'en' => 'Add Admin form now uses the same password rules and live checklist as the registration page (6–12 characters, must include number, letter, and capital).', 'th' => 'ฟอร์มเพิ่มแอดมินใช้กฎรหัสผ่านและรายการตรวจสอบแบบสดเหมือนกับหน้าสมัครสมาชิก (6–12 ตัวอักษร ต้องมีตัวเลข ตัวอักษร และตัวพิมพ์ใหญ่)'],
+        ],
+    ],
+    [
+        'version' => 'V20.0',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Super-admin can now add and manage employee admin accounts from a new Admin Users page.', 'th' => 'แอดมินหลักสามารถเพิ่มและจัดการบัญชีแอดมินพนักงานได้จากหน้า Admin Users ใหม่'],
+            ['type' => 'new', 'en' => 'Employee admins can log in and access the admin panel with their own credentials.', 'th' => 'แอดมินพนักงานสามารถเข้าสู่ระบบและเข้าถึงแผงแอดมินด้วยข้อมูลรับรองของตนเองได้'],
+        ],
+    ],
+    [
         'version' => 'V19.3',
         'date'    => '2026-06-30',
         'changes' => [
