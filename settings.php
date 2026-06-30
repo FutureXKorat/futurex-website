@@ -521,10 +521,10 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       transition: transform .15s, background .2s;
     }
     .lang-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
-    .pw-wrap { position: relative; }
-    .pw-wrap .pw-input { padding-right: 2.75rem; }
+    .pw-wrap { position: relative; margin-bottom: 12px; }
+    .pw-wrap .pw-input { padding-right: 2.75rem; margin-bottom: 0; }
     .pwd-eye {
-      position: absolute; right: 12px; top: calc(50% - 6px);
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       background: none; border: none; padding: 0; cursor: pointer;
       color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
       touch-action: none;

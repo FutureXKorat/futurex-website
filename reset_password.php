@@ -189,6 +189,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ::selection { background: rgba(0,123,255,0.2); color: #111827; }
 
         /* ── Password requirements checklist ── */
+        .pw-wrap { position: relative; }
+        .pw-wrap .form-control { padding-right: 2.75rem; }
+        .pwd-eye {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; padding: 0; cursor: pointer;
+            color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
+            touch-action: none;
+        }
+        .pwd-eye:focus { outline: none; }
+        .pwd-eye:hover { color: #374151; }
         .pw-reqs { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
         .pw-req { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: #9ca3af; transition: color .2s; }
         .pw-req.met { color: #15803d; }
@@ -220,7 +230,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
     <form method="post" id="resetForm">
         <div class="mb-3">
-            <input type="password" name="password" id="rpNewPw" class="form-control" placeholder="<?php echo htmlspecialchars($texts[$lang]['Pass']); ?>" required>
+            <div class="pw-wrap">
+                <input type="password" name="password" id="rpNewPw" class="form-control" placeholder="<?php echo htmlspecialchars($texts[$lang]['Pass']); ?>" required>
+                <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
             <ul class="pw-reqs">
                 <li class="pw-req" id="rp-req-min"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least 6 characters' : 'อย่างน้อย 6 ตัวอักษร'; ?></span></li>
                 <li class="pw-req" id="rp-req-max"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'No more than 12 characters' : 'ไม่เกิน 12 ตัวอักษร'; ?></span></li>
@@ -230,7 +243,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </ul>
         </div>
         <div class="mb-3">
-            <input type="password" name="confirm_password" id="rpCfPw" class="form-control" placeholder="<?php echo htmlspecialchars ($texts[$lang]['Con']); ?>" required>
+            <div class="pw-wrap">
+                <input type="password" name="confirm_password" id="rpCfPw" class="form-control" placeholder="<?php echo htmlspecialchars ($texts[$lang]['Con']); ?>" required>
+                <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
             <ul class="pw-reqs">
                 <li class="pw-req" id="rp-req-match"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'Passwords match' : 'รหัสผ่านตรงกัน'; ?></span></li>
             </ul>
@@ -270,6 +286,15 @@ document.getElementById("resetForm").addEventListener("submit", function() {
     newPw.addEventListener('input', checkReqs);
     if (cfPw) cfPw.addEventListener('input', checkMatch);
 })();
+
+document.querySelectorAll('.pwd-eye').forEach(function(btn) {
+    var inp = btn.previousElementSibling;
+    btn.addEventListener('mousedown',  function()  { inp.type = 'text'; });
+    btn.addEventListener('mouseup',    function()  { inp.type = 'password'; });
+    btn.addEventListener('mouseleave', function()  { inp.type = 'password'; });
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
+    btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
+});
 </script>
 </body>
 </html>

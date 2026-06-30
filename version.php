@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V21.3C',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new',     'en' => 'Reset password page: hold-to-show eye buttons added to both password fields.', 'th' => 'หน้ารีเซ็ตรหัสผ่าน: เพิ่มปุ่มตาแสดงรหัสผ่านชั่วคราวในทั้งสองช่อง'],
+            ['type' => 'fix',     'en' => 'Settings page: eye buttons are now perfectly centered vertically inside the password input fields.', 'th' => 'หน้าการตั้งค่า: แก้ไขปุ่มตาให้อยู่ตรงกลางแนวตั้งของช่องกรอกรหัสผ่านแล้ว'],
+        ],
+    ],
+    [
         'version' => 'V21.3B',
         'date'    => '2026-06-30',
         'changes' => [
