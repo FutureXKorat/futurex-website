@@ -28,8 +28,8 @@ $texts = [
     'tagline'        => 'Premium products, imported from Malaysia, delivered across Thailand.',
     'stat1Title'     => '20 Warehouses',
     'stat1Sub'       => 'Across Thailand',
-    'stat2Title'     => '1 Country',
-    'stat2Sub'       => 'Manufacturing in Malaysia',
+    'stat2Title'     => '2 Countries',
+    'stat2Sub'       => 'Manufacturing in Malaysia, Distributed in Thailand',
     'stat3Title'     => 'High Quality',
     'stat3Sub'       => 'Innovative & affordable products',
     'lang'           => 'ภาษาไทย'
@@ -61,8 +61,8 @@ $texts = [
     'tagline'        => 'สินค้าคุณภาพนำเข้าจากมาเลเซีย จัดส่งทั่วประเทศไทย',
     'stat1Title'     => '20 คลังสินค้า',
     'stat1Sub'       => 'ทั่วประเทศไทย',
-    'stat2Title'     => '1 ประเทศ',
-    'stat2Sub'       => 'โรงงานผลิตในมาเลเซีย',
+    'stat2Title'     => '2 ประเทศ',
+    'stat2Sub'       => 'ผลิตในมาเลเซีย จัดจำหน่ายในประเทศไทย',
     'stat3Title'     => 'คุณภาพสูง',
     'stat3Sub'       => 'สินค้านวัตกรรม ราคาไม่แพง',
     'lang'           => 'English'
@@ -716,7 +716,7 @@ $texts = [
 </div>
 
 <div class="footer-min reveal">
-    <span class="small-muted">V22.2A</span>
+    <span class="small-muted">V22.2B</span>
 </div>
 
 <!-- Bootstrap JS -->

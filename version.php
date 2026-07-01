@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.2B',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Home page trust row now correctly shows "2 Countries — Manufacturing in Malaysia, Distributed in Thailand".', 'th' => 'แถบข้อมูลในหน้าแรกแสดงผล "2 ประเทศ — ผลิตในมาเลเซีย จัดจำหน่ายในประเทศไทย" อย่างถูกต้อง'],
+            ['type' => 'fix', 'en' => 'Fixed uneven spacing in the About page credits between ChatGPT and Claude.', 'th' => 'แก้ไขระยะห่างที่ไม่เท่ากันระหว่าง ChatGPT และ Claude ในหน้าเครดิต'],
+        ],
+    ],
+    [
         'version' => 'V22.2A',
         'date'    => '2026-07-01',
         'changes' => [

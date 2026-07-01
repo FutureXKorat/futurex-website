@@ -297,7 +297,7 @@ $texts = [
             <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Website Programmer
 (futurexthailand.com)': 'โปรแกรมเมอร์ (futurexthailand.com)'; ?></strong></p>
             <p class="mb-2"><?php echo ($lang === 'en') ? 'Decha Thanajitchai' : 'เดชา ธนจิตชัย'; ?></p>
-            <p class="mb-0">ChatGPT</p>
+            <p class="mb-2">ChatGPT</p>
             <p class="mb-0">Claude</p>
         </div>
 
