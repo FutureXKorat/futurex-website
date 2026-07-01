@@ -26,20 +26,20 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.2B',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Home page trust row now correctly shows "2 Countries — Manufacturing in Malaysia, Distributed in Thailand".', 'th' => 'แถบข้อมูลในหน้าแรกแสดงผล "2 ประเทศ — ผลิตในมาเลเซีย จัดจำหน่ายในประเทศไทย" อย่างถูกต้อง'],
+            ['type' => 'fix', 'en' => 'Fixed uneven spacing in the About page credits between ChatGPT and Claude.', 'th' => 'แก้ไขระยะห่างที่ไม่เท่ากันระหว่าง ChatGPT และ Claude ในหน้าเครดิต'],
+        ],
+    ],
+    [
         'version' => 'V22.2A',
         'date'    => '2026-07-01',
         'changes' => [
             ['type' => 'fix', 'en' => 'Fixed the home page scroll arrow blending into the wave graphic on wide screens.', 'th' => 'แก้ไขลูกศรเลื่อนหน้าในหน้าแรกที่กลืนไปกับเส้นคลื่นบนหน้าจอกว้าง'],
             ['type' => 'fix', 'en' => 'Corrected warehouse and manufacturing facts across the site: 20 warehouses across Thailand, manufacturing only in Malaysia (not Indonesia).', 'th' => 'แก้ไขข้อมูลคลังสินค้าและการผลิตทั่วทั้งเว็บไซต์: มีคลังสินค้า 20 แห่งทั่วไทย ผลิตที่มาเลเซียเท่านั้น (ไม่มีอินโดนีเซีย)'],
             ['type' => 'new', 'en' => 'Added Claude to the website programmer credits on the About page.', 'th' => 'เพิ่ม Claude ในเครดิตโปรแกรมเมอร์เว็บไซต์ที่หน้าเกี่ยวกับเรา'],
-        ],
-    ],
-    [
-        'version' => 'V22.2B',
-        'date'    => '2026-07-01',
-        'changes' => [
-            ['type' => 'fix', 'en' => 'Home page trust row now correctly shows "2 Countries — Manufacturing in Malaysia, Distributed in Thailand".', 'th' => 'แถบข้อมูลในหน้าแรกแสดงผล "2 ประเทศ — ผลิตในมาเลเซีย จัดจำหน่ายในประเทศไทย" อย่างถูกต้อง'],
-            ['type' => 'fix', 'en' => 'Fixed uneven spacing in the About page credits between ChatGPT and Claude.', 'th' => 'แก้ไขระยะห่างที่ไม่เท่ากันระหว่าง ChatGPT และ Claude ในหน้าเครดิต'],
         ],
     ],
     [
@@ -51,19 +51,19 @@ $versions = [
         ],
     ],
     [
+        'version' => 'V22.1B',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Version Log page title now sits at the same height as About Us and Sources — was missing the same 20px spacer below the navbar.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตอยู่ในระดับความสูงเดียวกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้ว — ก่อนหน้านี้ขาดระยะห่าง 20px ใต้แถบนำทาง'],
+            ['type' => 'fix', 'en' => 'Fixed changelog ordering — lettered patches (e.g. V22.1A / V22.1B) now list top to bottom as B, then A, matching every other lettered version on this page.', 'th' => 'แก้ไขลำดับบันทึกการอัปเดต — แพตช์ที่มีตัวอักษรต่อท้าย (เช่น V22.1A / V22.1B) เรียงจากบนลงล่างเป็น B แล้วตามด้วย A ให้ตรงกับเวอร์ชันอื่นๆ ในหน้านี้'],
+        ],
+    ],
+    [
         'version' => 'V22.1A',
         'date'    => '2026-07-01',
         'changes' => [
             ['type' => 'fix', 'en' => 'Version Log page title now truly matches About Us and Sources — a leftover font-weight and bottom padding mismatch from V22.1 is now resolved.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตตรงกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้วจริงๆ — แก้ไขปัญหาน้ำหนักตัวอักษรและ padding ด้านล่างที่ตกค้างจาก V22.1'],
             ['type' => 'improve', 'en' => 'About Us cards now have equal spacing above the title and below the content, consistent across every card.', 'th' => 'การ์ดในหน้าเกี่ยวกับเรามีระยะห่างเหนือหัวข้อและใต้เนื้อหาเท่ากันในทุกการ์ดแล้ว'],
-        ],
-    ],
-    [
-        'version' => 'V22.1B',
-        'date'    => '2026-07-01',
-        'changes' => [
-            ['type' => 'fix', 'en' => 'Version Log page title now sits at the same height as About Us and Sources — was missing the same 20px spacer below the navbar.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตอยู่ในระดับความสูงเดียวกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้ว — ก่อนหน้านี้ขาดระยะห่าง 20px ใต้แถบนำทาง'],
-            ['type' => 'fix', 'en' => 'Fixed changelog ordering — lettered patches (e.g. V22.2A / V22.2B) now list in A-then-B order instead of B-then-A.', 'th' => 'แก้ไขลำดับบันทึกการอัปเดต — แพตช์ที่มีตัวอักษรต่อท้าย (เช่น V22.2A / V22.2B) เรียงลำดับ A ก่อน B แล้ว'],
         ],
     ],
     [
