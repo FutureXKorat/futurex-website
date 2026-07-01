@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.1',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Version Log page title now matches the font size used on About Us and Sources.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตใช้ขนาดตัวอักษรเดียวกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้ว'],
+            ['type' => 'improve', 'en' => 'About Us and Sources pages now use separate cards per section, letting the background gradient show through — less gloomy, more consistent with the Version Log page.', 'th' => 'หน้าเกี่ยวกับเราและแหล่งที่มาแบ่งเป็นการ์ดแยกแต่ละหัวข้อ ทำให้เห็นพื้นหลังไล่สีชัดขึ้น ดูสว่างและเข้ากับหน้าประวัติการอัปเดตมากขึ้น'],
+            ['type' => 'improve', 'en' => 'The version number on the home page footer now fades in with the same scroll animation as the rest of the page.', 'th' => 'หมายเลขเวอร์ชันที่ท้ายหน้าแรกจะค่อยๆ ปรากฏขึ้นด้วยอนิเมชันเดียวกับส่วนอื่นของหน้า'],
+        ],
+    ],
+    [
         'version' => 'V22.0',
         'date'    => '2026-07-01',
         'changes' => [
@@ -278,17 +287,17 @@ $tagColors = [
             padding: 30px 20px 40px;
         }
         .content-section h1 {
-            font-size: 2.2rem;
+            font-size: 2.4rem;
             font-weight: 700;
             color: var(--brand-color);
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .content-section p.lead {
             text-align: center;
             color: #374151;
             font-size: 1.05rem;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
         }
 
         /* Version card */

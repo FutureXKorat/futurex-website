@@ -213,6 +213,7 @@ $texts = [
             border-radius: 14px;
             padding: 22px 20px;
             box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
         }
         .credits h2 {
             font-size: 1.35rem;
@@ -235,11 +236,6 @@ $texts = [
         .values-list {
             text-align: left;
             list-style-position: inside;
-        }
-        .divider {
-            height: 1px;
-            background: rgba(0,0,0,0.07);
-            margin: 20px 0;
         }
         .footer-min {
             margin-top: 10px;
@@ -268,43 +264,43 @@ $texts = [
             <p>
                 <?php echo ($lang === 'en') ? 'Coming Soon' : 'Coming Soon'; ?>
             </p>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Our Vision' : 'มุมมองของเรา'; ?></h2>
-           
+
             <p>
                 <?php echo ($lang === 'en') ? 'Coming Soon' : 'Coming Soon'; ?>
             </p>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Our Values' : 'คุณภาพของเรา'; ?></h2>
             <ul class="values-list">
                 <li><strong><?php echo ($lang === 'en') ? 'Product Distribution' : 'การกระจายสินค้า'; ?></strong><?php echo ($lang === 'en') ? ' — We have 17 Warehouse across Thailand.' : ' — เรามี 17 คลังสินค้าทั่วไทย'; ?></li>
                 <li><strong><?php echo ($lang === 'en') ? 'Products' : 'สินค้า'; ?></strong> — <?php echo ($lang === 'en') ? ' Our products are innovative, high quality, and affordable.' : ' สินค้านวัตกรรม คุณภาพสูง ราคาไม่แพง'; ?></li>
                 <li><strong><?php echo ($lang === 'en') ? 'Leadership' : 'การบริหาร'; ?></strong> — <?php echo ($lang === 'en') ? 'We have an experienced leader.' : 'ผู้บริหารมีประสบการณ์'; ?></li>
             </ul>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'History & Background' : 'ประวัติ และ พื้นหลัง'; ?></h2>
             <p>Details coming soon.</p>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Team' : 'ทีม'; ?></h2>
             <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Owner' : 'เจ้าของ'; ?></strong></p>
             <p class="mb-2"><?php echo ($lang === 'en') ? "Dato' Dr. Chong Kak Loong (Chair Man)" : 'ดาโต้ ชอง (ประธาน)'; ?></p>
-            <p class="mb-2"><?php echo ($lang === 'en') ? 'Pimchaya Wattanakulyothin 
+            <p class="mb-2"><?php echo ($lang === 'en') ? 'Pimchaya Wattanakulyothin
             (Vice President)' : 'คุณ พิมพ์ชญา วัฒนกุลโยธิน (รองประธาน)'; ?></p>
-            <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Website Programmer 
+            <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Website Programmer
 (futurexthailand.com)': 'โปรแกรมเมอร์ (futurexthailand.com)'; ?></strong></p>
             <p class="mb-2"><?php echo ($lang === 'en') ? 'Decha Thanajitchai' : 'เดชา ธนจิตชัย'; ?></p>
             <p class="mb-0">ChatGPT</p>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Why choose Future X' : 'ทำไมถึงต้องเลือก Future X'; ?></h2>
             <ul>
                 <li><?php echo ($lang === 'en') ? 'We have a large factory in Malaysia and Indonesia.' : 'เรามีโรงงานขนาดใหญ่ที่มาเลเซีย และ อินโดนีเซีย'; ?></li>
@@ -313,21 +309,19 @@ $texts = [
                 <li><?php echo ($lang === 'en') ? 'Experienced Leader' : 'ผู้บริหารมีประสบการณ์'; ?></li>
                 <li><?php echo ($lang === 'en') ? 'A business that’s easy to start and truly achievable.' : 'ธุรกิจเริ่มต้นง่ายทำได้จริง'; ?></li>
             </ul>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Contact Us' : 'ติดต่อเรา'; ?></h2>
             <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Phone' : 'โทรศัพท์'; ?></strong></p>
             <p class="mb-1">Khai: <a href="tel:+66619699249">+66 61-969-9249</a></p>
             <p class="mb-2">Seven: <a href="tel:+66933292113">+66 93-329-2113</a></p>
             <p class="mb-1"><strong><?php echo ($lang === 'en') ? 'Email' : 'อีเมลล์'; ?></strong></p>
             <p class="mb-0"><a href="mailto:futurexkorat@gmail.com">futurexkorat@gmail.com</a></p>
+        </div>
 
-            <div class="divider"></div>
-
-            <div class="footer-min">
-                <?php echo ($lang === 'en') ? 'Thank you for your interest in Future X.' : 'ขอบคุณที่ท่านเลื่อก Future X'; ?>
-            </div>
+        <div class="footer-min">
+            <?php echo ($lang === 'en') ? 'Thank you for your interest in Future X.' : 'ขอบคุณที่ท่านเลื่อก Future X'; ?>
         </div>
     </div>
 

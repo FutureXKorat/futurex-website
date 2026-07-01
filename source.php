@@ -81,6 +81,7 @@ $texts = [
             border-radius: 14px;
             padding: 22px 20px;
             box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
         }
         .credits h2 {
             font-size: 1.35rem;
@@ -110,11 +111,6 @@ $texts = [
             font-size: 0.9rem;
             color: #6B7280;
             text-align: center;
-        }
-        .divider {
-            height: 1px;
-            background: rgba(0,0,0,0.07);
-            margin: 20px 0;
         }
         .top-banner {
             background-color: var(--brand-color);
@@ -267,9 +263,9 @@ $texts = [
                     <a href="https://www.anthropic.com/" target="_blank" rel="noopener noreferrer">Claude (Anthropic)</a>.
                 </li>
             </ul>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Design' : 'การออกแบบ' ?></h2>
             <ul>
                 <li><?php echo ($lang === 'en') ? 'Logo created using' : 'โลโก้สร้างขึ้นโดยใช้'?>
@@ -279,18 +275,18 @@ $texts = [
                     <a href="https://www.photopea.com/" target="_blank" rel="noopener noreferrer">Photopea</a>.
                 </li>
             </ul>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Fonts' : 'แบบอักษร' ?></h2>
             <ul>
                 <li>
                     <a href="https://fonts.google.com/specimen/Inter" target="_blank" rel="noopener noreferrer">Google Fonts — Inter</a>
                 </li>
             </ul>
+        </div>
 
-            <div class="divider"></div>
-
+        <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Frameworks & Libraries' : 'เฟรมเวิร์กและไลบรารี' ?></h2>
             <ul>
                 <li>
@@ -308,14 +304,12 @@ $texts = [
                 <?php echo ($lang === 'en') ? 'All third-party trademarks, logos, and assets are the property of their respective owners.
                 Links are provided for attribution and do not imply endorsement.' : 'เครื่องหมายการค้า โลโก้ และทรัพย์สินของบุคคลที่สามทั้งหมดเป็นกรรมสิทธิ์ของเจ้าของที่เกี่ยวข้อง ลิงก์ที่ให้ไว้มีวัตถุประสงค์เพื่อการอ้างอิงเท่านั้น และไม่ได้หมายความถึงการรับรอง' ?>
             </div>
+        </div>
 
-            <div class="divider"></div>
-
-            <div class="footer-min">
-                <?php echo ($lang === 'en') ? 'Future X Korat — All rights reserved.' : 'Future X Korat — สงวนลิขสิทธิ์' ?>
-                <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
-                <span class="small-muted">V22.0</span>
-            </div>
+        <div class="footer-min">
+            <?php echo ($lang === 'en') ? 'Future X Korat — All rights reserved.' : 'Future X Korat — สงวนลิขสิทธิ์' ?>
+            <span class="small-muted"><?php echo ($lang === 'en') ? 'Last updated:' : 'การอัพเดตครั้งสุดท้าย:' ?> <?php echo date('F j, Y'); ?></span>
+            <span class="small-muted">V22.1</span>
         </div>
     </div>
 

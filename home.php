@@ -579,8 +579,8 @@ $texts = [
     <?php endif; ?>
 </div>
 
-<div class="footer-min">
-    <span class="small-muted">V22.0</span>
+<div class="footer-min reveal">
+    <span class="small-muted">V22.1</span>
 </div>
 
 <!-- Bootstrap JS -->
