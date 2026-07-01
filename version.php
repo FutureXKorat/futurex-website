@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.2',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Home page hero now has a tagline, a smoother wave transition into the page, and a new "17 Warehouses / 2 Countries / High Quality" trust row.', 'th' => 'หน้าแรกมีข้อความแท็กไลน์ใหม่ เส้นคลื่นเชื่อมส่วนต่างๆ ที่นุ่มนวลขึ้น และแถบข้อมูล "17 คลังสินค้า / 2 ประเทศ / คุณภาพสูง"'],
+            ['type' => 'improve', 'en' => 'Home page feature carousel now has softer shadows, icon backgrounds, brand-colored dots, and fades in on scroll like the rest of the page.', 'th' => 'สไลด์แนะนำโบนัสในหน้าแรกมีเงาที่นุ่มนวลขึ้น พื้นหลังไอคอน จุดสีตามแบรนด์ และค่อยๆ ปรากฏขึ้นเมื่อเลื่อนหน้าจอเหมือนส่วนอื่น'],
+        ],
+    ],
+    [
         'version' => 'V22.1',
         'date'    => '2026-07-01',
         'changes' => [

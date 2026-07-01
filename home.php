@@ -25,6 +25,13 @@ $texts = [
     'profile'        => 'Edit Profile',
     'out'            => 'Log Out',
     'orders'         => 'Orders',
+    'tagline'        => 'Premium products, imported from Malaysia, delivered across Thailand.',
+    'stat1Title'     => '17 Warehouses',
+    'stat1Sub'       => 'Across Thailand',
+    'stat2Title'     => '2 Countries',
+    'stat2Sub'       => 'Manufacturing in Malaysia & Indonesia',
+    'stat3Title'     => 'High Quality',
+    'stat3Sub'       => 'Innovative & affordable products',
     'lang'           => 'ภาษาไทย'
     ],
 
@@ -51,6 +58,13 @@ $texts = [
     'profile'        => 'แก้ไขโปรไฟล์',
     'out'            => 'ออกจากระบบ',
     'orders'         => 'รายการที่สั่ง',
+    'tagline'        => 'สินค้าคุณภาพนำเข้าจากมาเลเซีย จัดส่งทั่วประเทศไทย',
+    'stat1Title'     => '17 คลังสินค้า',
+    'stat1Sub'       => 'ทั่วประเทศไทย',
+    'stat2Title'     => '2 ประเทศ',
+    'stat2Sub'       => 'โรงงานผลิตในมาเลเซียและอินโดนีเซีย',
+    'stat3Title'     => 'คุณภาพสูง',
+    'stat3Sub'       => 'สินค้านวัตกรรม ราคาไม่แพง',
     'lang'           => 'English'
     ],
 ];
@@ -241,6 +255,33 @@ $texts = [
         .hero-loaded .logo-box { transform: none; opacity: 1; }
         .logo-box img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
+        .hero-tagline {
+            position: relative;
+            z-index: 1;
+            margin-top: 4px;
+            color: #fff;
+            font-weight: 600;
+            font-size: clamp(0.95rem, 0.85rem + 0.6vw, 1.2rem);
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            max-width: 90vw;
+            transform: translateY(16px);
+            opacity: 0;
+            transition: transform 800ms cubic-bezier(.2,.8,.2,1) 150ms, opacity 800ms ease 150ms;
+        }
+        .hero-loaded .hero-tagline { transform: none; opacity: 1; }
+
+        .hero-wave {
+            position: absolute;
+            left: 0;
+            bottom: -1px;
+            width: 100%;
+            height: auto;
+            line-height: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         .scroll-down {
             position: absolute;
             bottom: 4%;
@@ -257,6 +298,49 @@ $texts = [
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
             40% { transform: translateY(-12px); }
             60% { transform: translateY(-6px); }
+        }
+
+        /* TRUST / STAT ROW */
+        .stats-row {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 16px 4px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+        }
+        .stat-card {
+            flex: 1 1 220px;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 22px 18px;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.12);
+        }
+        .stat-icon-wrap {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(0, 123, 255, 0.1);
+            margin-bottom: 10px;
+        }
+        .stat-icon { width: 26px; height: 26px; }
+        .stat-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--brand-hover);
+        }
+        .stat-sub {
+            font-size: 0.9rem;
+            color: #374151;
+            margin-top: 2px;
         }
 
         /* FEATURES SLIDER — red-tinted background */
@@ -278,6 +362,7 @@ $texts = [
             padding: 36px 16px;
             background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
             border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.12);
         }
         .feature-title {
             font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem);
@@ -292,8 +377,18 @@ $texts = [
             max-width: 780px;
             margin: 0 auto;
         }
-        .feature-icon { width: 44px; height: 44px; margin-bottom: 10px; }
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(0, 123, 255, 0.08);
+            box-sizing: content-box;
+        }
         .feature-icon path { stroke: var(--brand-color); }
+        .carousel-indicators [data-bs-target] { background-color: var(--brand-color); opacity: 0.35; }
+        .carousel-indicators .active { opacity: 1; }
 
         /* CONTENT */
         .content-section {
@@ -315,7 +410,7 @@ $texts = [
         .content-section p.lead {
             font-size: clamp(1.05rem, 1rem + 0.5vw, 1.3rem);
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
             color: #374151;
             line-height: 1.6;
         }
@@ -442,16 +537,55 @@ $texts = [
     <div class="logo-box">
         <img src="logo_transparent.png" alt="Future X Logo">
     </div>
+    <p class="hero-tagline"><?php echo ($texts[$lang]['tagline']); ?></p>
     <div class="scroll-down" id="scrollDown" aria-label="Scroll to features">
         <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
             <circle cx="30" cy="30" r="28" stroke="white" stroke-width="4"/>
             <polyline points="20,25 30,35 40,25" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
+    <svg class="hero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#ffffff" d="M0,32 C240,80 480,80 720,48 C960,16 1200,16 1440,48 L1440,80 L0,80 Z"></path>
+    </svg>
 </div>
 
-<!-- FEATURES SLIDER -->
+<!-- TRUST / STAT ROW -->
 <section class="features-wrap" id="features">
+    <div class="stats-row reveal">
+        <div class="stat-card">
+            <div class="stat-icon-wrap">
+                <svg class="stat-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 21V9L12 3L21 9V21" stroke="var(--brand-color)" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M9 21V13H15V21" stroke="var(--brand-color)" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="stat-title"><?php echo ($texts[$lang]['stat1Title']); ?></div>
+            <div class="stat-sub"><?php echo ($texts[$lang]['stat1Sub']); ?></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrap">
+                <svg class="stat-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="var(--brand-color)" stroke-width="2"/>
+                    <path d="M3 12H21M12 3C14.5 5.7 15.8 8.8 15.8 12C15.8 15.2 14.5 18.3 12 21C9.5 18.3 8.2 15.2 8.2 12C8.2 8.8 9.5 5.7 12 3Z" stroke="var(--brand-color)" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="stat-title"><?php echo ($texts[$lang]['stat2Title']); ?></div>
+            <div class="stat-sub"><?php echo ($texts[$lang]['stat2Sub']); ?></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrap">
+                <svg class="stat-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 3L14.6 8.6L21 9.3L16.3 13.5L17.6 20L12 16.8L6.4 20L7.7 13.5L3 9.3L9.4 8.6L12 3Z" stroke="var(--brand-color)" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="stat-title"><?php echo ($texts[$lang]['stat3Title']); ?></div>
+            <div class="stat-sub"><?php echo ($texts[$lang]['stat3Sub']); ?></div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES SLIDER -->
+<section class="features-wrap reveal">
     <div class="features container">
         <div id="featuresCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover">
             <div class="carousel-inner">
@@ -580,7 +714,7 @@ $texts = [
 </div>
 
 <div class="footer-min reveal">
-    <span class="small-muted">V22.1</span>
+    <span class="small-muted">V22.2</span>
 </div>
 
 <!-- Bootstrap JS -->
