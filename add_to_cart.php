@@ -79,7 +79,6 @@ if ($toAdd > 0) {
     } else {
         $_SESSION['cart'][] = ['name' => $name, 'price' => $price, 'qty' => $toAdd];
     }
-    $_SESSION['cart_seen'] = false; // light the red dot
     $newQty = $current + $toAdd;
 } else {
     // Nothing to add (already at max)

@@ -53,9 +53,6 @@ function qty_in_cart($name, $price) {
     return $sum;
 }
 
-// Red dot if there are items and cart not seen yet
-$hasUnseen = !empty($_SESSION['cart']) && (empty($_SESSION['cart_seen']) || $_SESSION['cart_seen'] === false);
-
 		// Optional: small helper for image fallback
 		function product_img($path) {
 			if (!is_string($path) || $path === '') return 'assets/products/placeholder.jpg';
@@ -194,9 +191,6 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
                 font-weight:700;
                 background:#f7f7f7;
         }
-
-        .cart-dot { position:absolute; top:4px; right:-6px; width:10px; height:10px; background:#ef4444; border-radius:50%; display:none; box-shadow:0 0 0 2px rgba(255,255,255,.9); }
-        .cart-dot.show { display:inline-block; }
 
         .content-section { padding:60px 20px; max-width:1100px; margin:0 auto; color:#1F2937; }
         hr.divider { border:none; border-top:2px solid #999; margin:1rem 0; }
@@ -373,8 +367,6 @@ if ($res) { while ($row = $res->fetch_assoc()) { $products[] = $row; } $res->clo
     <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const cartDot = document.querySelector('.cart-dot');
-
 const trashSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
   <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
   <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
@@ -416,16 +408,13 @@ function syncSteppers(name, price, inCart, stock) {
             renderStepper(w);
         }
     });
-    updateCartDot();
 }
 
-function updateCartDot() {
-    if (!cartDot) return;
-    let any = false;
-    document.querySelectorAll('.stepper-wrap').forEach(w => {
-        if (parseInt(w.dataset.inCart || '0', 10) > 0) any = true;
-    });
-    cartDot.classList.toggle('show', any);
+function updateNavBadge(count) {
+    const badge = document.getElementById('navCartBadge');
+    if (!badge) return;
+    badge.textContent = count;
+    badge.classList.toggle('show', count > 0);
 }
 
 async function stepperAdd(wrap) {
@@ -441,6 +430,7 @@ async function stepperAdd(wrap) {
         const data = await resp.json();
         if (!data.ok) return;
         syncSteppers(name, price, data.itemQty, data.stockLeft);
+        updateNavBadge(data.cartCount);
     } catch (e) { console.error(e); }
 }
 
@@ -462,6 +452,7 @@ async function stepperDec(wrap) {
         const newInCart = data.removed ? 0 : (data.qty ?? newQty);
         const baseStock = inCart + stock;
         syncSteppers(name, price, newInCart, baseStock - newInCart);
+        updateNavBadge(data.cartCount);
     } catch (e) { console.error(e); }
 }
 

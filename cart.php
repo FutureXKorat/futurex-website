@@ -66,9 +66,6 @@ foreach ($items as $it) {
     $total += $qty * $price;
 }
 
-// Mark seen so red dot disappears
-$_SESSION['cart_seen'] = true;
-$hasUnseen = false;
 ?>
 <?php
 // Inline AJAX: update/remove by (name, price) — no new file needed
@@ -101,8 +98,8 @@ if ($idx === null) { echo json_encode(['ok'=>false,'error'=>'item_not_found']); 
 if ($qtyIn <= 0) {
 unset($items[$idx]);
 $items = array_values($items);
-$cartTotal = 0.0; foreach ($items as $x){ $cartTotal += ((int)($x['qty']??1))*((float)($x['price']??0)); }
-echo json_encode(['ok'=>true,'removed'=>true,'empty'=>empty($items),'cartTotal'=>$cartTotal]); exit;
+$cartTotal = 0.0; $cartCount = 0; foreach ($items as $x){ $cartTotal += ((int)($x['qty']??1))*((float)($x['price']??0)); $cartCount += (int)($x['qty']??1); }
+echo json_encode(['ok'=>true,'removed'=>true,'empty'=>empty($items),'cartTotal'=>$cartTotal,'cartCount'=>$cartCount]); exit;
 }
 
 
@@ -119,7 +116,7 @@ $items[$idx]['qty'] = $qty;
 
 
 $lineTotal = $qty * (float)$items[$idx]['price'];
-$cartTotal = 0.0; foreach ($items as $x){ $cartTotal += ((int)($x['qty']??1))*((float)($x['price']??0)); }
+$cartTotal = 0.0; $cartCount = 0; foreach ($items as $x){ $cartTotal += ((int)($x['qty']??1))*((float)($x['price']??0)); $cartCount += (int)($x['qty']??1); }
 
 
 echo json_encode([
@@ -127,6 +124,7 @@ echo json_encode([
 'qty' => $qty,
 'lineTotal' => $lineTotal,
 'cartTotal' => $cartTotal,
+'cartCount' => $cartCount,
 'note' => ($stock>0 && $qtyIn>$max) ? "Adjusted to max {$max}" : ''
 ]);
 exit; // important so the HTML below is not output for AJAX
@@ -266,9 +264,6 @@ exit; // important so the HTML below is not output for AJAX
                 font-weight:700;
                 background:#f7f7f7;
         }
-        .cart-dot{ position:absolute; top:4px; right:-6px; width:10px; height:10px; background:#ef4444; border-radius:50%; display:none; box-shadow:0 0 0 2px rgba(255,255,255,.9); }
-        .cart-dot.show{ display:inline-block; }
-
         .content-section{ margin-top:60px; max-width:800px; margin-left:auto; margin-right:auto; }
         .cart-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #000000; font-size:1.1rem; }
         .cart-left{ display:flex; flex-direction:column; gap:6px; }

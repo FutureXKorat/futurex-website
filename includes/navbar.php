@@ -55,6 +55,16 @@ if (isset($_SESSION['user_id'])) {
         $_navIsAdmin  = strtolower(trim((string)($_navRow['email'] ?? ''))) === $_navAdminEmail;
     }
 }
+
+// Cart badge: total item quantity, hidden while already on cart.php
+$_navCartCount = 0;
+if (isset($_SESSION['user_id']) && !empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    foreach ($_SESSION['cart'] as $_navCartItem) {
+        $_navCartCount += isset($_navCartItem['qty']) ? (int)$_navCartItem['qty'] : 1;
+    }
+}
+$_navOnCartPage    = basename($_SERVER['SCRIPT_NAME'] ?? '') === 'cart.php';
+$_navShowCartBadge = $_navCartCount > 0 && !$_navOnCartPage;
 ?>
 <style>
 /* Fixed navbar — reliable on all mobile browsers, no -webkit-sticky quirks */
@@ -75,6 +85,7 @@ body {
 .nav-logo-link:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
 .nav-logo-img { height: 36px; width: auto; display: block; }
 .nav-cart-btn {
+  position: relative;
   width: 42px; height: 42px;
   display: grid; place-items: center;
   border: 1px solid rgba(255,255,255,0.35);
@@ -87,6 +98,22 @@ body {
   transition: transform .15s ease, background .2s ease;
 }
 .nav-cart-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); color: #fff; }
+.nav-cart-badge {
+  display: none;
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 18px; height: 18px;
+  padding: 0 4px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+.nav-cart-badge.show { display: flex; align-items: center; justify-content: center; }
 </style>
 <div class="top-banner" id="topBanner">
   <div class="nav-links-container" id="navLinksContainer">
@@ -109,6 +136,7 @@ body {
       <svg viewBox="0 0 16 16" width="22" height="22" fill="currentColor" aria-hidden="true">
         <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
       </svg>
+      <span class="nav-cart-badge<?php echo $_navShowCartBadge ? ' show' : ''; ?>" id="navCartBadge"><?php echo $_navCartCount; ?></span>
     </a>
     <?php endif; ?>
     <div class="lang-dropdown">

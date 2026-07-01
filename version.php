@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.0',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'new', 'en' => 'A red badge on the cart icon now shows how many items are in your cart, visible from every page except the cart itself.', 'th' => 'ไอคอนตะกร้าสินค้ามีจุดแดงแสดงจำนวนสินค้าที่อยู่ในตะกร้า มองเห็นได้จากทุกหน้า ยกเว้นหน้าตะกร้าเอง'],
+        ],
+    ],
+    [
         'version' => 'V21.4',
         'date'    => '2026-06-30',
         'changes' => [
