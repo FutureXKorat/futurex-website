@@ -59,6 +59,13 @@ $versions = [
         ],
     ],
     [
+        'version' => 'V22.1B',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Version Log page title now sits at the same height as About Us and Sources — was missing the same 20px spacer below the navbar.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตอยู่ในระดับความสูงเดียวกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้ว — ก่อนหน้านี้ขาดระยะห่าง 20px ใต้แถบนำทาง'],
+        ],
+    ],
+    [
         'version' => 'V22.1',
         'date'    => '2026-07-01',
         'changes' => [
@@ -386,10 +393,12 @@ $tagColors = [
             color: #6B7280;
             margin-top: 10px;
         }
+        .spacer-nav { height: 20px; }
     </style>
 </head>
 <body>
 <?php include 'includes/navbar.php'; ?>
+<div class="spacer-nav"></div>
 
 <div class="content-section">
     <h1><?php echo $t['heading']; ?></h1>
