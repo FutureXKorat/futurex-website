@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.2A',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed the home page scroll arrow blending into the wave graphic on wide screens.', 'th' => 'แก้ไขลูกศรเลื่อนหน้าในหน้าแรกที่กลืนไปกับเส้นคลื่นบนหน้าจอกว้าง'],
+            ['type' => 'fix', 'en' => 'Corrected warehouse and manufacturing facts across the site: 20 warehouses across Thailand, manufacturing only in Malaysia (not Indonesia).', 'th' => 'แก้ไขข้อมูลคลังสินค้าและการผลิตทั่วทั้งเว็บไซต์: มีคลังสินค้า 20 แห่งทั่วไทย ผลิตที่มาเลเซียเท่านั้น (ไม่มีอินโดนีเซีย)'],
+            ['type' => 'new', 'en' => 'Added Claude to the website programmer credits on the About page.', 'th' => 'เพิ่ม Claude ในเครดิตโปรแกรมเมอร์เว็บไซต์ที่หน้าเกี่ยวกับเรา'],
+        ],
+    ],
+    [
         'version' => 'V22.2',
         'date'    => '2026-07-01',
         'changes' => [

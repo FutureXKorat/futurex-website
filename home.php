@@ -26,10 +26,10 @@ $texts = [
     'out'            => 'Log Out',
     'orders'         => 'Orders',
     'tagline'        => 'Premium products, imported from Malaysia, delivered across Thailand.',
-    'stat1Title'     => '17 Warehouses',
+    'stat1Title'     => '20 Warehouses',
     'stat1Sub'       => 'Across Thailand',
-    'stat2Title'     => '2 Countries',
-    'stat2Sub'       => 'Manufacturing in Malaysia & Indonesia',
+    'stat2Title'     => '1 Country',
+    'stat2Sub'       => 'Manufacturing in Malaysia',
     'stat3Title'     => 'High Quality',
     'stat3Sub'       => 'Innovative & affordable products',
     'lang'           => 'ภาษาไทย'
@@ -59,10 +59,10 @@ $texts = [
     'out'            => 'ออกจากระบบ',
     'orders'         => 'รายการที่สั่ง',
     'tagline'        => 'สินค้าคุณภาพนำเข้าจากมาเลเซีย จัดส่งทั่วประเทศไทย',
-    'stat1Title'     => '17 คลังสินค้า',
+    'stat1Title'     => '20 คลังสินค้า',
     'stat1Sub'       => 'ทั่วประเทศไทย',
-    'stat2Title'     => '2 ประเทศ',
-    'stat2Sub'       => 'โรงงานผลิตในมาเลเซียและอินโดนีเซีย',
+    'stat2Title'     => '1 ประเทศ',
+    'stat2Sub'       => 'โรงงานผลิตในมาเลเซีย',
     'stat3Title'     => 'คุณภาพสูง',
     'stat3Sub'       => 'สินค้านวัตกรรม ราคาไม่แพง',
     'lang'           => 'English'
@@ -276,7 +276,8 @@ $texts = [
             left: 0;
             bottom: -1px;
             width: 100%;
-            height: auto;
+            /* capped so the wave can't grow tall enough on wide screens to reach the arrow */
+            height: clamp(24px, 6vw, 90px);
             line-height: 0;
             z-index: 0;
             pointer-events: none;
@@ -284,7 +285,8 @@ $texts = [
 
         .scroll-down {
             position: absolute;
-            bottom: 4%;
+            /* always clears the wave's tallest point (see .hero-wave height) with room to spare */
+            bottom: calc(clamp(24px, 6vw, 90px) + 32px);
             width: 60px;
             height: 60px;
             cursor: pointer;
@@ -714,7 +716,7 @@ $texts = [
 </div>
 
 <div class="footer-min reveal">
-    <span class="small-muted">V22.2</span>
+    <span class="small-muted">V22.2A</span>
 </div>
 
 <!-- Bootstrap JS -->
