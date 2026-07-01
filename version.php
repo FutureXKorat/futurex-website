@@ -51,6 +51,14 @@ $versions = [
         ],
     ],
     [
+        'version' => 'V22.1A',
+        'date'    => '2026-07-01',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Version Log page title now truly matches About Us and Sources — a leftover font-weight and bottom padding mismatch from V22.1 is now resolved.', 'th' => 'หัวข้อในหน้าประวัติการอัปเดตตรงกับหน้าเกี่ยวกับเราและแหล่งที่มาแล้วจริงๆ — แก้ไขปัญหาน้ำหนักตัวอักษรและ padding ด้านล่างที่ตกค้างจาก V22.1'],
+            ['type' => 'improve', 'en' => 'About Us cards now have equal spacing above the title and below the content, consistent across every card.', 'th' => 'การ์ดในหน้าเกี่ยวกับเรามีระยะห่างเหนือหัวข้อและใต้เนื้อหาเท่ากันในทุกการ์ดแล้ว'],
+        ],
+    ],
+    [
         'version' => 'V22.1',
         'date'    => '2026-07-01',
         'changes' => [
@@ -265,7 +273,7 @@ $tagColors = [
     <link rel="icon" href="favicon.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
         :root {
@@ -309,7 +317,7 @@ $tagColors = [
         .content-section {
             max-width: 780px;
             margin: 0 auto;
-            padding: 30px 20px 40px;
+            padding: 30px 20px 30px 20px;
         }
         .content-section h1 {
             font-size: 2.4rem;

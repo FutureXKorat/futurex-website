@@ -218,7 +218,7 @@ $texts = [
         .credits h2 {
             font-size: 1.35rem;
             font-weight: 700;
-            margin: 18px 0 10px;
+            margin: 0 0 10px;
             color: #1F2937;
         }
         .credits p {
@@ -261,7 +261,7 @@ $texts = [
         <!-- Card wrapper -->
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Our Mission' : 'เป้าหมายของเรา'; ?></h2>
-            <p>
+            <p class="mb-0">
                 <?php echo ($lang === 'en') ? 'Coming Soon' : 'Coming Soon'; ?>
             </p>
         </div>
@@ -269,14 +269,14 @@ $texts = [
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Our Vision' : 'มุมมองของเรา'; ?></h2>
 
-            <p>
+            <p class="mb-0">
                 <?php echo ($lang === 'en') ? 'Coming Soon' : 'Coming Soon'; ?>
             </p>
         </div>
 
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Our Values' : 'คุณภาพของเรา'; ?></h2>
-            <ul class="values-list">
+            <ul class="values-list mb-0">
                 <li><strong><?php echo ($lang === 'en') ? 'Product Distribution' : 'การกระจายสินค้า'; ?></strong><?php echo ($lang === 'en') ? ' — We have 20 Warehouses across Thailand.' : ' — เรามี 20 คลังสินค้าทั่วไทย'; ?></li>
                 <li><strong><?php echo ($lang === 'en') ? 'Products' : 'สินค้า'; ?></strong> — <?php echo ($lang === 'en') ? ' Our products are innovative, high quality, and affordable.' : ' สินค้านวัตกรรม คุณภาพสูง ราคาไม่แพง'; ?></li>
                 <li><strong><?php echo ($lang === 'en') ? 'Leadership' : 'การบริหาร'; ?></strong> — <?php echo ($lang === 'en') ? 'We have an experienced leader.' : 'ผู้บริหารมีประสบการณ์'; ?></li>
@@ -285,7 +285,7 @@ $texts = [
 
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'History & Background' : 'ประวัติ และ พื้นหลัง'; ?></h2>
-            <p>Details coming soon.</p>
+            <p class="mb-0">Details coming soon.</p>
         </div>
 
         <div class="credits">
@@ -303,7 +303,7 @@ $texts = [
 
         <div class="credits">
             <h2><?php echo ($lang === 'en') ? 'Why choose Future X' : 'ทำไมถึงต้องเลือก Future X'; ?></h2>
-            <ul>
+            <ul class="mb-0">
                 <li><?php echo ($lang === 'en') ? 'We have a large factory in Malaysia.' : 'เรามีโรงงานขนาดใหญ่ที่มาเลเซีย'; ?></li>
                 <li><?php echo ($lang === 'en') ? 'The center of our manufactory and distribution of products are our own.' : 'จุด Center การผลิต และ การกระจายสินค้าเป็นของตัวเอง'; ?></li>
                 <li><?php echo ($lang === 'en') ? 'Products are innovative, high quality, and able to compete in the online market.' : 'สินค้านวัตกรรม คุณภาพสูง ราคาแข่งขันกับตลาดออนไลน์ได้'; ?></li>
