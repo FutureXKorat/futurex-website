@@ -10,16 +10,18 @@ $ADMIN_EMAIL  = strtolower(trim((string)($_mailCfg['ADMIN_EMAIL'] ?? getenv('ADM
 
 $isSuperAdmin    = false;
 $isEmployeeAdmin = false;
+$adminActorName  = 'Admin'; // display name of the logged-in admin, for attributing actions (e.g. order status changes)
 
 // Employee-admin: logged in via admins table
 if (isset($_SESSION['admin_id'])) {
-    $_s = $conn->prepare("SELECT id FROM admins WHERE id = ? LIMIT 1");
+    $_s = $conn->prepare("SELECT id, name, surname FROM admins WHERE id = ? LIMIT 1");
     $_s->bind_param('i', $_SESSION['admin_id']);
     $_s->execute();
     $_r = $_s->get_result()->fetch_assoc();
     $_s->close();
     if ($_r) {
         $isEmployeeAdmin = true;
+        $adminActorName  = trim((string)$_r['name'] . ' ' . (string)$_r['surname']) ?: 'Admin';
     } else {
         unset($_SESSION['admin_id']); // stale session — wipe it
     }
@@ -27,13 +29,14 @@ if (isset($_SESSION['admin_id'])) {
 
 // Super-admin: regular user whose email matches ADMIN_EMAIL
 if (!$isEmployeeAdmin && isset($_SESSION['user_id'])) {
-    $_s = $conn->prepare("SELECT email FROM users WHERE id = ? LIMIT 1");
+    $_s = $conn->prepare("SELECT name, surname, email FROM users WHERE id = ? LIMIT 1");
     $_s->bind_param('i', $_SESSION['user_id']);
     $_s->execute();
     $_r = $_s->get_result()->fetch_assoc();
     $_s->close();
     if ($_r && strtolower(trim((string)$_r['email'])) === $ADMIN_EMAIL) {
-        $isSuperAdmin = true;
+        $isSuperAdmin   = true;
+        $adminActorName = trim((string)$_r['name'] . ' ' . (string)$_r['surname']) ?: 'Admin';
     }
 }
 

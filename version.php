@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V25.2',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Admin panel: the Order Log now shows which admin performed the last status change (approve, reject, complete, etc.) on each order.', 'th' => 'แผงแอดมิน: บันทึกคำสั่งซื้อตอนนี้แสดงว่าแอดมินคนใดเป็นผู้ทำการเปลี่ยนสถานะล่าสุด (อนุมัติ ปฏิเสธ เสร็จสิ้น ฯลฯ) ของแต่ละคำสั่งซื้อ'],
+        ],
+    ],
+    [
         'version' => 'V25.1',
         'date'    => '2026-07-02',
         'changes' => [

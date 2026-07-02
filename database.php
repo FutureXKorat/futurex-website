@@ -147,3 +147,8 @@ $conn->query("CREATE TABLE IF NOT EXISTS `orders` (
   KEY `idx_status`   (`status`),
   KEY `idx_created`  (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+// Add updated_by if the table pre-existed without it — tracks which admin last changed the status
+$_colCheck = $conn->query("SHOW COLUMNS FROM `orders` LIKE 'updated_by'");
+if ($_colCheck && $_colCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `orders` ADD COLUMN `updated_by` VARCHAR(255) DEFAULT NULL");
+}

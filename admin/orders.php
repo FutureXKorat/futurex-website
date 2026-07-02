@@ -67,6 +67,7 @@ $texts = [
         'order_id_label' => 'Order ID',
         'created_label'  => 'Placed',
         'updated_label'  => 'Updated',
+        'updated_by_label' => 'by',
         'modal_pickup_time' => 'Pick-Up Appointment',
         'search_ph'           => 'Search by ID or customer…',
         'bulk_approve'        => 'Approve Selected',
@@ -159,6 +160,7 @@ $texts = [
         'order_id_label' => 'เลขที่',
         'created_label'  => 'สั่งเมื่อ',
         'updated_label'  => 'อัปเดต',
+        'updated_by_label' => 'โดย',
         'modal_pickup_time' => 'นัดรับสินค้า',
         'search_ph'           => 'ค้นหาด้วยเลขที่หรือลูกค้า…',
         'bulk_approve'        => 'อนุมัติที่เลือก',
@@ -292,11 +294,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 
         if ($dataChanged) {
             $newData = json_encode($orderData, JSON_UNESCAPED_UNICODE);
-            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW() WHERE order_id = ?");
-            $stmt->bind_param('sss', $newStatus, $newData, $oid);
+            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW(), updated_by = ? WHERE order_id = ?");
+            $stmt->bind_param('ssss', $newStatus, $newData, $adminActorName, $oid);
         } else {
-            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ?");
-            $stmt->bind_param('ss', $newStatus, $oid);
+            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW(), updated_by = ? WHERE order_id = ?");
+            $stmt->bind_param('sss', $newStatus, $adminActorName, $oid);
         }
         $stmt->execute();
         $stmt->close();
@@ -343,12 +345,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_
                 $orderData['rejection_reason'] = $rejReason;
                 $newData = json_encode($orderData, JSON_UNESCAPED_UNICODE);
                 // Only update if still awaiting_review (prevents re-processing)
-                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
-                $stmt->bind_param('sss', $newStatus, $newData, $oid);
+                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW(), updated_by = ? WHERE order_id = ? AND status = 'awaiting_review'");
+                $stmt->bind_param('ssss', $newStatus, $newData, $adminActorName, $oid);
             } else {
                 // Only update if still awaiting_review (prevents re-processing)
-                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
-                $stmt->bind_param('ss', $newStatus, $oid);
+                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW(), updated_by = ? WHERE order_id = ? AND status = 'awaiting_review'");
+                $stmt->bind_param('sss', $newStatus, $adminActorName, $oid);
             }
             $stmt->execute();
             $stmt->close();
@@ -362,7 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_
 // Read all orders — pending first, then approved/rejected (newest first within each group)
 $orders = [];
 $result = $conn->query(
-    "SELECT data, status, created_at, updated_at FROM `orders`
+    "SELECT data, status, created_at, updated_at, updated_by FROM `orders`
      ORDER BY CASE status WHEN 'awaiting_review' THEN 0 ELSE 1 END ASC, created_at DESC"
 );
 if ($result) {
@@ -372,6 +374,7 @@ if ($result) {
             $rec['status']     = $row['status']; // DB column is authoritative
             $rec['created_at'] = $row['created_at'];
             if ($row['updated_at']) $rec['updated_at'] = $row['updated_at'];
+            if ($row['updated_by']) $rec['updated_by'] = $row['updated_by'];
             $orders[] = $rec;
         }
     }
@@ -774,6 +777,9 @@ function statusClass(string $status): string {
               <span class="badge <?= statusClass($status) ?>">
                 <?= htmlspecialchars(statusLabel($status, $t)) ?>
               </span>
+              <?php if (!empty($ord['updated_by'])): ?>
+                <div style="font-size:.72rem;color:#888;margin-top:3px;white-space:nowrap;"><?= htmlspecialchars($t['updated_by_label']) ?> <?= htmlspecialchars($ord['updated_by']) ?></div>
+              <?php endif; ?>
             </td>
             <td style="white-space:nowrap;font-size:.8rem;color:#666;"><?= htmlspecialchars($dateStr) ?></td>
             <td>
@@ -992,6 +998,7 @@ const i18n = <?= json_encode([
   'order_id_label'    => $t['order_id_label'],
   'created_label'     => $t['created_label'],
   'updated_label'     => $t['updated_label'],
+  'updated_by_label'  => $t['updated_by_label'],
   'items_label'       => $t['items_label'],
   'modal_pickup_time' => $t['modal_pickup_time'],
 ], JSON_UNESCAPED_UNICODE) ?>;
@@ -1158,7 +1165,8 @@ function openModal(btn) {
   document.getElementById('modalTitle').textContent = '#' + (ord.order_id || '');
   document.getElementById('modalSubtitle').textContent =
     esc(i18n.created_label) + ': ' + formatIso(ord.created_at || '') +
-    (ord.updated_at ? '  ·  ' + esc(i18n.updated_label) + ': ' + formatIso(ord.updated_at) : '');
+    (ord.updated_at ? '  ·  ' + esc(i18n.updated_label) + ': ' + formatIso(ord.updated_at) : '') +
+    (ord.updated_by ? ' (' + esc(i18n.updated_by_label) + ' ' + esc(ord.updated_by) + ')' : '');
 
   const itemRows = items.map(it => {
     const qty   = parseInt(it.qty)   || 1;
