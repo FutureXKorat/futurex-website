@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V24.0',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed "Sign in with Google" timing out every time — the server was stalling on a broken IPv6 route to Google\'s servers before falling back to a working connection. It now connects directly over IPv4.', 'th' => 'แก้ไขปัญหา "เข้าสู่ระบบด้วย Google" ค้างจนหมดเวลาทุกครั้ง — เดิมเซิร์ฟเวอร์ค้างอยู่ที่เส้นทาง IPv6 ที่เชื่อมต่อไปยังเซิร์ฟเวอร์ของ Google ไม่ได้ ก่อนจะย้อนกลับไปใช้การเชื่อมต่อที่ใช้งานได้ ตอนนี้จะเชื่อมต่อผ่าน IPv4 โดยตรงแทน'],
+        ],
+    ],
+    [
         'version' => 'V23.0',
         'date'    => '2026-07-02',
         'changes' => [

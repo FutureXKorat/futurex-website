@@ -33,6 +33,7 @@ curl_setopt_array($ch, [
     CURLOPT_POST           => true,
     CURLOPT_TIMEOUT        => 15,
     CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
     CURLOPT_POSTFIELDS     => http_build_query([
         'code'          => $code,
         'client_id'     => $clientId,
@@ -74,6 +75,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 15,
     CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
     CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $accessToken],
 ]);
 $userInfoRaw = curl_exec($ch);
