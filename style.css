@@ -52,7 +52,7 @@ body {
 }
 .nav-swipe-hint {
     position: sticky;
-    right: 0;
+    right: -20px;
     margin-left: -52px;
     flex-shrink: 0;
     width: 40px;

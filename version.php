@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.4B',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed the navbar swipe hint sitting short of the edge, which let menu text peek out uncovered next to it on phones/tablets.', 'th' => 'แก้ไขคำแนะนำการปัดในแถบเมนูที่อยู่ไม่ถึงขอบจอ ทำให้ข้อความเมนูโผล่ออกมาข้างๆ โดยไม่ถูกบัง'],
+        ],
+    ],
+    [
         'version' => 'V22.4A',
         'date'    => '2026-07-02',
         'changes' => [
