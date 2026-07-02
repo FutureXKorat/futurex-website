@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V25.1',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed a sign-in bug: "Sign in with Google" could log into an account that had never been linked to Google, as long as the email matched. Now it only signs you in if Google has actually been linked to that account first (via Settings).', 'th' => 'แก้ไขข้อบกพร่องในการเข้าสู่ระบบ: การ "เข้าสู่ระบบด้วย Google" สามารถเข้าสู่บัญชีที่ไม่เคยเชื่อมต่อกับ Google ได้ ตราบใดที่อีเมลตรงกัน ตอนนี้ระบบจะเข้าสู่ระบบให้ก็ต่อเมื่อบัญชีนั้นเชื่อมต่อกับ Google ไว้แล้วเท่านั้น (ผ่านหน้าการตั้งค่า)'],
+        ],
+    ],
+    [
         'version' => 'V25.0',
         'date'    => '2026-07-02',
         'changes' => [

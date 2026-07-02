@@ -156,21 +156,19 @@ if ($res->num_rows > 0) {
 }
 $stmt->close();
 
-// 2) Match by email — auto-link on first Google login
-$stmt = $conn->prepare("SELECT id, username FROM users WHERE email = ?");
+// 2) Email matches an account that hasn't linked Google — do NOT auto-login.
+//    Matching email alone doesn't prove ownership of the account's password,
+//    so this must never sign the visitor in. Point them to link it themselves.
+$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $res = $stmt->get_result();
 if ($res->num_rows > 0) {
-    $row = $res->fetch_assoc();
     $stmt->close();
-    $upd = $conn->prepare("UPDATE users SET google_id = ? WHERE id = ?");
-    $upd->bind_param("si", $googleId, $row['id']);
-    $upd->execute();
-    $upd->close();
-    $_SESSION['user_id']  = $row['id'];
-    $_SESSION['username'] = $row['username'];
-    header('Location: home.php');
+    $_SESSION['flash_google_error'] = ($lang === 'en')
+        ? 'This email is registered but not linked to Google yet. Please log in with your password, then link Google from Settings.'
+        : 'อีเมลนี้ลงทะเบียนไว้แล้วแต่ยังไม่ได้เชื่อมต่อ Google กรุณาเข้าสู่ระบบด้วยรหัสผ่าน แล้วเชื่อมต่อ Google ได้จากหน้าการตั้งค่า';
+    header('Location: login.php');
     exit();
 }
 $stmt->close();
