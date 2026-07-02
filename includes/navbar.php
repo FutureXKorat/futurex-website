@@ -118,11 +118,6 @@ body {
 <div class="top-banner" id="topBanner">
   <div class="nav-links-container" id="navLinksContainer">
     <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
-    <div class="nav-swipe-hint" id="navSwipeHint" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
-        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
     <div class="nav-links" id="navLinks">
       <a href="home.php" class="nav-logo-link"><img src="logo_transparent.png" alt="Home" class="nav-logo-img"></a>
       <?php if (isset($_SESSION['user_id'])): ?>
@@ -132,6 +127,11 @@ body {
       <a href="version.php"><?php echo $_navL['version']; ?></a>
       <a href="about.php"><?php echo $_navL['about']; ?></a>
       <a href="source.php"><?php echo $_navL['source']; ?></a>
+      <div class="nav-swipe-hint" id="navSwipeHint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
     </div>
   </div>
 

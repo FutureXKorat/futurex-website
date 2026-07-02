@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.4A',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed the new navbar swipe hint drifting out of place and cutting through menu text while scrolling on phones/tablets.', 'th' => 'แก้ไขคำแนะนำการปัดในแถบเมนูที่เลื่อนหลุดตำแหน่งและตัดผ่านข้อความเมนูขณะเลื่อนบนมือถือ/แท็บเล็ต'],
+        ],
+    ],
+    [
         'version' => 'V22.4',
         'date'    => '2026-07-02',
         'changes' => [
