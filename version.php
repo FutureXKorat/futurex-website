@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.5',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Deleting an approved or completed order now restores its stock — previously the stock stayed deducted forever with no order left to explain it.', 'th' => 'การลบคำสั่งซื้อที่อนุมัติหรือเสร็จสิ้นแล้ว จะคืนสต็อกสินค้ากลับให้อัตโนมัติ — เดิมสต็อกจะถูกตัดค้างไว้ตลอดไปโดยไม่มีคำสั่งซื้อเหลืออยู่ให้ตรวจสอบ'],
+            ['type' => 'new', 'en' => 'Added a "Picked Up" / "Shipped" button on approved orders to mark them as completed, with a new Completed status, stat card, and filter tab.', 'th' => 'เพิ่มปุ่ม "รับสินค้าแล้ว" / "จัดส่งแล้ว" สำหรับคำสั่งซื้อที่อนุมัติแล้ว พร้อมสถานะ "เสร็จสิ้น" การ์ดสรุป และแท็บกรองใหม่'],
+        ],
+    ],
+    [
         'version' => 'V22.4B',
         'date'    => '2026-07-02',
         'changes' => [

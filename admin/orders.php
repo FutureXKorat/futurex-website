@@ -16,6 +16,7 @@ $texts = [
         'stat_total'     => 'Total Orders',
         'stat_pending'   => 'Pending Review',
         'stat_approved'  => 'Approved',
+        'stat_completed' => 'Completed',
         'stat_rejected'  => 'Rejected',
         'col_id'         => 'Order ID',
         'col_customer'   => 'Customer',
@@ -32,6 +33,7 @@ $texts = [
         'tab_all'        => 'All',
         'tab_pending'    => 'Pending',
         'tab_approved'   => 'Approved',
+        'tab_completed'  => 'Completed',
         'tab_rejected'   => 'Rejected',
         'modal_slip'     => 'Payment Slip',
         'modal_no_slip'  => 'No slip uploaded',
@@ -53,6 +55,7 @@ $texts = [
         'del_ship'       => 'Shipping',
         'st_pending'     => 'Pending Review',
         'st_approved'    => 'Approved',
+        'st_completed'   => 'Completed',
         'st_rejected'    => 'Rejected',
         'back'           => '← Dashboard',
         'lang'           => 'ภาษาไทย',
@@ -85,6 +88,11 @@ $texts = [
         'btn_revert_pending'  => 'Revert to Pending Review',
         'confirm_revert'      => 'Reset this order back to Pending Review?',
         'revert_title'        => 'Revert to Pending',
+        'btn_picked_up'       => 'Picked Up',
+        'btn_shipped'         => 'Shipped',
+        'btn_revert_approved' => 'Revert to Approved',
+        'confirm_revert_approved' => 'Reset this order back to Approved?',
+        'revert_approved_title'   => 'Revert to Approved',
         'bulk_approve_title'  => 'Approve Orders',
         'bulk_reject_title'   => 'Reject Orders',
         'btn_confirm'         => 'Confirm',
@@ -100,6 +108,7 @@ $texts = [
         'stat_total'     => 'ทั้งหมด',
         'stat_pending'   => 'รอตรวจสอบ',
         'stat_approved'  => 'อนุมัติแล้ว',
+        'stat_completed' => 'เสร็จสิ้น',
         'stat_rejected'  => 'ปฏิเสธ',
         'col_id'         => 'เลขที่คำสั่งซื้อ',
         'col_customer'   => 'ลูกค้า',
@@ -116,6 +125,7 @@ $texts = [
         'tab_all'        => 'ทั้งหมด',
         'tab_pending'    => 'รอตรวจ',
         'tab_approved'   => 'อนุมัติ',
+        'tab_completed'  => 'เสร็จสิ้น',
         'tab_rejected'   => 'ปฏิเสธ',
         'modal_slip'     => 'สลิปการชำระเงิน',
         'modal_no_slip'  => 'ไม่มีสลิปที่อัปโหลด',
@@ -137,6 +147,7 @@ $texts = [
         'del_ship'       => 'จัดส่งถึงบ้าน',
         'st_pending'     => 'รอตรวจสอบ',
         'st_approved'    => 'อนุมัติแล้ว',
+        'st_completed'   => 'เสร็จสิ้น',
         'st_rejected'    => 'ปฏิเสธ',
         'back'           => '← แดชบอร์ด',
         'lang'           => 'English',
@@ -169,6 +180,11 @@ $texts = [
         'btn_revert_pending'  => 'คืนสถานะเป็นรอตรวจสอบ',
         'confirm_revert'      => 'คืนสถานะคำสั่งซื้อนี้เป็นรอตรวจสอบ?',
         'revert_title'        => 'คืนสถานะเป็นรอตรวจสอบ',
+        'btn_picked_up'       => 'รับสินค้าแล้ว',
+        'btn_shipped'         => 'จัดส่งแล้ว',
+        'btn_revert_approved' => 'คืนสถานะเป็นอนุมัติแล้ว',
+        'confirm_revert_approved' => 'คืนสถานะคำสั่งซื้อนี้เป็นอนุมัติแล้ว?',
+        'revert_approved_title'   => 'คืนสถานะเป็นอนุมัติ',
         'bulk_approve_title'  => 'อนุมัติคำสั่งซื้อ',
         'bulk_reject_title'   => 'ปฏิเสธคำสั่งซื้อ',
         'btn_confirm'         => 'ยืนยัน',
@@ -184,6 +200,27 @@ $t = $texts[$lang] ?? $texts['en'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
     $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
     if ($oid !== '') {
+        // Restore stock if the order being deleted had already deducted it
+        $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
+        $chk->bind_param('s', $oid);
+        $chk->execute();
+        $chkRow = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        $delStatus = (string)($chkRow['status'] ?? '');
+        if (in_array($delStatus, ['approved', 'completed'], true)) {
+            $orderData = json_decode((string)($chkRow['data'] ?? '{}'), true) ?: [];
+            foreach ((array)($orderData['items'] ?? []) as $item) {
+                $iName = (string)($item['name'] ?? '');
+                $iQty  = max(1, (int)($item['qty'] ?? 1));
+                if ($iName !== '') {
+                    $upd = $conn->prepare("UPDATE products SET stock = stock + ? WHERE name = ?");
+                    $upd->bind_param('is', $iQty, $iName);
+                    $upd->execute();
+                    $upd->close();
+                }
+            }
+        }
+
         $stmt = $conn->prepare("DELETE FROM `orders` WHERE order_id = ?");
         $stmt->bind_param('s', $oid);
         $stmt->execute();
@@ -197,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 // Handle POST: status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $oid       = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
-    $allowed   = ['approved', 'rejected', 'awaiting_review'];
+    $allowed   = ['approved', 'rejected', 'awaiting_review', 'completed'];
     $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
     if ($oid !== '' && $newStatus !== '') {
         // Fetch current order to know prev status and current data JSON
@@ -209,8 +246,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         $prevStatus = (string)($chkRow['status'] ?? '');
         $orderData  = json_decode((string)($chkRow['data'] ?? '{}'), true) ?: [];
 
-        // Deduct stock when approving (only if not already approved)
-        if ($newStatus === 'approved' && $prevStatus !== 'approved') {
+        // Only an approved order can be marked completed (e.g. picked up / shipped)
+        if ($newStatus === 'completed' && $prevStatus !== 'approved') {
+            $newStatus = '';
+        }
+    }
+    if ($oid !== '' && $newStatus !== '') {
+        // Deduct stock when approving (only if not already approved/completed)
+        if ($newStatus === 'approved' && !in_array($prevStatus, ['approved', 'completed'], true)) {
             foreach ((array)($orderData['items'] ?? []) as $item) {
                 $iName = (string)($item['name'] ?? '');
                 $iQty  = max(1, (int)($item['qty'] ?? 1));
@@ -335,7 +378,7 @@ if ($result) {
 }
 
 // Stats
-$cnt = ['all' => count($orders), 'awaiting_review' => 0, 'approved' => 0, 'rejected' => 0];
+$cnt = ['all' => count($orders), 'awaiting_review' => 0, 'approved' => 0, 'completed' => 0, 'rejected' => 0];
 foreach ($orders as $o) {
     $s = $o['status'] ?? 'awaiting_review';
     if (isset($cnt[$s])) $cnt[$s]++;
@@ -354,6 +397,7 @@ function statusLabel(string $status, array $t): string {
     return match ($status) {
         'awaiting_review' => $t['st_pending'],
         'approved'        => $t['st_approved'],
+        'completed'       => $t['st_completed'],
         'rejected'        => $t['st_rejected'],
         default           => $status,
     };
@@ -362,6 +406,7 @@ function statusClass(string $status): string {
     return match ($status) {
         'awaiting_review' => 'badge-pending',
         'approved'        => 'badge-approved',
+        'completed'       => 'badge-completed',
         'rejected'        => 'badge-rejected',
         default           => 'badge-secondary text-white',
     };
@@ -422,11 +467,13 @@ function statusClass(string $status): string {
     .stat-card.c-total   { border-top-color: #007BFF; }
     .stat-card.c-pending { border-top-color: #ffc107; }
     .stat-card.c-approved{ border-top-color: #198754; }
+    .stat-card.c-completed{ border-top-color: #0d9488; }
     .stat-card.c-rejected{ border-top-color: #dc3545; }
     .stat-num { font-size: 2.1rem; font-weight: 700; line-height: 1; }
     .stat-num.c-total    { color: #007BFF; }
     .stat-num.c-pending  { color: #c98a00; }
     .stat-num.c-approved { color: #198754; }
+    .stat-num.c-completed { color: #0d9488; }
     .stat-num.c-rejected { color: #dc3545; }
     .stat-label { font-size: 0.78rem; color: #666; margin-top: 5px; font-weight: 500; }
 
@@ -470,6 +517,7 @@ function statusClass(string $status): string {
     .badge { display: inline-block; font-size: 0.73rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
     .badge-pending  { background: #FFF3CD; color: #856404; }
     .badge-approved { background: #D1E7DD; color: #0A3622; }
+    .badge-completed { background: #CCFBF1; color: #0F5C55; }
     .badge-rejected { background: #F8D7DA; color: #58151C; }
 
     .act-btn {
@@ -489,6 +537,8 @@ function statusClass(string $status): string {
     .act-delete:hover  { background: rgba(220,53,69,0.2); transform: translateY(-1px); }
     .act-revert  { background: rgba(108,117,125,0.12); color: #495057; border: 1px solid rgba(108,117,125,0.3); }
     .act-revert:hover  { background: rgba(108,117,125,0.22); transform: translateY(-1px); }
+    .act-complete { background: linear-gradient(135deg, #0d9488, #0f5c55); color: #fff; }
+    .act-complete:hover { box-shadow: 0 3px 10px rgba(13,148,136,0.4); transform: translateY(-1px); }
 
     .oid {
       font-family: 'Courier New', monospace; font-size: 0.75rem;
@@ -602,25 +652,31 @@ function statusClass(string $status): string {
 
   <!-- Stats -->
   <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="stat-card c-total">
         <div class="stat-num c-total"><?= $cnt['all'] ?></div>
         <div class="stat-label"><?= htmlspecialchars($t['stat_total']) ?></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="stat-card c-pending">
         <div class="stat-num c-pending"><?= $cnt['awaiting_review'] ?></div>
         <div class="stat-label"><?= htmlspecialchars($t['stat_pending']) ?></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="stat-card c-approved">
         <div class="stat-num c-approved"><?= $cnt['approved'] ?></div>
         <div class="stat-label"><?= htmlspecialchars($t['stat_approved']) ?></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
+      <div class="stat-card c-completed">
+        <div class="stat-num c-completed"><?= $cnt['completed'] ?></div>
+        <div class="stat-label"><?= htmlspecialchars($t['stat_completed']) ?></div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
       <div class="stat-card c-rejected">
         <div class="stat-num c-rejected"><?= $cnt['rejected'] ?></div>
         <div class="stat-label"><?= htmlspecialchars($t['stat_rejected']) ?></div>
@@ -643,6 +699,7 @@ function statusClass(string $status): string {
         <button class="ftab active" data-filter="all"><?= htmlspecialchars($t['tab_all']) ?> (<?= $cnt['all'] ?>)</button>
         <button class="ftab" data-filter="awaiting_review"><?= htmlspecialchars($t['tab_pending']) ?> (<?= $cnt['awaiting_review'] ?>)</button>
         <button class="ftab" data-filter="approved"><?= htmlspecialchars($t['tab_approved']) ?> (<?= $cnt['approved'] ?>)</button>
+        <button class="ftab" data-filter="completed"><?= htmlspecialchars($t['tab_completed']) ?> (<?= $cnt['completed'] ?>)</button>
         <button class="ftab" data-filter="rejected"><?= htmlspecialchars($t['tab_rejected']) ?> (<?= $cnt['rejected'] ?>)</button>
       </div>
     </div>
@@ -738,6 +795,34 @@ function statusClass(string $status): string {
                           onclick="openRejectModal('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
                     <?= htmlspecialchars($t['btn_reject']) ?>
                   </button>
+                <?php elseif ($status === 'approved'): ?>
+                  <form method="post" style="display:contents;">
+                    <input type="hidden" name="action"   value="update_status">
+                    <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
+                    <input type="hidden" name="status"   value="completed">
+                    <button type="submit" class="act-btn act-complete">
+                      <?= htmlspecialchars(($ord['delivery'] ?? '') === 'ship' ? $t['btn_shipped'] : $t['btn_picked_up']) ?>
+                    </button>
+                  </form>
+                  <form method="post" style="display:contents;" id="revertForm-<?= htmlspecialchars($oid, ENT_QUOTES) ?>">
+                    <input type="hidden" name="action"   value="update_status">
+                    <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
+                    <input type="hidden" name="status"   value="awaiting_review">
+                    <button type="button" class="act-btn act-revert"
+                            onclick="confirmRevertOrder('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
+                      <?= htmlspecialchars($t['btn_revert_pending']) ?>
+                    </button>
+                  </form>
+                <?php elseif ($status === 'completed'): ?>
+                  <form method="post" style="display:contents;" id="revertApprovedForm-<?= htmlspecialchars($oid, ENT_QUOTES) ?>">
+                    <input type="hidden" name="action"   value="update_status">
+                    <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
+                    <input type="hidden" name="status"   value="approved">
+                    <button type="button" class="act-btn act-revert"
+                            onclick="confirmRevertToApproved('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
+                      <?= htmlspecialchars($t['btn_revert_approved']) ?>
+                    </button>
+                  </form>
                 <?php else: ?>
                   <form method="post" style="display:contents;" id="revertForm-<?= htmlspecialchars($oid, ENT_QUOTES) ?>">
                     <input type="hidden" name="action"   value="update_status">
@@ -879,11 +964,17 @@ const i18n = <?= json_encode([
   'del_ship'       => $t['del_ship'],
   'st_pending'     => $t['st_pending'],
   'st_approved'    => $t['st_approved'],
+  'st_completed'   => $t['st_completed'],
   'st_rejected'    => $t['st_rejected'],
   'confirm_reject'    => $t['confirm_reject'],
   'btn_revert_pending'=> $t['btn_revert_pending'],
   'confirm_revert'    => $t['confirm_revert'],
   'revert_title'      => $t['revert_title'],
+  'btn_picked_up'          => $t['btn_picked_up'],
+  'btn_shipped'            => $t['btn_shipped'],
+  'btn_revert_approved'    => $t['btn_revert_approved'],
+  'confirm_revert_approved'=> $t['confirm_revert_approved'],
+  'revert_approved_title'  => $t['revert_approved_title'],
   'btn_confirm'       => $t['btn_confirm'],
   'btn_cancel'        => $t['btn_cancel'],
   'btn_delete'        => $t['btn_delete'],
@@ -967,7 +1058,18 @@ function confirmRevertOrder(oid) {
   });
 }
 
+function confirmRevertToApproved(oid) {
+  showConfirmModal({
+    title: i18n.revert_approved_title,
+    message: i18n.confirm_revert_approved,
+    confirmLabel: i18n.btn_revert_approved,
+    danger: false,
+    onConfirm: () => document.getElementById('revertApprovedForm-' + oid).submit()
+  });
+}
+
 let _pendingRevertOid = null;
+let _pendingRevertApprovedOid = null;
 
 function confirmRevertOrderJs(oid) {
   _pendingRevertOid = oid;
@@ -992,10 +1094,34 @@ function _openRevertConfirmNow() {
   });
 }
 
+function confirmRevertToApprovedJs(oid) {
+  _pendingRevertApprovedOid = oid;
+  const orderModalEl = document.getElementById('orderModal');
+  if (orderModalEl.classList.contains('show')) {
+    // Close order detail modal first; hidden event will open the confirm modal
+    bootstrap.Modal.getInstance(orderModalEl)?.hide();
+  } else {
+    _openRevertApprovedConfirmNow();
+  }
+}
+
+function _openRevertApprovedConfirmNow() {
+  const oid = _pendingRevertApprovedOid;
+  _pendingRevertApprovedOid = null;
+  showConfirmModal({
+    title: i18n.revert_approved_title,
+    message: i18n.confirm_revert_approved,
+    confirmLabel: i18n.btn_revert_approved,
+    danger: false,
+    onConfirm: () => document.getElementById('jsRevertApprovedForm-' + oid).submit()
+  });
+}
+
 function statusBadge(status) {
   const map = {
     'awaiting_review': ['badge-pending',  i18n.st_pending],
     'approved':        ['badge-approved', i18n.st_approved],
+    'completed':       ['badge-completed', i18n.st_completed],
     'rejected':        ['badge-rejected', i18n.st_rejected],
   };
   const [cls, label] = map[status] || ['badge bg-secondary text-white', status];
@@ -1122,6 +1248,29 @@ function openModal(btn) {
     </form>
     <button type="button" class="act-btn act-reject" style="padding:9px 20px;font-size:.9rem;"
             onclick="openRejectModal('${oidSafe}')">${esc(i18n.btn_reject)}</button>` + footer;
+  } else if (status === 'approved') {
+    const completeLabel = (ord.delivery === 'ship') ? i18n.btn_shipped : i18n.btn_picked_up;
+    footer = `<form method="post">
+      <input type="hidden" name="action"   value="update_status">
+      <input type="hidden" name="order_id" value="${oidSafe}">
+      <input type="hidden" name="status"   value="completed">
+      <button type="submit" class="act-btn act-complete" style="padding:9px 20px;font-size:.9rem;">${esc(completeLabel)}</button>
+    </form>
+    <form method="post" id="jsRevertForm-${oidSafe}">
+      <input type="hidden" name="action"   value="update_status">
+      <input type="hidden" name="order_id" value="${oidSafe}">
+      <input type="hidden" name="status"   value="awaiting_review">
+      <button type="button" class="act-btn act-revert" style="padding:9px 20px;font-size:.9rem;"
+              onclick="confirmRevertOrderJs('${oidSafe}')">${esc(i18n.btn_revert_pending)}</button>
+    </form>` + footer;
+  } else if (status === 'completed') {
+    footer = `<form method="post" id="jsRevertApprovedForm-${oidSafe}">
+      <input type="hidden" name="action"   value="update_status">
+      <input type="hidden" name="order_id" value="${oidSafe}">
+      <input type="hidden" name="status"   value="approved">
+      <button type="button" class="act-btn act-revert" style="padding:9px 20px;font-size:.9rem;"
+              onclick="confirmRevertToApprovedJs('${oidSafe}')">${esc(i18n.btn_revert_approved)}</button>
+    </form>` + footer;
   } else {
     footer = `<form method="post" id="jsRevertForm-${oidSafe}">
       <input type="hidden" name="action"   value="update_status">
@@ -1268,6 +1417,7 @@ function openBulkRejectModal(ids) {
 document.getElementById('orderModal').addEventListener('hidden.bs.modal', function() {
   if (_pendingRejectOid !== null) _openRejectModalNow();
   if (_pendingRevertOid !== null) _openRevertConfirmNow();
+  if (_pendingRevertApprovedOid !== null) _openRevertApprovedConfirmNow();
 });
 
 function _openRejectModalNow() {
