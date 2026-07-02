@@ -942,6 +942,20 @@ function statusClass(string $status): string {
 <script>
 const MAIN_SITE_URL = <?= json_encode($mainSiteUrl) ?>;
 
+// Keep scroll position across the full-page reload that follows admin actions
+// (approve/reject/complete/revert/delete all redirect back to this same page).
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('beforeunload', function() {
+  sessionStorage.setItem('adminOrdersScrollY', String(window.scrollY));
+});
+window.addEventListener('DOMContentLoaded', function() {
+  const savedY = sessionStorage.getItem('adminOrdersScrollY');
+  if (savedY !== null) {
+    sessionStorage.removeItem('adminOrdersScrollY');
+    window.scrollTo(0, parseInt(savedY, 10) || 0);
+  }
+});
+
 const i18n = <?= json_encode([
   'modal_slip'     => $t['modal_slip'],
   'modal_no_slip'  => $t['modal_no_slip'],

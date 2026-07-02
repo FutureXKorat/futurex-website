@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.6',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'The admin Order Log page now stays at the same scroll position after approving, rejecting, completing, reverting, or deleting an order, instead of jumping back to the top.', 'th' => 'หน้าบันทึกคำสั่งซื้อของแอดมินจะคงตำแหน่งการเลื่อนหน้าจอเดิมไว้หลังจากอนุมัติ ปฏิเสธ ทำเครื่องหมายเสร็จสิ้น คืนสถานะ หรือลบคำสั่งซื้อ แทนที่จะเลื่อนกลับไปด้านบนสุด'],
+        ],
+    ],
+    [
         'version' => 'V22.5A',
         'date'    => '2026-07-02',
         'changes' => [
