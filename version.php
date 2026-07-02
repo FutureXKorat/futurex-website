@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.4',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Added a swipe hint on the navigation bar for phones and tablets, so it\'s clear there are more menu items when the navbar doesn\'t fit the screen.', 'th' => 'เพิ่มคำแนะนำการปัดในแถบเมนูสำหรับมือถือและแท็บเล็ต เพื่อให้เห็นชัดว่ามีรายการเมนูเพิ่มเติมเมื่อแถบเมนูแสดงไม่พอดีหน้าจอ'],
+        ],
+    ],
+    [
         'version' => 'V22.3A',
         'date'    => '2026-07-02',
         'changes' => [

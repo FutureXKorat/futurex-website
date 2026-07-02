@@ -118,6 +118,11 @@ body {
 <div class="top-banner" id="topBanner">
   <div class="nav-links-container" id="navLinksContainer">
     <div class="nav-scroll-indicator" id="navScrollIndicator"></div>
+    <div class="nav-swipe-hint" id="navSwipeHint" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
     <div class="nav-links" id="navLinks">
       <a href="home.php" class="nav-logo-link"><img src="logo_transparent.png" alt="Home" class="nav-logo-img"></a>
       <?php if (isset($_SESSION['user_id'])): ?>
@@ -177,6 +182,7 @@ body {
     var banner = document.getElementById('topBanner');
     var nlc = document.getElementById('navLinksContainer');
     var nsi = document.getElementById('navScrollIndicator');
+    var nsh = document.getElementById('navSwipeHint');
 
     function closeAll() {
         if (pMenu) pMenu.style.display = 'none';
@@ -218,6 +224,10 @@ body {
         if (!nlc || !nsi) return;
         var max = nlc.scrollWidth - nlc.clientWidth;
         nsi.style.width = (max > 0 ? (nlc.scrollLeft / max) * 100 : 0) + '%';
+        if (nsh) {
+            var remaining = max - nlc.scrollLeft;
+            nsh.classList.toggle('show', max > 4 && remaining > 4);
+        }
     }
     if (nlc) {
         nlc.addEventListener('scroll', updateScroll);
