@@ -166,6 +166,14 @@ $versions = [
         ],
     ],
     [
+        'version' => 'V21.3D',
+        'date'    => '2026-06-30',
+        'changes' => [
+            ['type' => 'new',     'en' => 'Admin Settings page: Change Password form now shows the same live password requirements checklist as the user-facing settings page.', 'th' => 'หน้าการตั้งค่าแอดมิน: แบบฟอร์มเปลี่ยนรหัสผ่านแสดงรายการข้อกำหนดรหัสผ่านแบบเรียลไทม์เหมือนกับหน้าการตั้งค่าของผู้ใช้แล้ว'],
+            ['type' => 'improve', 'en' => 'Admin Settings page: password rules now match all other forms — 6–12 characters, number, lowercase letter, capital letter.', 'th' => 'หน้าการตั้งค่าแอดมิน: กฎรหัสผ่านตอนนี้ตรงกับแบบฟอร์มอื่นทั้งหมด — 6–12 ตัวอักษร มีตัวเลข ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่'],
+        ],
+    ],
+    [
         'version' => 'V21.4',
         'date'    => '2026-06-30',
         'changes' => [

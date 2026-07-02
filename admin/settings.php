@@ -69,10 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw_step1'])) {
 
     if (!password_verify($currentPw, $user['password'])) {
         $pwErrors[] = ($lang === 'en') ? 'Current password is incorrect.' : 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
-    } elseif (strlen($newPw) < 8) {
-        $pwErrors[] = ($lang === 'en') ? 'New password must be at least 8 characters.' : 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร';
-    } elseif (!preg_match('/\d/', $newPw)) {
+    } elseif (strlen($newPw) < 6 || strlen($newPw) > 12) {
+        $pwErrors[] = ($lang === 'en') ? 'New password must be 6–12 characters.' : 'รหัสผ่านใหม่ต้องมี 6–12 ตัวอักษร';
+    } elseif (!preg_match('/[0-9]/', $newPw)) {
         $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one number.' : 'รหัสผ่านใหม่ต้องมีตัวเลขอย่างน้อยหนึ่งตัว';
+    } elseif (!preg_match('/[a-z]/', $newPw)) {
+        $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one lowercase letter.' : 'รหัสผ่านใหม่ต้องมีตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว';
+    } elseif (!preg_match('/[A-Z]/', $newPw)) {
+        $pwErrors[] = ($lang === 'en') ? 'New password must contain at least one capital letter.' : 'รหัสผ่านใหม่ต้องมีตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว';
     } elseif ($newPw !== $confirmPw) {
         $pwErrors[] = ($lang === 'en') ? 'Passwords do not match.' : 'รหัสผ่านไม่ตรงกัน';
     } elseif (empty($user['email'])) {
@@ -573,16 +577,29 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       transition: transform .15s, background .2s;
     }
     .lang-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
-    .pw-wrap { position: relative; }
-    .pw-wrap .pw-input { padding-right: 2.75rem; }
+    .pw-wrap { position: relative; margin-bottom: 12px; }
+    .pw-wrap .pw-input { padding-right: 2.75rem; margin-bottom: 0; }
     .pwd-eye {
-      position: absolute; right: 12px; top: calc(50% - 6px);
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       background: none; border: none; padding: 0; cursor: pointer;
       color: #6B7280; line-height: 0; user-select: none; -webkit-user-select: none;
       touch-action: none;
     }
     .pwd-eye:focus { outline: none; }
     .pwd-eye:hover { color: #374151; }
+
+    /* ── Password requirements checklist ── */
+    .pw-reqs { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .pw-req { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: #9ca3af; transition: color .2s; }
+    .pw-req.met { color: #15803d; }
+    .pw-req-dot {
+      width: 17px; height: 17px; border-radius: 50%; border: 2px solid #d1d5db;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background .2s, border-color .2s;
+    }
+    .pw-req.met .pw-req-dot { background: #16a34a; border-color: #16a34a; }
+    .pw-req-dot svg { display: none; }
+    .pw-req.met .pw-req-dot svg { display: block; }
   </style>
 </head>
 <body>
@@ -714,15 +731,25 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
             <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="pw-wrap">
-            <input class="pw-input" type="password" name="new_password"
+            <input class="pw-input" type="password" name="new_password" id="aspNewPw"
               placeholder="<?php echo ($lang === 'en') ? 'New Password' : 'รหัสผ่านใหม่'; ?>" required>
             <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
+          <ul class="pw-reqs">
+            <li class="pw-req" id="asp-req-min"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least 6 characters' : 'อย่างน้อย 6 ตัวอักษร'; ?></span></li>
+            <li class="pw-req" id="asp-req-max"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'No more than 12 characters' : 'ไม่เกิน 12 ตัวอักษร'; ?></span></li>
+            <li class="pw-req" id="asp-req-num"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one number' : 'มีตัวเลขอย่างน้อย 1 ตัว'; ?></span></li>
+            <li class="pw-req" id="asp-req-lower"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one lowercase letter' : 'มีตัวพิมพ์เล็กอย่างน้อย 1 ตัว'; ?></span></li>
+            <li class="pw-req" id="asp-req-upper"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'At least one capital letter' : 'มีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว'; ?></span></li>
+          </ul>
           <div class="pw-wrap">
-            <input class="pw-input" type="password" name="confirm_password"
+            <input class="pw-input" type="password" name="confirm_password" id="aspCfPw"
               placeholder="<?php echo ($lang === 'en') ? 'Confirm New Password' : 'ยืนยันรหัสผ่านใหม่'; ?>" required>
             <button type="button" class="pwd-eye" aria-label="Hold to show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
+          <ul class="pw-reqs">
+            <li class="pw-req" id="asp-req-match"><span class="pw-req-dot"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><?php echo ($lang === 'en') ? 'Passwords match' : 'รหัสผ่านตรงกัน'; ?></span></li>
+          </ul>
           <button type="submit" class="btn-modern" id="pwBtn">
             <?php echo ($lang === 'en') ? 'Send OTP to Email' : 'ส่ง OTP ไปยังอีเมล'; ?>
           </button>
@@ -1158,6 +1185,32 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       btn.addEventListener('touchstart', function(e) { e.preventDefault(); inp.type = 'text'; }, { passive: false });
       btn.addEventListener('touchend',   function()  { inp.type = 'password'; });
     });
+
+    // ── Live password requirements checklist (Change Password section) ──
+    (function() {
+      var newPw = document.getElementById('aspNewPw');
+      var cfPw  = document.getElementById('aspCfPw');
+      if (!newPw) return;
+      function set(id, met) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle('met', met);
+      }
+      function checkReqs() {
+        var v = newPw.value;
+        set('asp-req-min',   v.length >= 6);
+        set('asp-req-max',   v.length > 0 && v.length <= 12);
+        set('asp-req-num',   /[0-9]/.test(v));
+        set('asp-req-lower', /[a-z]/.test(v));
+        set('asp-req-upper', /[A-Z]/.test(v));
+        checkMatch();
+      }
+      function checkMatch() {
+        if (!cfPw) return;
+        set('asp-req-match', cfPw.value.length > 0 && cfPw.value === newPw.value);
+      }
+      newPw.addEventListener('input', checkReqs);
+      if (cfPw) cfPw.addEventListener('input', checkMatch);
+    })();
   </script>
 </body>
 </html>
