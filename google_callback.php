@@ -46,7 +46,6 @@ curl_setopt_array($ch, [
 $tokenRaw  = curl_exec($ch);
 $curlError = curl_error($ch);
 $curlErrno = curl_errno($ch);
-curl_close($ch);
 
 if ($curlErrno || $tokenRaw === false) {
     error_log("Google OAuth: token exchange curl failed [{$curlErrno}] {$curlError}");
@@ -81,7 +80,6 @@ curl_setopt_array($ch, [
 $userInfoRaw = curl_exec($ch);
 $curlError   = curl_error($ch);
 $curlErrno   = curl_errno($ch);
-curl_close($ch);
 
 if ($curlErrno || $userInfoRaw === false) {
     error_log("Google OAuth: userinfo curl failed [{$curlErrno}] {$curlError}");

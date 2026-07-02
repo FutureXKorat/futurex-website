@@ -26,6 +26,20 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V24.1',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'PHP errors and warnings are no longer shown directly to visitors — they are logged for us to review instead, so a stray warning can no longer break a page the way it just did with Google sign-in.', 'th' => 'ข้อผิดพลาดและคำเตือนของ PHP จะไม่แสดงให้ผู้เข้าชมเห็นโดยตรงอีกต่อไป — จะถูกบันทึกไว้ให้เราตรวจสอบแทน ทำให้คำเตือนเล็กๆ น้อยๆ ไม่สามารถทำให้หน้าเว็บพังได้เหมือนที่เพิ่งเกิดขึ้นกับการเข้าสู่ระบบด้วย Google'],
+        ],
+    ],
+    [
+        'version' => 'V24.0B',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed Google sign-in breaking with a "headers already sent" error — caused by a harmless PHP deprecation notice that was leaking into the page output. Removed the outdated code that triggered it.', 'th' => 'แก้ไขปัญหาการเข้าสู่ระบบด้วย Google ที่พังพร้อมข้อผิดพลาด "headers already sent" — สาเหตุมาจากข้อความแจ้งเตือนที่ไม่เป็นอันตรายของ PHP ที่รั่วไหลเข้าไปในหน้าเว็บ ได้ลบโค้ดเก่าที่ทำให้เกิดปัญหานี้ออกแล้ว'],
+        ],
+    ],
+    [
         'version' => 'V24.0A',
         'date'    => '2026-07-02',
         'changes' => [
