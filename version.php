@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V23.0',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Redesigned the profile picture cropping tool with a cleaner popup, and the picture itself can no longer be dragged around — only the circular crop area moves and resizes.', 'th' => 'ออกแบบเครื่องมือครอบตัดรูปโปรไฟล์ใหม่ให้ดูทันสมัยขึ้น และรูปภาพจะไม่สามารถลากย้ายได้อีกต่อไป — เลื่อนและปรับขนาดได้เฉพาะกรอบครอบตัดวงกลมเท่านั้น'],
+            ['type' => 'improve', 'en' => 'Zooming while cropping your profile picture now feels the same whether you use a mouse wheel, a touchpad, or touch, with new +/- buttons and a slider for easy control.', 'th' => 'การซูมขณะครอบตัดรูปโปรไฟล์ทำงานเหมือนกัน ไม่ว่าจะใช้ล้อเลื่อนเมาส์ ทัชแพด หรือหน้าจอสัมผัส พร้อมปุ่ม +/- และแถบเลื่อนใหม่ให้ควบคุมง่ายขึ้น'],
+            ['type' => 'improve', 'en' => '"Delete Profile Picture" button now matches the site\'s modern gradient button style instead of the old plain red box.', 'th' => 'ปุ่ม "ลบรูปโปรไฟล์" ใช้สไตล์ปุ่มไล่สีทันสมัยแบบเดียวกับเว็บไซต์ แทนกล่องสีแดงธรรมดาแบบเดิม'],
+        ],
+    ],
+    [
         'version' => 'V22.7',
         'date'    => '2026-07-02',
         'changes' => [
