@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V24.3',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Settings page: added an "Edit Name" card to update your first name and surname, and a "Phone Number" card to update your phone number.', 'th' => 'หน้าการตั้งค่า: เพิ่มการ์ด "แก้ไขชื่อ" สำหรับอัปเดตชื่อและนามสกุล และการ์ด "เบอร์โทรศัพท์" สำหรับอัปเดตเบอร์โทร'],
+        ],
+    ],
+    [
         'version' => 'V24.2',
         'date'    => '2026-07-02',
         'changes' => [

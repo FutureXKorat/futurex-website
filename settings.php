@@ -11,8 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 $userId       = (int)$_SESSION['user_id'];
 $success      = "";
 $errors       = [];
+$nameErrors   = [];
 $pwErrors     = [];
 $emailErrors  = [];
+$phoneErrors  = [];
 $deleteErrors = [];
 
 require_once __DIR__ . '/cloudinary.php';
@@ -51,6 +53,23 @@ if (isset($_POST['delete_profile_picture'])) {
         $user['profile_picture'] = null;
     } else {
         $errors[] = ($lang === 'en') ? "No profile picture to delete." : "ไม่มีรูปโปรไฟล์ที่จะลบ";
+    }
+}
+
+// ── Update Name ────────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_name'])) {
+    $newName    = trim($_POST['name'] ?? '');
+    $newSurname = trim($_POST['surname'] ?? '');
+    if ($newName === '' || $newSurname === '') {
+        $nameErrors[] = ($lang === 'en') ? 'Name and surname cannot be empty.' : 'ชื่อและนามสกุลห้ามว่างเปล่า';
+    } else {
+        $upd = $conn->prepare("UPDATE users SET name = ?, surname = ? WHERE id = ?");
+        $upd->bind_param("ssi", $newName, $newSurname, $userId);
+        $upd->execute();
+        $upd->close();
+        $user['name']    = $newName;
+        $user['surname'] = $newSurname;
+        $success = ($lang === 'en') ? 'Name updated successfully.' : 'อัปเดตชื่อสำเร็จแล้ว';
     }
 }
 
@@ -221,6 +240,25 @@ if (isset($_POST['email_cancel'])) {
     unset($_SESSION['email_change']);
 }
 
+// ── Update Phone Number ───────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_phone'])) {
+    $phoneCcInput = $_POST['phone_cc'] ?? '+66';
+    $digitsOnly   = preg_replace('/\D+/', '', $_POST['phoneno'] ?? '');
+    $phoneFull    = $phoneCcInput . $digitsOnly;
+    if (!in_array($phoneCcInput, ['+66', '+60', '+856'], true)) {
+        $phoneErrors[] = ($lang === 'en') ? 'Invalid country code.' : 'รหัสประเทศไม่ถูกต้อง';
+    } elseif (!preg_match('/^\+(66|60|856)\d{7,12}$/', $phoneFull)) {
+        $phoneErrors[] = ($lang === 'en') ? 'Invalid phone number format.' : 'รูปแบบเบอร์โทรไม่ถูกต้อง';
+    } else {
+        $upd = $conn->prepare("UPDATE users SET phoneno = ? WHERE id = ?");
+        $upd->bind_param("si", $phoneFull, $userId);
+        $upd->execute();
+        $upd->close();
+        $user['phoneno'] = $phoneFull;
+        $success = ($lang === 'en') ? 'Phone number updated successfully.' : 'อัปเดตเบอร์โทรสำเร็จแล้ว';
+    }
+}
+
 // ── Delete Account ────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     $confirmText = trim($_POST['confirm_delete'] ?? '');
@@ -269,6 +307,19 @@ $profilePicUrl = (!empty($user['profile_picture']) && str_starts_with($user['pro
 $hasPic = $profilePicUrl !== '';
 $otpPending      = !empty($_SESSION['pw_change'])     && time() <= $_SESSION['pw_change']['expires'];
 $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['email_change']['expires'];
+
+// ── Split stored phoneno into country code + local digits ────────────────
+$phoneCc     = '+66';
+$phoneDigits = '';
+$storedPhone = $user['phoneno'] ?? '';
+foreach (['+66', '+60', '+856'] as $ccOpt) {
+    if (str_starts_with($storedPhone, $ccOpt)) {
+        $phoneCc     = $ccOpt;
+        $phoneDigits = substr($storedPhone, strlen($ccOpt));
+        break;
+    }
+}
+$phoneCcLabels = ['+66' => '🇹🇭 +66', '+60' => '🇲🇾 +60', '+856' => '🇱🇦 +856'];
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($lang); ?>">
@@ -593,6 +644,53 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     .pw-req.met .pw-req-dot { background: #16a34a; border-color: #16a34a; }
     .pw-req-dot svg { display: none; }
     .pw-req.met .pw-req-dot svg { display: block; }
+
+    /* ── Phone input (country code + number) ── */
+    .cc-dropdown-wrap { position: relative; }
+    .phone-wrap {
+      display: flex; align-items: center;
+      background: #fff; border: 1px solid #E5E7EB;
+      border-radius: 12px; overflow: visible;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 12px;
+    }
+    .phone-wrap:focus-within {
+      border-color: var(--brand-color);
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.2);
+    }
+    .phone-cc {
+      display: flex; align-items: center; gap: 5px;
+      padding: 12px 10px 12px 14px;
+      cursor: pointer; white-space: nowrap;
+      font-weight: 600; font-size: .95rem; color: #212529;
+      border-radius: 12px 0 0 12px;
+      user-select: none; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .phone-cc:hover { background: rgba(0,123,255,.06); }
+    .cc-chevron { transition: transform .2s; flex-shrink: 0; }
+    .cc-chevron.open { transform: rotate(180deg); }
+    .phone-divider { width: 1px; height: 20px; background: #dee2e6; flex-shrink: 0; }
+    .phone-num-input {
+      flex: 1; border: none; outline: none;
+      padding: 12px 14px; font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      background: transparent; border-radius: 0 12px 12px 0;
+      color: #212529; min-width: 0;
+    }
+    .phone-num-input::placeholder { color: #adb5bd; }
+    .cc-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      z-index: 1060; background: #fff; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.14); overflow: hidden; min-width: 190px;
+    }
+    .cc-dropdown.open { display: block; }
+    .cc-opt {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; font-size: .95rem; font-weight: 500; cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .cc-opt:hover { background: #007BFF; color: #fff; }
   </style>
 </head>
 <body>
@@ -605,11 +703,17 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     <a class="toc-link" href="#section-profile">
       <?php echo ($lang === 'en') ? 'Profile Picture' : 'รูปโปรไฟล์'; ?>
     </a>
+    <a class="toc-link" href="#section-name">
+      <?php echo ($lang === 'en') ? 'Edit Name' : 'แก้ไขชื่อ'; ?>
+    </a>
     <a class="toc-link" href="#section-password">
       <?php echo ($lang === 'en') ? 'Change Password' : 'เปลี่ยนรหัสผ่าน'; ?>
     </a>
     <a class="toc-link" href="#section-email">
       <?php echo ($lang === 'en') ? 'Change Email' : 'เปลี่ยนอีเมล'; ?>
+    </a>
+    <a class="toc-link" href="#section-phone">
+      <?php echo ($lang === 'en') ? 'Phone Number' : 'เบอร์โทรศัพท์'; ?>
     </a>
     <a class="toc-link" href="#section-linked-accounts">
       <?php echo ($lang === 'en') ? 'Linked Accounts' : 'บัญชีที่เชื่อมต่อ'; ?>
@@ -664,6 +768,35 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           <?php echo ($lang === 'en') ? 'Delete Profile Picture' : 'ลบรูปโปรไฟล์'; ?>
         </button>
       </div>
+    </div>
+
+    <!-- ── Edit Name ── -->
+    <div class="settings-card" id="section-name">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Edit Name' : 'แก้ไขชื่อ'; ?>
+      </h2>
+
+      <?php if ($nameErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($nameErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <form method="POST" id="nameForm">
+        <input type="hidden" name="update_name" value="1">
+        <input class="pw-input" type="text" name="name"
+          value="<?= htmlspecialchars($user['name'] ?? '') ?>"
+          placeholder="<?php echo ($lang === 'en') ? 'First Name' : 'ชื่อ'; ?>" required>
+        <input class="pw-input" type="text" name="surname"
+          value="<?= htmlspecialchars($user['surname'] ?? '') ?>"
+          placeholder="<?php echo ($lang === 'en') ? 'Surname' : 'นามสกุล'; ?>" required>
+        <button type="submit" class="btn-modern" id="nameBtn">
+          <?php echo ($lang === 'en') ? 'Save Name' : 'บันทึกชื่อ'; ?>
+        </button>
+      </form>
     </div>
 
     <!-- ── Change Password ── -->
@@ -822,6 +955,47 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       <?php endif; ?>
     </div>
 
+    <!-- ── Phone Number ── -->
+    <div class="settings-card" id="section-phone">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <?php echo ($lang === 'en') ? 'Phone Number' : 'เบอร์โทรศัพท์'; ?>
+      </h2>
+
+      <?php if ($phoneErrors): ?>
+        <div class="alert alert-danger"><ul class="mb-0">
+          <?php foreach ($phoneErrors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul></div>
+      <?php endif; ?>
+
+      <form method="POST" id="phoneForm">
+        <input type="hidden" name="update_phone" value="1">
+        <div class="cc-dropdown-wrap">
+          <div class="phone-wrap">
+            <div class="phone-cc" id="phoneCcToggle">
+              <span id="phoneSelectedCC"><?= $phoneCcLabels[$phoneCc] ?? $phoneCcLabels['+66'] ?></span>
+              <svg class="cc-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="phone-divider"></div>
+            <input type="tel" name="phoneno" class="phone-num-input"
+              value="<?= htmlspecialchars($phoneDigits) ?>"
+              placeholder="<?php echo ($lang === 'en') ? 'Phone Number' : 'เบอร์โทร'; ?>" required>
+          </div>
+          <input type="hidden" name="phone_cc" id="phoneCcInput" value="<?= htmlspecialchars($phoneCc) ?>">
+          <div class="cc-dropdown" id="phoneCcDropdown">
+            <div class="cc-opt" data-cc="+66" data-label="🇹🇭 +66">🇹🇭 &nbsp;+66 &nbsp; Thailand</div>
+            <div class="cc-opt" data-cc="+60" data-label="🇲🇾 +60">🇲🇾 &nbsp;+60 &nbsp; Malaysia</div>
+            <div class="cc-opt" data-cc="+856" data-label="🇱🇦 +856">🇱🇦 &nbsp;+856 &nbsp; Laos</div>
+          </div>
+        </div>
+        <button type="submit" class="btn-modern" id="phoneBtn">
+          <?php echo ($lang === 'en') ? 'Save Phone Number' : 'บันทึกเบอร์โทร'; ?>
+        </button>
+      </form>
+    </div>
+
     <!-- ── Linked Accounts ── -->
     <div class="settings-card" id="section-linked-accounts">
       <h2>
@@ -939,8 +1113,8 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         </div>
       </div>
     <?php endif; ?>
-    <?php if (!empty($errors) || !empty($pwErrors) || !empty($emailErrors) || !empty($deleteErrors) || !empty($googleErrors)): ?>
-      <?php foreach (array_merge($errors, $pwErrors, $emailErrors, $deleteErrors, $googleErrors) as $e): ?>
+    <?php if (!empty($errors) || !empty($nameErrors) || !empty($pwErrors) || !empty($emailErrors) || !empty($phoneErrors) || !empty($deleteErrors) || !empty($googleErrors)): ?>
+      <?php foreach (array_merge($errors, $nameErrors, $pwErrors, $emailErrors, $phoneErrors, $deleteErrors, $googleErrors) as $e): ?>
         <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" data-bs-autohide="true" data-bs-delay="6000">
           <div class="d-flex">
             <div class="toast-body"><?= htmlspecialchars($e) ?></div>
@@ -1092,6 +1266,55 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     }
 
     // ── Spinners on form submit ──
+    const nameForm = document.getElementById('nameForm');
+    if (nameForm) {
+      nameForm.addEventListener('submit', () => {
+        const btn = document.getElementById('nameBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Saving...' : 'กำลังบันทึก...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+
+    const phoneForm = document.getElementById('phoneForm');
+    if (phoneForm) {
+      phoneForm.addEventListener('submit', () => {
+        const btn = document.getElementById('phoneBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<?php echo ($lang === 'en') ? 'Saving...' : 'กำลังบันทึก...'; ?> <span class="spinner-border spinner-border-sm ms-2 text-light" role="status"></span>';
+      });
+    }
+
+    // Country code custom dropdown (Phone Number section)
+    (function() {
+      var toggle   = document.getElementById('phoneCcToggle');
+      var dropdown = document.getElementById('phoneCcDropdown');
+      var hidden   = document.getElementById('phoneCcInput');
+      var display  = document.getElementById('phoneSelectedCC');
+      if (!toggle || !dropdown) return;
+      var chevron  = toggle.querySelector('.cc-chevron');
+
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var open = dropdown.classList.toggle('open');
+        if (chevron) chevron.classList.toggle('open', open);
+      });
+
+      dropdown.querySelectorAll('.cc-opt').forEach(function(opt) {
+        opt.addEventListener('click', function(e) {
+          e.stopPropagation();
+          display.textContent = this.dataset.label;
+          hidden.value = this.dataset.cc;
+          dropdown.classList.remove('open');
+          if (chevron) chevron.classList.remove('open');
+        });
+      });
+
+      document.addEventListener('click', function() {
+        dropdown.classList.remove('open');
+        if (chevron) chevron.classList.remove('open');
+      });
+    })();
+
     const pwForm  = document.getElementById('pwForm');
     const otpForm = document.getElementById('otpForm');
 
