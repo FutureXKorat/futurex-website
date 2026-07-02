@@ -417,6 +417,20 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
     }
     .btn-modern:disabled { opacity: 0.7; transform: none; cursor: not-allowed; }
 
+    /* ── Red gradient button (destructive actions) ── */
+    .btn-modern-red {
+      width: 100%; margin-top: 12px; padding: 14px; font-size: 1.1rem;
+      font-weight: 600; border-radius: 14px; transition: all 0.3s ease;
+      display: block; border: none; cursor: pointer; text-align: center; color: #fff;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+    .btn-modern-red:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239,68,68,0.35);
+    }
+    .btn-modern-red:disabled { opacity: 0.7; transform: none; cursor: not-allowed; }
+
     /* ── Secondary button (cancel / resend) ── */
     .btn-secondary-flat {
       width: 100%; margin-top: 8px; padding: 12px; font-size: 1rem;
@@ -455,21 +469,56 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       text-align: center; font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;
     }
 
-    /* ── Crop controls ── */
+    /* ── Crop modal ── */
     .cropper-crop-box, .cropper-view-box { border-radius: 50%; }
-    #cropControls {
-      display: flex; justify-content: space-between; gap: 8px;
-      padding: 0 16px 16px;
-    }
-    #cropControls .control-btn {
-      flex: 1; padding: 10px 0; font-size: 1.1rem; font-weight: 700;
-      color: #fff; border: none; border-radius: 8px; cursor: pointer;
-    }
-    #cropControls .cancel  { background-color: #ef4444; }
-    #cropControls .confirm { background-color: #22c55e; }
     .modal-body    { max-height: 65vh; overflow: auto; }
     .modal-content { background-color: #f8f9fa; border-radius: 12px; overflow: hidden; }
     .modal-header  { border-bottom: 1px solid #dcdcdc; }
+
+    #cropModal .modal-content {
+      border-radius: 20px; border: none;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    }
+    #cropModal .modal-header { padding: 18px 22px; }
+    #cropModal .modal-title  { font-weight: 700; font-size: 1.05rem; color: #1f2937; }
+    #cropModal .modal-body   { padding: 22px !important; max-height: none; overflow: visible; }
+
+    #cropContainer {
+      width: 100%; height: min(55vh, 420px);
+      background: #f1f3f5; border-radius: 16px; overflow: hidden; touch-action: none;
+    }
+
+    /* ── Zoom controls ── */
+    #zoomControls { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+    #zoomControls input[type=range] { flex: 1; accent-color: var(--brand-color); height: 4px; cursor: pointer; }
+    .zoom-btn {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
+      border: 1px solid #e5e7eb; background: #fff; color: #374151;
+      font-size: 1.3rem; font-weight: 700; line-height: 1; padding-bottom: 2px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .zoom-btn:hover  { background: #f3f4f6; border-color: #d1d5db; }
+    .zoom-btn:active { transform: scale(0.94); }
+
+    /* ── Cancel / Confirm ── */
+    #cropControls { display: flex; gap: 12px; margin-top: 20px; }
+    #cropControls .control-btn {
+      flex: 1; padding: 13px 0; font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 14px; cursor: pointer; transition: all 0.25s ease;
+    }
+    #cropControls .cancel { background: #f3f4f6; color: #4b5563; }
+    #cropControls .cancel:hover { background: #e5e7eb; transform: translateY(-2px); }
+    #cropControls .confirm {
+      color: #fff;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+    }
+    #cropControls .confirm:hover {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(34,197,94,0.4);
+    }
 
     /* ── Navbar overrides ── */
     .top-banner {
@@ -607,7 +656,7 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         <button
           id="deleteProfileBtn"
           type="button"
-          class="btn btn-danger mb-2 w-100 fw-bold"
+          class="btn-modern-red"
           data-bs-toggle="modal"
           data-bs-target="#deleteModal"
           <?php echo $hasPic ? '' : 'style="display:none;"'; ?>
@@ -913,11 +962,11 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
         <?php echo ($lang === 'en') ? 'Are you sure you want to delete your profile picture?' : 'คุณแน่ใจหรือไม่ว่าต้องการลบรูปโปรไฟล์ของคุณ?'; ?>
       </div>
       <div class="modal-footer d-flex flex-column gap-2">
-        <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+        <button type="button" class="btn-secondary-flat" data-bs-dismiss="modal">
           <?php echo ($lang === 'en') ? 'Cancel' : 'ยกเลิก'; ?>
         </button>
         <form action="" method="POST" class="w-100">
-          <button type="submit" name="delete_profile_picture" class="btn btn-danger w-100">
+          <button type="submit" name="delete_profile_picture" class="btn-modern-red">
             <?php echo ($lang === 'en') ? 'Yes, Delete' : 'ใช่, ลบ'; ?>
           </button>
         </form>
@@ -929,12 +978,23 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
   <div class="modal fade" id="cropModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-body p-3">
-          <img id="cropImage" class="d-block mx-auto" style="max-width:100%;">
+        <div class="modal-header">
+          <h5 class="modal-title"><?php echo ($lang === 'en') ? 'Crop Profile Picture' : 'ครอบตัดรูปโปรไฟล์'; ?></h5>
+          <button type="button" class="btn-close" onclick="cancelCrop()"></button>
         </div>
-        <div id="cropControls" class="px-3 pb-3">
-          <button type="button" class="control-btn cancel"  onclick="cancelCrop()">✕</button>
-          <button type="button" class="control-btn confirm" onclick="uploadCropped()">✔</button>
+        <div class="modal-body">
+          <div id="cropContainer">
+            <img id="cropImage" style="max-width:100%;">
+          </div>
+          <div id="zoomControls">
+            <button type="button" class="zoom-btn" id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
+            <input type="range" id="zoomSlider" min="0" max="100" value="0" step="1">
+            <button type="button" class="zoom-btn" id="zoomInBtn" aria-label="Zoom in">&plus;</button>
+          </div>
+          <div id="cropControls">
+            <button type="button" class="control-btn cancel"  onclick="cancelCrop()"><?php echo ($lang === 'en') ? 'Cancel' : 'ยกเลิก'; ?></button>
+            <button type="button" class="control-btn confirm" onclick="uploadCropped()"><?php echo ($lang === 'en') ? 'Use Photo' : 'ใช้รูปนี้'; ?></button>
+          </div>
         </div>
       </div>
     </div>
@@ -963,13 +1023,16 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
           if (cropper) cropper.destroy();
           cropper = new Cropper(img, {
             aspectRatio: 1, viewMode: 1, background: false,
-            zoomable: true, dragMode: 'move', cropBoxResizable: true, autoCropArea: 1,
+            zoomable: true, zoomOnWheel: true, zoomOnTouch: true, wheelZoomRatio: 0.05,
+            dragMode: 'none', cropBoxMovable: true, cropBoxResizable: true, autoCropArea: 1,
             ready() {
               const c    = cropper.getContainerData();
-              const size = Math.min(c.width, c.height) * 0.6;
+              const size = Math.min(c.width, c.height) * 0.7;
               cropper.setCropBoxData({ width: size, height: size, left: (c.width - size) / 2, top: (c.height - size) / 2 });
               document.querySelector('.cropper-crop-box').style.borderRadius = '50%';
               document.querySelector('.cropper-view-box').style.borderRadius = '50%';
+              zoomSlider.value = 0;
+              lastZoomSliderValue = 0;
             }
           });
         }, { once: true });
@@ -977,6 +1040,25 @@ $emailOtpPending = !empty($_SESSION['email_change'])  && time() <= $_SESSION['em
       };
       reader.readAsDataURL(file);
     }
+
+    // ── Zoom controls — buttons + slider, same behavior for mouse/touchpad/touch ──
+    const zoomSlider = document.getElementById('zoomSlider');
+    let lastZoomSliderValue = 0;
+
+    function zoomBy(ratio) {
+      if (!cropper) return;
+      cropper.zoom(ratio);
+    }
+
+    document.getElementById('zoomInBtn').addEventListener('click', () => zoomBy(0.1));
+    document.getElementById('zoomOutBtn').addEventListener('click', () => zoomBy(-0.1));
+
+    zoomSlider.addEventListener('input', () => {
+      const value = Number(zoomSlider.value);
+      const delta = (value - lastZoomSliderValue) / 100; // slider spans 0-100 → zoom ratio -1..1
+      lastZoomSliderValue = value;
+      zoomBy(delta);
+    });
 
     function uploadCropped() {
       if (!cropper) return;
