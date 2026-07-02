@@ -125,10 +125,16 @@ $title = $lang === 'th' ? 'แอดมิน — Future X' : 'Admin — Future 
       <div class="card-badge blue"><?= $productCount ?> <?= $lang === 'th' ? 'สินค้าทั้งหมด' : 'total products' ?></div>
     </a>
 
-    <?php if ($isSuperAdmin): ?>
     <a href="users.php" class="admin-card">
+      <div class="card-icon">👤</div>
+      <div class="card-name"><?= $lang === 'th' ? 'ผู้ใช้' : 'Users' ?></div>
+      <div class="card-desc"><?= $lang === 'th' ? 'ค้นหาและแก้ไขบัญชีลูกค้า' : 'Look up and edit customer accounts' ?></div>
+    </a>
+
+    <?php if ($isSuperAdmin): ?>
+    <a href="admins.php" class="admin-card">
       <div class="card-icon">👥</div>
-      <div class="card-name"><?= $lang === 'th' ? 'ผู้ใช้แอดมิน' : 'Admin Users' ?></div>
+      <div class="card-name"><?= $lang === 'th' ? 'แอดมิน' : 'Admins' ?></div>
       <div class="card-desc"><?= $lang === 'th' ? 'เพิ่มหรือลบบัญชีแอดมินพนักงาน' : 'Add or remove employee admin accounts' ?></div>
     </a>
     <?php endif; ?>

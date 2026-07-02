@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V25.0',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'new', 'en' => 'Admin panel: added a "Users" tool for admins to look up customer accounts and update a customer\'s username when needed. Customers now get an email whenever their username is changed by an admin.', 'th' => 'แผงแอดมิน: เพิ่มเครื่องมือ "ผู้ใช้" ให้แอดมินค้นหาบัญชีลูกค้าและแก้ไขชื่อผู้ใช้ของลูกค้าได้เมื่อจำเป็น ลูกค้าจะได้รับอีเมลแจ้งเตือนทุกครั้งที่แอดมินเปลี่ยนชื่อผู้ใช้ของพวกเขา'],
+        ],
+    ],
+    [
         'version' => 'V24.3',
         'date'    => '2026-07-02',
         'changes' => [
