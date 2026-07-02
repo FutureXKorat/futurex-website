@@ -26,6 +26,15 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.3',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Deleting an order now shows a styled on-site popup instead of the browser\'s plain confirm box.', 'th' => 'การลบคำสั่งซื้อแสดงป๊อปอัปสไตล์ของเว็บไซต์แทนกล่องยืนยันแบบเดิมของเบราว์เซอร์'],
+            ['type' => 'improve', 'en' => 'Admin panel: delete, revert-to-pending, and bulk approve/reject confirmations now use styled on-site popups instead of the browser\'s plain popups.', 'th' => 'หน้าแอดมิน: การยืนยันลบ, คืนสถานะเป็นรอตรวจสอบ, และอนุมัติ/ปฏิเสธแบบกลุ่ม ใช้ป๊อปอัปสไตล์ของเว็บไซต์แทนป๊อปอัปเดิมของเบราว์เซอร์'],
+            ['type' => 'new', 'en' => 'Admin panel: bulk-rejecting orders now lets you pick a rejection reason, same as rejecting a single order.', 'th' => 'หน้าแอดมิน: การปฏิเสธคำสั่งซื้อแบบกลุ่มสามารถเลือกเหตุผลการปฏิเสธได้แล้ว เหมือนกับการปฏิเสธทีละรายการ'],
+        ],
+    ],
+    [
         'version' => 'V22.2B',
         'date'    => '2026-07-01',
         'changes' => [

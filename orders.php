@@ -58,6 +58,8 @@ $texts = [
         'lang'           => 'ภาษาไทย',
         'btn_delete'     => 'Delete',
         'confirm_delete' => 'Delete this order? This cannot be undone.',
+        'confirm_delete_title' => 'Delete Order',
+        'btn_cancel'     => 'Cancel',
         'rejection_reason_label' => 'Reason:',
         'pickup_appt'    => 'Pick-Up Appointment',
         'view_map'       => 'View store on Google Maps',
@@ -98,6 +100,8 @@ $texts = [
         'lang'           => 'English',
         'btn_delete'     => 'ลบ',
         'confirm_delete' => 'ลบคำสั่งซื้อนี้? ไม่สามารถกู้คืนได้',
+        'confirm_delete_title' => 'ลบคำสั่งซื้อ',
+        'btn_cancel'     => 'ยกเลิก',
         'rejection_reason_label' => 'เหตุผล:',
         'pickup_appt'    => 'นัดรับสินค้า',
         'view_map'       => 'ดูที่ตั้งร้านบน Google Maps',
@@ -525,11 +529,11 @@ function ordFmtDate(string $iso): string {
           <?= htmlspecialchars($t['view_details']) ?>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
-        <form method="post" style="display:contents;">
+        <form method="post" style="display:contents;" id="deleteForm-<?= htmlspecialchars($oid, ENT_QUOTES) ?>">
           <input type="hidden" name="action"   value="delete_order">
           <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
-          <button type="submit" class="btn-delete"
-                  onclick="return confirm(<?= json_encode($t['confirm_delete']) ?>)">
+          <button type="button" class="btn-delete"
+                  onclick="openDeleteConfirm('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             <?= htmlspecialchars($t['btn_delete']) ?>
           </button>
@@ -568,8 +572,38 @@ function ordFmtDate(string $iso): string {
   </div>
 </div>
 
+<!-- Confirm Delete Modal (replaces native browser confirm popup) -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><?= htmlspecialchars($t['confirm_delete_title']) ?></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px 22px;">
+        <p style="margin:0;color:#333;font-size:.92rem;"><?= htmlspecialchars($t['confirm_delete']) ?></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= htmlspecialchars($t['btn_cancel']) ?></button>
+        <button type="button" class="btn-delete" style="padding:8px 18px;" onclick="_runDeleteConfirm()"><?= htmlspecialchars($t['btn_delete']) ?></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+let _deleteOid = null;
+let _deleteModalBs = null;
+function openDeleteConfirm(oid) {
+  _deleteOid = oid;
+  if (!_deleteModalBs) _deleteModalBs = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+  _deleteModalBs.show();
+}
+function _runDeleteConfirm() {
+  if (_deleteOid) document.getElementById('deleteForm-' + _deleteOid).submit();
+}
+
 const i18n = <?= json_encode([
   'modal_items'    => $t['modal_items'],
   'modal_qty'      => $t['modal_qty'],

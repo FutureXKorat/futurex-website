@@ -84,6 +84,14 @@ $texts = [
         'btn_cancel'          => 'Cancel',
         'btn_revert_pending'  => 'Revert to Pending Review',
         'confirm_revert'      => 'Reset this order back to Pending Review?',
+        'revert_title'        => 'Revert to Pending',
+        'bulk_approve_title'  => 'Approve Orders',
+        'bulk_reject_title'   => 'Reject Orders',
+        'btn_confirm'         => 'Confirm',
+        'btn_delete'          => 'Delete',
+        'delete_title'        => 'Delete Order',
+        'delete_msg'          => 'This action cannot be undone. Type "delete-order" below to confirm.',
+        'delete_mismatch'     => 'Text did not match. Order not deleted.',
     ],
     'th' => [
         'title'          => 'บันทึกคำสั่งซื้อ — Future X Admin',
@@ -160,6 +168,14 @@ $texts = [
         'btn_cancel'          => 'ยกเลิก',
         'btn_revert_pending'  => 'คืนสถานะเป็นรอตรวจสอบ',
         'confirm_revert'      => 'คืนสถานะคำสั่งซื้อนี้เป็นรอตรวจสอบ?',
+        'revert_title'        => 'คืนสถานะเป็นรอตรวจสอบ',
+        'bulk_approve_title'  => 'อนุมัติคำสั่งซื้อ',
+        'bulk_reject_title'   => 'ปฏิเสธคำสั่งซื้อ',
+        'btn_confirm'         => 'ยืนยัน',
+        'btn_delete'          => 'ลบ',
+        'delete_title'        => 'ลบคำสั่งซื้อ',
+        'delete_msg'          => 'การกระทำนี้ไม่สามารถย้อนกลับได้ พิมพ์ "delete-order" ด้านล่างเพื่อยืนยัน',
+        'delete_mismatch'     => 'ข้อความไม่ตรงกัน ไม่ได้ลบคำสั่งซื้อ',
     ],
 ];
 $t = $texts[$lang] ?? $texts['en'];
@@ -252,33 +268,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_
     $allowed   = ['approved', 'rejected'];
     $newStatus = in_array($_POST['status'] ?? '', $allowed, true) ? $_POST['status'] : '';
     $rawIds    = is_array($_POST['order_ids'] ?? null) ? $_POST['order_ids'] : [];
+    $rejReason = $newStatus === 'rejected'
+        ? mb_substr(trim((string)($_POST['rejection_reason'] ?? '')), 0, 500)
+        : '';
     if ($newStatus !== '' && !empty($rawIds)) {
         foreach ($rawIds as $rawId) {
             $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$rawId);
             if ($oid === '') continue;
-            if ($newStatus === 'approved') {
-                $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
-                $chk->bind_param('s', $oid);
-                $chk->execute();
-                $chkRow = $chk->get_result()->fetch_assoc();
-                $chk->close();
-                if ($chkRow && $chkRow['status'] !== 'approved') {
-                    $orderData = json_decode((string)$chkRow['data'], true);
-                    foreach ((array)($orderData['items'] ?? []) as $item) {
-                        $iName = (string)($item['name'] ?? '');
-                        $iQty  = max(1, (int)($item['qty'] ?? 1));
-                        if ($iName !== '') {
-                            $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
-                            $upd->bind_param('is', $iQty, $iName);
-                            $upd->execute();
-                            $upd->close();
-                        }
+
+            $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? LIMIT 1");
+            $chk->bind_param('s', $oid);
+            $chk->execute();
+            $chkRow = $chk->get_result()->fetch_assoc();
+            $chk->close();
+            $orderData = json_decode((string)($chkRow['data'] ?? '{}'), true) ?: [];
+
+            if ($newStatus === 'approved' && ($chkRow['status'] ?? '') !== 'approved') {
+                foreach ((array)($orderData['items'] ?? []) as $item) {
+                    $iName = (string)($item['name'] ?? '');
+                    $iQty  = max(1, (int)($item['qty'] ?? 1));
+                    if ($iName !== '') {
+                        $upd = $conn->prepare("UPDATE products SET stock = GREATEST(0, stock - ?) WHERE name = ?");
+                        $upd->bind_param('is', $iQty, $iName);
+                        $upd->execute();
+                        $upd->close();
                     }
                 }
             }
-            // Only update if still awaiting_review (prevents re-processing)
-            $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
-            $stmt->bind_param('ss', $newStatus, $oid);
+
+            if ($newStatus === 'rejected') {
+                $orderData['rejection_reason'] = $rejReason;
+                $newData = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+                // Only update if still awaiting_review (prevents re-processing)
+                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, data = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
+                $stmt->bind_param('sss', $newStatus, $newData, $oid);
+            } else {
+                // Only update if still awaiting_review (prevents re-processing)
+                $stmt = $conn->prepare("UPDATE `orders` SET status = ?, updated_at = NOW() WHERE order_id = ? AND status = 'awaiting_review'");
+                $stmt->bind_param('ss', $newStatus, $oid);
+            }
             $stmt->execute();
             $stmt->close();
         }
@@ -710,19 +738,19 @@ function statusClass(string $status): string {
                     <?= htmlspecialchars($t['btn_reject']) ?>
                   </button>
                 <?php else: ?>
-                  <form method="post" style="display:contents;">
+                  <form method="post" style="display:contents;" id="revertForm-<?= htmlspecialchars($oid, ENT_QUOTES) ?>">
                     <input type="hidden" name="action"   value="update_status">
                     <input type="hidden" name="order_id" value="<?= htmlspecialchars($oid) ?>">
                     <input type="hidden" name="status"   value="awaiting_review">
-                    <button type="submit" class="act-btn act-revert"
-                            onclick="return confirm(<?= json_encode($t['confirm_revert']) ?>)">
+                    <button type="button" class="act-btn act-revert"
+                            onclick="confirmRevertOrder('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
                       <?= htmlspecialchars($t['btn_revert_pending']) ?>
                     </button>
                   </form>
                 <?php endif; ?>
 
                 <button class="act-btn act-delete" onclick="confirmDeleteOrder('<?= htmlspecialchars($oid, ENT_QUOTES) ?>')">
-                  <?= $lang === 'th' ? 'ลบ' : 'Delete' ?>
+                  <?= htmlspecialchars($t['btn_delete']) ?>
                 </button>
 
               </div>
@@ -798,6 +826,32 @@ function statusClass(string $status): string {
   </div>
 </div>
 
+<!-- Modal: Generic Confirm Action (replaces native confirm/prompt/alert popups) -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="confirmActionTitle">—</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:22px 24px;">
+        <p id="confirmActionMessage" style="margin:0;color:#333;font-size:.9rem;"></p>
+        <div id="confirmActionInputWrap" style="display:none;margin-top:14px;">
+          <input type="text" id="confirmActionInput" class="form-control" placeholder="delete-order">
+          <div id="confirmActionInputError" style="display:none;color:#dc3545;font-size:.8rem;margin-top:6px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <?= htmlspecialchars($t['btn_cancel']) ?>
+        </button>
+        <button type="button" class="act-btn" id="confirmActionBtn" style="padding:9px 20px;font-size:.9rem;"
+                onclick="_confirmActionRun()">—</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const MAIN_SITE_URL = <?= json_encode($mainSiteUrl) ?>;
@@ -828,6 +882,17 @@ const i18n = <?= json_encode([
   'confirm_reject'    => $t['confirm_reject'],
   'btn_revert_pending'=> $t['btn_revert_pending'],
   'confirm_revert'    => $t['confirm_revert'],
+  'revert_title'      => $t['revert_title'],
+  'btn_confirm'       => $t['btn_confirm'],
+  'btn_cancel'        => $t['btn_cancel'],
+  'btn_delete'        => $t['btn_delete'],
+  'delete_title'      => $t['delete_title'],
+  'delete_msg'        => $t['delete_msg'],
+  'delete_mismatch'   => $t['delete_mismatch'],
+  'bulk_approve_title'=> $t['bulk_approve_title'],
+  'bulk_reject_title' => $t['bulk_reject_title'],
+  'confirm_bulk_approve' => $t['confirm_bulk_approve'],
+  'confirm_bulk_reject'  => $t['confirm_bulk_reject'],
   'click_slip'        => $t['click_slip'],
   'view_original'  => $t['view_original'],
   'img_not_found'  => $t['img_not_found'],
@@ -846,6 +911,86 @@ function esc(s) {
 function fmt(n) {
   return Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+
+// ── Generic Confirm Action Modal (replaces native confirm/prompt/alert) ──
+let _confirmActionBs       = null;
+let _confirmActionCallback = null;
+let _confirmActionRequire  = null;
+
+function showConfirmModal(opts) {
+  document.getElementById('confirmActionTitle').textContent   = opts.title;
+  document.getElementById('confirmActionMessage').textContent = opts.message;
+  const btn = document.getElementById('confirmActionBtn');
+  btn.textContent = opts.confirmLabel;
+  btn.className   = 'act-btn ' + (opts.danger ? 'act-reject' : 'act-approve');
+
+  const inputWrap = document.getElementById('confirmActionInputWrap');
+  const input     = document.getElementById('confirmActionInput');
+  const err       = document.getElementById('confirmActionInputError');
+  err.style.display = 'none';
+  if (opts.requireText) {
+    inputWrap.style.display = 'block';
+    input.value = '';
+  } else {
+    inputWrap.style.display = 'none';
+  }
+
+  _confirmActionCallback = opts.onConfirm;
+  _confirmActionRequire  = opts.requireText || null;
+
+  if (!_confirmActionBs) _confirmActionBs = new bootstrap.Modal(document.getElementById('confirmActionModal'));
+  _confirmActionBs.show();
+}
+
+function _confirmActionRun() {
+  if (_confirmActionRequire) {
+    const input = document.getElementById('confirmActionInput');
+    const err   = document.getElementById('confirmActionInputError');
+    if (input.value.trim() !== _confirmActionRequire) {
+      err.textContent   = i18n.delete_mismatch;
+      err.style.display = 'block';
+      return;
+    }
+  }
+  _confirmActionBs.hide();
+  if (_confirmActionCallback) _confirmActionCallback();
+}
+
+function confirmRevertOrder(oid) {
+  showConfirmModal({
+    title: i18n.revert_title,
+    message: i18n.confirm_revert,
+    confirmLabel: i18n.btn_revert_pending,
+    danger: false,
+    onConfirm: () => document.getElementById('revertForm-' + oid).submit()
+  });
+}
+
+let _pendingRevertOid = null;
+
+function confirmRevertOrderJs(oid) {
+  _pendingRevertOid = oid;
+  const orderModalEl = document.getElementById('orderModal');
+  if (orderModalEl.classList.contains('show')) {
+    // Close order detail modal first; hidden event will open the confirm modal
+    bootstrap.Modal.getInstance(orderModalEl)?.hide();
+  } else {
+    _openRevertConfirmNow();
+  }
+}
+
+function _openRevertConfirmNow() {
+  const oid = _pendingRevertOid;
+  _pendingRevertOid = null;
+  showConfirmModal({
+    title: i18n.revert_title,
+    message: i18n.confirm_revert,
+    confirmLabel: i18n.btn_revert_pending,
+    danger: false,
+    onConfirm: () => document.getElementById('jsRevertForm-' + oid).submit()
+  });
+}
+
 function statusBadge(status) {
   const map = {
     'awaiting_review': ['badge-pending',  i18n.st_pending],
@@ -977,12 +1122,12 @@ function openModal(btn) {
     <button type="button" class="act-btn act-reject" style="padding:9px 20px;font-size:.9rem;"
             onclick="openRejectModal('${oidSafe}')">${esc(i18n.btn_reject)}</button>` + footer;
   } else {
-    footer = `<form method="post">
+    footer = `<form method="post" id="jsRevertForm-${oidSafe}">
       <input type="hidden" name="action"   value="update_status">
       <input type="hidden" name="order_id" value="${oidSafe}">
       <input type="hidden" name="status"   value="awaiting_review">
-      <button type="submit" class="act-btn act-revert" style="padding:9px 20px;font-size:.9rem;"
-              onclick="return confirm(${JSON.stringify(i18n.confirm_revert)})">${esc(i18n.btn_revert_pending)}</button>
+      <button type="button" class="act-btn act-revert" style="padding:9px 20px;font-size:.9rem;"
+              onclick="confirmRevertOrderJs('${oidSafe}')">${esc(i18n.btn_revert_pending)}</button>
     </form>` + footer;
   }
   document.getElementById('modalFooter').innerHTML = footer;
@@ -1057,18 +1202,31 @@ document.querySelectorAll('.order-cb:not(#selectAll)').forEach(cb => {
 function submitBulk(status) {
   const checked = Array.from(document.querySelectorAll('.order-cb:not(#selectAll):checked'));
   if (checked.length === 0) return;
-  const tpl = status === 'approved'
-    ? <?= json_encode($t['confirm_bulk_approve']) ?>
-    : <?= json_encode($t['confirm_bulk_reject']) ?>;
-  if (!confirm(tpl.replace('{n}', checked.length))) return;
+  const ids = checked.map(cb => cb.value);
+
+  if (status === 'rejected') {
+    openBulkRejectModal(ids);
+    return;
+  }
+
+  showConfirmModal({
+    title: i18n.bulk_approve_title,
+    message: i18n.confirm_bulk_approve.replace('{n}', ids.length),
+    confirmLabel: i18n.btn_approve,
+    danger: false,
+    onConfirm: () => submitBulkForm(status, ids)
+  });
+}
+
+function submitBulkForm(status, ids) {
   const form      = document.getElementById('bulkForm');
   const statusInp = document.getElementById('bulkStatus');
   const container = document.getElementById('bulkIds');
   statusInp.value  = status;
   container.innerHTML = '';
-  checked.forEach(cb => {
+  ids.forEach(id => {
     const inp = document.createElement('input');
-    inp.type = 'hidden'; inp.name = 'order_ids[]'; inp.value = cb.value;
+    inp.type = 'hidden'; inp.name = 'order_ids[]'; inp.value = id;
     container.appendChild(inp);
   });
   form.submit();
@@ -1083,6 +1241,7 @@ document.getElementById('bulkClear')?.addEventListener('click', function() {
 // ── Rejection Reason Modal ──────────────────────────────────────
 let _pendingRejectOid = null;
 let _rejectModalBs    = null;
+let _bulkRejectIds    = null;
 
 function openRejectModal(oid) {
   _pendingRejectOid = oid;
@@ -1095,8 +1254,19 @@ function openRejectModal(oid) {
   }
 }
 
+function openBulkRejectModal(ids) {
+  _bulkRejectIds = ids;
+  document.getElementById('rejectReasonSelect').selectedIndex = 0;
+  document.getElementById('otherReasonWrap').style.display   = 'none';
+  document.getElementById('otherReasonText').value           = '';
+  document.getElementById('rejectReasonFinal').value         = '';
+  if (!_rejectModalBs) _rejectModalBs = new bootstrap.Modal(document.getElementById('rejectReasonModal'));
+  _rejectModalBs.show();
+}
+
 document.getElementById('orderModal').addEventListener('hidden.bs.modal', function() {
   if (_pendingRejectOid !== null) _openRejectModalNow();
+  if (_pendingRevertOid !== null) _openRevertConfirmNow();
 });
 
 function _openRejectModalNow() {
@@ -1125,24 +1295,36 @@ function submitRejectReason() {
       return;
     }
   }
+
+  if (_bulkRejectIds) {
+    const ids = _bulkRejectIds;
+    _bulkRejectIds = null;
+    document.getElementById('bulkRejectionReason').value = reason;
+    submitBulkForm('rejected', ids);
+    return;
+  }
+
   document.getElementById('rejectReasonFinal').value = reason;
   document.getElementById('rejectReasonForm').submit();
 }
 
 function confirmDeleteOrder(oid) {
-  var input = prompt('Type "delete-order" to permanently delete this order:');
-  if (input === null) return;
-  if (input.trim() !== 'delete-order') {
-    alert('Text did not match. Order not deleted.');
-    return;
-  }
-  var form = document.createElement('form');
-  form.method = 'post';
-  form.innerHTML =
-    '<input type="hidden" name="action" value="delete_order">' +
-    '<input type="hidden" name="order_id" value="' + oid + '">';
-  document.body.appendChild(form);
-  form.submit();
+  showConfirmModal({
+    title: i18n.delete_title,
+    message: i18n.delete_msg,
+    confirmLabel: i18n.btn_delete,
+    danger: true,
+    requireText: 'delete-order',
+    onConfirm: () => {
+      var form = document.createElement('form');
+      form.method = 'post';
+      form.innerHTML =
+        '<input type="hidden" name="action" value="delete_order">' +
+        '<input type="hidden" name="order_id" value="' + oid + '">';
+      document.body.appendChild(form);
+      form.submit();
+    }
+  });
 }
 </script>
 
@@ -1150,6 +1332,7 @@ function confirmDeleteOrder(oid) {
 <form id="bulkForm" method="post" style="display:none;">
   <input type="hidden" name="action" value="bulk_update">
   <input type="hidden" name="status" id="bulkStatus" value="">
+  <input type="hidden" name="rejection_reason" id="bulkRejectionReason" value="">
   <div id="bulkIds"></div>
 </form>
 </body>
