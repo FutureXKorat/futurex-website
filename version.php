@@ -26,6 +26,14 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.5A',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'The customer-facing "My Orders" page now shows completed (Picked Up / Shipped) orders correctly instead of showing them as Pending Review.', 'th' => 'หน้า "คำสั่งซื้อของฉัน" ของลูกค้าแสดงสถานะคำสั่งซื้อที่เสร็จสิ้น (รับสินค้าแล้ว / จัดส่งแล้ว) ถูกต้อง แทนที่จะแสดงเป็นรอตรวจสอบ'],
+            ['type' => 'fix', 'en' => 'Fixed the same stock-not-restored bug on the customer side — deleting your own approved or completed order now restores stock too.', 'th' => 'แก้ไขปัญหาสต็อกไม่คืนกลับแบบเดียวกันในฝั่งลูกค้า — การลบคำสั่งซื้อที่อนุมัติหรือเสร็จสิ้นแล้วของคุณเองจะคืนสต็อกกลับให้ด้วยเช่นกัน'],
+        ],
+    ],
+    [
         'version' => 'V22.5',
         'date'    => '2026-07-02',
         'changes' => [

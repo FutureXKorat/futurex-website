@@ -12,6 +12,27 @@ $userId = (int)$_SESSION['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_order') {
     $oid = preg_replace('/[^A-Za-z0-9_-]/', '', (string)($_POST['order_id'] ?? ''));
     if ($oid !== '') {
+        // Restore stock if the order being deleted had already deducted it
+        $chk = $conn->prepare("SELECT status, data FROM `orders` WHERE order_id = ? AND user_id = ? LIMIT 1");
+        $chk->bind_param('si', $oid, $userId);
+        $chk->execute();
+        $chkRow = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        $delStatus = (string)($chkRow['status'] ?? '');
+        if (in_array($delStatus, ['approved', 'completed'], true)) {
+            $orderData = json_decode((string)($chkRow['data'] ?? '{}'), true) ?: [];
+            foreach ((array)($orderData['items'] ?? []) as $item) {
+                $iName = (string)($item['name'] ?? '');
+                $iQty  = max(1, (int)($item['qty'] ?? 1));
+                if ($iName !== '') {
+                    $upd = $conn->prepare("UPDATE products SET stock = stock + ? WHERE name = ?");
+                    $upd->bind_param('is', $iQty, $iName);
+                    $upd->execute();
+                    $upd->close();
+                }
+            }
+        }
+
         $stmt = $conn->prepare("DELETE FROM `orders` WHERE order_id = ? AND user_id = ?");
         $stmt->bind_param('si', $oid, $userId);
         $stmt->execute();
@@ -30,6 +51,7 @@ $texts = [
         'view_details' => 'View Details',
         'st_pending'   => 'Pending Review',
         'st_approved'  => 'Approved',
+        'st_completed' => 'Completed',
         'st_rejected'  => 'Rejected',
         'del_pickup'   => 'Pick Up',
         'del_ship'     => 'Shipping',
@@ -52,6 +74,7 @@ $texts = [
         'order_id'     => 'Order',
         'note_pending' => 'We received your payment slip and are reviewing it. We\'ll confirm shortly.',
         'note_approved'=> 'Your payment has been verified. Your order is confirmed!',
+        'note_completed'=> 'Your order has been picked up / shipped. Thanks for shopping with us!',
         'note_rejected'=> 'Your payment could not be verified. Please contact us for help.',
         'click_slip'     => 'Click to open full size',
         'img_error'      => 'Image not available',
@@ -72,6 +95,7 @@ $texts = [
         'view_details' => 'ดูรายละเอียด',
         'st_pending'   => 'รอตรวจสอบ',
         'st_approved'  => 'อนุมัติแล้ว',
+        'st_completed' => 'เสร็จสิ้น',
         'st_rejected'  => 'ไม่อนุมัติ',
         'del_pickup'   => 'รับเอง',
         'del_ship'     => 'จัดส่งถึงบ้าน',
@@ -94,6 +118,7 @@ $texts = [
         'order_id'     => 'คำสั่งซื้อ',
         'note_pending' => 'เราได้รับสลิปของคุณแล้วและกำลังตรวจสอบ จะแจ้งผลเร็ว ๆ นี้',
         'note_approved'=> 'ยืนยันการชำระเงินแล้ว คำสั่งซื้อของคุณได้รับการยืนยัน!',
+        'note_completed'=> 'คำสั่งซื้อของคุณได้รับสินค้าแล้ว / จัดส่งแล้ว ขอบคุณที่อุดหนุนเรา!',
         'note_rejected'=> 'ไม่สามารถยืนยันการชำระเงินได้ กรุณาติดต่อเราเพื่อขอความช่วยเหลือ',
         'click_slip'     => 'คลิกเพื่อดูขนาดเต็ม',
         'img_error'      => 'ไม่พบรูปภาพ',
@@ -208,6 +233,7 @@ function ordFmtDate(string $iso): string {
     .order-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.14); }
     .order-card.s-pending  { border-left-color: #ffc107; }
     .order-card.s-approved { border-left-color: #198754; }
+    .order-card.s-completed { border-left-color: #0d9488; }
     .order-card.s-rejected { border-left-color: #dc3545; }
 
     /* ── Card Header ── */
@@ -232,6 +258,8 @@ function ordFmtDate(string $iso): string {
     .badge-pending .dot  { background: #ffc107; }
     .badge-approved { background: #D1E7DD; color: #0A3622; }
     .badge-approved .dot { background: #198754; }
+    .badge-completed { background: #CCFBF1; color: #0F5C55; }
+    .badge-completed .dot { background: #0d9488; }
     .badge-rejected { background: #F8D7DA; color: #58151C; }
     .badge-rejected .dot { background: #dc3545; }
 
@@ -244,6 +272,7 @@ function ordFmtDate(string $iso): string {
     }
     .note-pending  { background: rgba(255,193,7,0.12); color: #856404; }
     .note-approved { background: rgba(25,135,84,0.10); color: #0a4724; }
+    .note-completed { background: rgba(13,148,136,0.10); color: #0f5c55; }
     .note-rejected { background: rgba(220,53,69,0.10); color: #721c24; }
 
     /* ── Items List ── */
@@ -338,12 +367,14 @@ function ordFmtDate(string $iso): string {
     }
     .modal-status-bar.s-pending  { background: rgba(255,193,7,0.15); color: #856404; }
     .modal-status-bar.s-approved { background: rgba(25,135,84,0.12); color: #0a4724; }
+    .modal-status-bar.s-completed { background: rgba(13,148,136,0.12); color: #0f5c55; }
     .modal-status-bar.s-rejected { background: rgba(220,53,69,0.12); color: #721c24; }
     .modal-status-bar .dot {
       width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
     }
     .modal-status-bar.s-pending .dot  { background: #ffc107; }
     .modal-status-bar.s-approved .dot { background: #198754; }
+    .modal-status-bar.s-completed .dot { background: #0d9488; }
     .modal-status-bar.s-rejected .dot { background: #dc3545; }
 
     .items-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
@@ -434,15 +465,15 @@ function ordFmtDate(string $iso): string {
     $dateStr = ordFmtDate((string)($ord['created_at'] ?? ''));
 
     $statusClass = match($status) {
-      'approved' => 'approved', 'rejected' => 'rejected', default => 'pending'
+      'approved' => 'approved', 'completed' => 'completed', 'rejected' => 'rejected', default => 'pending'
     };
     $badgeClass = 'badge-' . $statusClass;
     $statusLabel = match($status) {
-      'approved' => $t['st_approved'], 'rejected' => $t['st_rejected'], default => $t['st_pending']
+      'approved' => $t['st_approved'], 'completed' => $t['st_completed'], 'rejected' => $t['st_rejected'], default => $t['st_pending']
     };
     $noteClass = 'note-' . $statusClass;
     $noteText = match($status) {
-      'approved' => $t['note_approved'], 'rejected' => $t['note_rejected'], default => $t['note_pending']
+      'approved' => $t['note_approved'], 'completed' => $t['note_completed'], 'rejected' => $t['note_rejected'], default => $t['note_pending']
     };
     if ($status === 'rejected' && !empty($ord['rejection_reason'])) {
       $rawReason = (string)$ord['rejection_reason'];
@@ -623,9 +654,11 @@ const i18n = <?= json_encode([
   'del_ship'       => $t['del_ship'],
   'st_pending'     => $t['st_pending'],
   'st_approved'    => $t['st_approved'],
+  'st_completed'   => $t['st_completed'],
   'st_rejected'    => $t['st_rejected'],
   'note_pending'   => $t['note_pending'],
   'note_approved'  => $t['note_approved'],
+  'note_completed' => $t['note_completed'],
   'note_rejected'  => $t['note_rejected'],
   'click_slip'     => $t['click_slip'],
   'img_error'      => $t['img_error'],
@@ -672,9 +705,10 @@ function openModal(btn) {
 
   // Status config
   const stMap = {
-    'awaiting_review': { cls: 's-pending',  label: i18n.st_pending,  note: i18n.note_pending  },
-    'approved':        { cls: 's-approved', label: i18n.st_approved, note: i18n.note_approved },
-    'rejected':        { cls: 's-rejected', label: i18n.st_rejected, note: i18n.note_rejected },
+    'awaiting_review': { cls: 's-pending',   label: i18n.st_pending,   note: i18n.note_pending   },
+    'approved':        { cls: 's-approved',  label: i18n.st_approved,  note: i18n.note_approved  },
+    'completed':       { cls: 's-completed', label: i18n.st_completed, note: i18n.note_completed },
+    'rejected':        { cls: 's-rejected',  label: i18n.st_rejected,  note: i18n.note_rejected  },
   };
   const st = stMap[status] || stMap['awaiting_review'];
 
