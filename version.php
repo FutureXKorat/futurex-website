@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.7',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'improve', 'en' => 'Extended the "stay where you were" scroll fix to the Stock, Products, Settings, and Users admin pages, not just the Order Log.', 'th' => 'ขยายการแก้ไขให้คงตำแหน่งการเลื่อนหน้าจอไปยังหน้าสต็อก สินค้า ตั้งค่า และผู้ใช้งานของแอดมิน ไม่ใช่แค่หน้าบันทึกคำสั่งซื้อ'],
+        ],
+    ],
+    [
         'version' => 'V22.6A',
         'date'    => '2026-07-02',
         'changes' => [

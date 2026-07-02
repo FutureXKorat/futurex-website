@@ -224,6 +224,7 @@ $t = [
 <body>
 
 <?php include 'navbar.php'; ?>
+<?php include 'scroll-restore.php'; ?>
 
 <div class="page-wrap" style="margin-top: 36px;">
 
