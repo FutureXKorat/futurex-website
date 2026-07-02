@@ -944,10 +944,21 @@ const MAIN_SITE_URL = <?= json_encode($mainSiteUrl) ?>;
 
 // Keep scroll position across the full-page reload that follows admin actions
 // (approve/reject/complete/revert/delete all redirect back to this same page).
+// Saved continuously on scroll rather than on 'beforeunload' — iOS Safari does
+// not reliably fire beforeunload on normal navigations, so a save-on-unload
+// approach silently fails on phones/tablets.
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-window.addEventListener('beforeunload', function() {
+function _saveAdminScrollY() {
   sessionStorage.setItem('adminOrdersScrollY', String(window.scrollY));
-});
+}
+let _scrollSaveTimer = null;
+window.addEventListener('scroll', function() {
+  clearTimeout(_scrollSaveTimer);
+  _scrollSaveTimer = setTimeout(_saveAdminScrollY, 100);
+}, { passive: true });
+// Flush immediately on any click (capture phase, before the click's own handler
+// runs) so a scroll-then-click-fast doesn't lose position to the debounce above.
+document.addEventListener('click', _saveAdminScrollY, true);
 window.addEventListener('DOMContentLoaded', function() {
   const savedY = sessionStorage.getItem('adminOrdersScrollY');
   if (savedY !== null) {

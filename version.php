@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.6A',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Fixed the scroll-position fix from V22.6 not working on phones/tablets — it relied on an event that iOS Safari does not reliably fire, so it now saves your scroll position continuously instead.', 'th' => 'แก้ไขปัญหาการคงตำแหน่งการเลื่อนหน้าจอจาก V22.6 ที่ไม่ทำงานบนมือถือ/แท็บเล็ต — เดิมอาศัยอีเวนต์ที่ iOS Safari ไม่ยิงอย่างสม่ำเสมอ ตอนนี้จะบันทึกตำแหน่งการเลื่อนอย่างต่อเนื่องแทน'],
+        ],
+    ],
+    [
         'version' => 'V22.6',
         'date'    => '2026-07-02',
         'changes' => [
