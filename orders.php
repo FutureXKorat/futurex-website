@@ -330,6 +330,7 @@ function ordFmtDate(string $iso): string {
     }
     .modal-header { border-bottom: 1px solid rgba(0,0,0,0.07) !important; padding: 18px 22px !important; }
     .modal-footer { border-top: 1px solid rgba(0,0,0,0.07) !important; padding: 14px 20px !important; }
+    .modal-footer .btn-secondary { border-radius: 10px; }
 
     .modal-status-bar {
       border-radius: 12px; padding: 12px 16px; margin-bottom: 18px;

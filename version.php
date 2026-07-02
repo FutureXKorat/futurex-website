@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V22.3A',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'The Cancel button in the new confirmation popups now matches the same corner roundness as the button next to it.', 'th' => 'ปุ่มยกเลิกในป๊อปอัปยืนยันแบบใหม่มีความโค้งมนของมุมตรงกับปุ่มข้างๆ แล้ว'],
+        ],
+    ],
+    [
         'version' => 'V22.3',
         'date'    => '2026-07-02',
         'changes' => [

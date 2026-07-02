@@ -515,6 +515,7 @@ function statusClass(string $status): string {
     }
     .modal-header { border-bottom: 1px solid rgba(0,0,0,0.07) !important; padding: 18px 24px !important; }
     .modal-footer { border-top: 1px solid rgba(0,0,0,0.07) !important; padding: 14px 20px !important; gap: 8px; }
+    .modal-footer .btn-secondary { border-radius: 8px; }
 
     .slip-wrap { position: relative; }
     .slip-img {
