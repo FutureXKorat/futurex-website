@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V24.0A',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Actually fixed "Sign in with Google" this time — the bare futurexthailand.com domain (no "www") has no working HTTPS, so Google\'s callback was hanging forever. Google sign-in now uses www.futurexthailand.com, which works correctly.', 'th' => 'แก้ไขปัญหา "เข้าสู่ระบบด้วย Google" ได้จริงในครั้งนี้ — โดเมน futurexthailand.com แบบไม่มี "www" ไม่รองรับ HTTPS ทำให้การตอบกลับจาก Google ค้างตลอดไป ตอนนี้ระบบเข้าสู่ระบบด้วย Google เปลี่ยนไปใช้ www.futurexthailand.com ซึ่งทำงานได้อย่างถูกต้อง'],
+        ],
+    ],
+    [
         'version' => 'V24.0',
         'date'    => '2026-07-02',
         'changes' => [

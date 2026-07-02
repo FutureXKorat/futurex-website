@@ -3,7 +3,7 @@ include_once 'database.php';
 
 $clientId     = getenv('GOOGLE_CLIENT_ID');
 $clientSecret = getenv('GOOGLE_CLIENT_SECRET');
-$redirectUri  = 'https://futurexthailand.com/google_callback.php';
+$redirectUri  = 'https://www.futurexthailand.com/google_callback.php';
 
 $loginError    = 'login.php';
 $settingsError = 'settings.php';

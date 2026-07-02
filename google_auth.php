@@ -2,7 +2,7 @@
 include_once 'database.php';
 
 $clientId    = getenv('GOOGLE_CLIENT_ID');
-$redirectUri = 'https://futurexthailand.com/google_callback.php';
+$redirectUri = 'https://www.futurexthailand.com/google_callback.php';
 $action      = in_array($_GET['action'] ?? '', ['login', 'link']) ? $_GET['action'] : 'login';
 
 $state = bin2hex(random_bytes(16));
