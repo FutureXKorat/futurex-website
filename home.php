@@ -716,7 +716,7 @@ $texts = [
 </div>
 
 <div class="footer-min reveal">
-    <span class="small-muted">V24.1</span>
+    <span class="small-muted">V24.2</span>
 </div>
 
 <!-- Bootstrap JS -->
@@ -740,7 +740,7 @@ $texts = [
     const revealEls = document.querySelectorAll('.reveal');
     const io = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) entry.target.classList.add('visible');
+            entry.target.classList.toggle('visible', entry.isIntersecting);
         });
     }, { threshold: 0.12 });
     revealEls.forEach(el => io.observe(el));

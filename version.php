@@ -26,6 +26,13 @@ $t = $texts[$lang] ?? $texts['en'];
 // type: 'new' | 'fix' | 'improve'
 $versions = [
     [
+        'version' => 'V24.2',
+        'date'    => '2026-07-02',
+        'changes' => [
+            ['type' => 'fix', 'en' => 'Scroll-in animations on the home page now replay every time a section enters view, instead of only playing once and staying revealed forever.', 'th' => 'แอนิเมชันการเลื่อนเข้าหน้าหลักจะเล่นซ้ำทุกครั้งที่ส่วนนั้นเข้ามาในมุมมอง แทนที่จะเล่นเพียงครั้งเดียวแล้วค้างอยู่ตลอดไป'],
+        ],
+    ],
+    [
         'version' => 'V24.1',
         'date'    => '2026-07-02',
         'changes' => [
